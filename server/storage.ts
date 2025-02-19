@@ -1,6 +1,6 @@
 import { users, messages, type User, type InsertUser, type Message, type InsertMessage } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -45,8 +45,13 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(messages)
-      .where(eq(messages.userId, userId))
-      .where(eq(messages.sessionId, sessionId));
+      .where(
+        and(
+          eq(messages.userId, userId),
+          eq(messages.sessionId, sessionId)
+        )
+      )
+      .orderBy(messages.timestamp);
   }
 
   async createMessage(userId: number, message: InsertMessage): Promise<Message> {
