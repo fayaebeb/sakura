@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import ChatInterface from "@/components/chat-interface";
-import Image from "next/image"; // Import Image component for logos
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -12,21 +11,19 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           {/* Company Logo */}
           <div className="flex items-center gap-3">
-            <Image
-              src="./images/pclogo.png" // Replace with actual company logo path
+            <img
+              src="../images/pclogo.png" // Replace with actual company logo path
               alt="Company Logo"
-              width={120}
-              height={40}
+              className="h-10" // Adjust size as needed
             />
           </div>
 
           {/* 桜AI Branding */}
           <div className="flex items-center">
-            <Image
-              src="./images/sklogo.png" // Replace with actual 桜AI logo path
+            <img
+              src="../images/sklogo.png" // Replace with actual 桜AI logo path
               alt="桜AI Logo"
-              width={100}
-              height={40}
+              className="h-8" // Adjust size as needed
             />
           </div>
 
@@ -51,3 +48,6 @@ export default function HomePage() {
     </div>
   );
 }
+
+
+
