@@ -9,7 +9,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">AI Chat Assistant</h1>
+          <h1 className="text-2xl font-bold">桜AI</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
               {user?.username}
