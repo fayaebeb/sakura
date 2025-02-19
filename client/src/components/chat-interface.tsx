@@ -11,22 +11,43 @@ import ChatMessage from "./chat-message";
 import { ScrollArea } from "./ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 
-const CHAT_SESSION_KEY = "chat_session_id";
+const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
 
 export default function ChatInterface() {
   const [input, setInput] = useState("");
+  const { user } = useAuth();
+
   const [sessionId, setSessionId] = useState<string>(() => {
-    // Try to get existing sessionId from localStorage
-    const savedSessionId = localStorage.getItem(CHAT_SESSION_KEY);
+    if (!user) return "";
+
+    // Create a user-specific storage key
+    const storageKey = `${CHAT_SESSION_KEY_PREFIX}${user.id}`;
+
+    // Try to get existing sessionId from localStorage for this user
+    const savedSessionId = localStorage.getItem(storageKey);
     if (savedSessionId) return savedSessionId;
 
-    // Generate new sessionId if none exists
+    // Generate new sessionId if none exists for this user
     const newSessionId = nanoid();
-    localStorage.setItem(CHAT_SESSION_KEY, newSessionId);
+    localStorage.setItem(storageKey, newSessionId);
     return newSessionId;
   });
 
-  const { user } = useAuth();
+  // Update sessionId when user changes
+  useEffect(() => {
+    if (!user) return;
+
+    const storageKey = `${CHAT_SESSION_KEY_PREFIX}${user.id}`;
+    const savedSessionId = localStorage.getItem(storageKey);
+
+    if (savedSessionId) {
+      setSessionId(savedSessionId);
+    } else {
+      const newSessionId = nanoid();
+      localStorage.setItem(storageKey, newSessionId);
+      setSessionId(newSessionId);
+    }
+  }, [user]);
 
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
     queryKey: ["/api/messages", sessionId],
@@ -37,7 +58,7 @@ export default function ChatInterface() {
       if (!res.ok) throw new Error("Failed to fetch messages");
       return res.json();
     },
-    enabled: !!user,
+    enabled: !!user && !!sessionId,
   });
 
   const sendMessage = useMutation({
