@@ -5,15 +5,35 @@ import ChatInterface from "@/components/chat-interface";
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
 
+  // Extract username before '@' from email
+  const displayName = user?.username?.split("@")[0];
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b">
+    <div className="min-h-screen flex flex-col bg-[#f7e6d5]">
+      {/* Header Section */}
+      <header className="border-b bg-[#f8eee2] shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">桜AI</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {user?.username}
-            </span>
+          {/* Company Logo */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/pclogo.png"
+              alt="Company Logo"
+              className="h-10"
+            />
+          </div>
+
+          {/* 桜AI Branding */}
+          <div className="flex items-center">
+            <img
+              src="/images/slogo.png"
+              alt="桜AI Logo"
+              className="h-24 w-auto"
+            />
+          </div>
+
+          {/* User Info & Logout */}
+          <div className="flex items-center gap-5">
+            <span className="text-sm font-bold text-gray-700">{displayName}</span>
             <Button
               variant="outline"
               size="sm"
@@ -26,8 +46,11 @@ export default function HomePage() {
         </div>
       </header>
 
+      {/* Chat Interface Section */}
       <main className="flex-1 container mx-auto px-4 py-8">
-        <ChatInterface />
+        <div className="bg-white rounded-lg shadow-md p-4 max-w-3xl mx-auto">
+          <ChatInterface />
+        </div>
       </main>
     </div>
   );

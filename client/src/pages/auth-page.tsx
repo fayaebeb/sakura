@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 
+
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
@@ -46,13 +47,21 @@ export default function AuthPage() {
     });
 
     return (
-      <div className="min-h-screen grid md:grid-cols-2">
-        <div className="flex items-center justify-center p-8">
-          <Card className="w-full max-w-md p-8">
+      <div className="min-h-screen flex flex-col md:grid md:grid-cols-2">
+        {/* Bot Logo in Mobile View */}
+        <div className="flex flex-col items-center justify-center p-8 md:hidden bg-[#f8eee2]">
+          <img src="/images/slogo.png" alt="桜AI Logo" className="w-24 mb-4" />
+          
+          
+        </div>
+
+        {/* Authentication Card */}
+        <div className="flex flex-col items-center justify-center p-8 bg-[#f7e6d5]">
+          <img src="/images/pclogo.png" alt="Company Logo" className="w-32 mb-6" />
+          <Card className="w-full max-w-md p-8 bg-[#fcf8f3]">
             <h1 className="text-3xl font-bold mb-8">
               {isLogin ? "Welcome Back" : "Create Account"}
             </h1>
-
             <Form {...form}>
               <form onSubmit={onSubmit} className="space-y-4">
                 <FormField
@@ -68,7 +77,6 @@ export default function AuthPage() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="password"
@@ -82,10 +90,9 @@ export default function AuthPage() {
                     </FormItem>
                   )}
                 />
-
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full bg-[#16213e]"
                   disabled={loginMutation.isPending || registerMutation.isPending}
                 >
                   {loginMutation.isPending || registerMutation.isPending ? (
@@ -98,28 +105,24 @@ export default function AuthPage() {
                 </Button>
               </form>
             </Form>
-
             <div className="mt-4 text-center">
               <Button
                 variant="link"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-sm"
+                className="text-sm "
               >
-                {isLogin
-                  ? "Need an account? Sign up"
-                  : "Already have an account? Sign in"}
+                {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
               </Button>
             </div>
           </Card>
         </div>
 
-        <div className="hidden md:flex flex-col justify-center p-8 bg-primary text-primary-foreground">
-          <div className="max-w-md">
-            <h2 className="text-4xl font-bold mb-4">AI Chat Assistant</h2>
-            <p className="text-lg opacity-90">
-              Connect with our intelligent chatbot powered by advanced AI. Get instant
-              responses and maintain continuous conversations with context awareness.
-            </p>
+        {/* Branding Section (Hidden in Mobile) */}
+        <div className="hidden md:flex flex-col justify-center items-center p-8 bg-[#f8eee2] text-primary-foreground">
+          <img src="/images/slogo.png" alt="桜AI Logo" className="w-40 mb-6" />
+          <div className="max-w-md text-center">
+            
+            
           </div>
         </div>
       </div>
