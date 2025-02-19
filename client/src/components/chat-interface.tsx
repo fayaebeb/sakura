@@ -18,6 +18,13 @@ export default function ChatInterface() {
 
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
     queryKey: ["/api/messages", sessionId],
+    queryFn: async () => {
+      const res = await fetch(`/api/messages/${sessionId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch messages");
+      return res.json();
+    },
     enabled: !!user,
   });
 
