@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertMessageSchema } from "@shared/schema";
-import { z } from "zod";
 
 const LANGFLOW_API = "https://fayaebeb-langflow.hf.space/api/v1/run/08a09a5e-de43-44f7-bbb0-0f50a0fcf7d7";
 
@@ -13,9 +12,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
+    // Validate request data
+    const result = insertMessageSchema.safeParse(req.body);
+    if (!result.success) {
+      console.error("Invalid request body:", result.error);
+      return res.status(400).json({ error: "Invalid request data" });
+    }
+
+    const body = result.data; // Parsed input data
+
     try {
-      const body = insertMessageSchema.parse(req.body);
-      
       // Store user message
       await storage.createMessage(req.user!.id, {
         ...body,
@@ -23,12 +29,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Call Langflow API
+      console.log(`Sending request to Langflow API: ${body.content}`);
       const response = await fetch(LANGFLOW_API, {
         method: "POST",
         headers: {
           "Authorization": "Bearer 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",
           "Content-Type": "application/json",
-          "x-api-key": "sk-QBuoI88mMiEVJH_nESwwmDyHlDRSr-cRN8-w6foiEhE"
+          "x-api-key": "sk-QBuoI88mMiEVJH_nESwwmDyHlDRSr-cRN8-w6foiEhE",
         },
         body: JSON.stringify({
           input_value: body.content,
@@ -36,39 +43,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
           input_type: "chat",
           tweaks: {
             "TextInput-nLYCj": {
-              "input_value": body.sessionId
-            }
-          }
-        })
+              "input_value": body.sessionId,
+            },
+          },
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("Langflow API Error:", errorText);
+        throw new Error(`Langflow API responded with status ${response.status}`);
       }
 
-      const botResponse = await response.json();
-      
+      const aiResponse = await response.json();
+      console.log("Langflow API Response:", JSON.stringify(aiResponse, null, 2));
+
+      // ✅ **Improved AI Response Handling**
+      let aiOutputText = null;
+
+      if (aiResponse.outputs && Array.isArray(aiResponse.outputs)) {
+        const firstOutput = aiResponse.outputs[0];
+        if (firstOutput?.outputs?.[0]?.results?.message?.data?.text) {
+          aiOutputText = firstOutput.outputs[0].results.message.data.text;
+        } else if (firstOutput?.outputs?.[0]?.messages?.[0]?.message) {
+          aiOutputText = firstOutput.outputs[0].messages[0].message;
+        }
+      }
+
+      if (!aiOutputText) {
+        console.error("Unexpected AI Response Format:", JSON.stringify(aiResponse, null, 2));
+        throw new Error("Could not extract message from AI response");
+      }
+
       // Store bot message
       const botMessage = await storage.createMessage(req.user!.id, {
-        content: botResponse.text || "Sorry, I couldn't process that.",
+        content: aiOutputText,
         isBot: true,
         sessionId: body.sessionId,
       });
 
       res.json(botMessage);
     } catch (error) {
-      res.status(400).json({ error: (error as Error).message });
+      console.error("Error in chat processing:", error);
+      res.status(500).json({
+        message: "Failed to process message",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
   app.get("/api/messages/:sessionId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const messages = await storage.getMessagesByUserAndSession(
-      req.user!.id,
-      req.params.sessionId
-    );
-    res.json(messages);
+
+    try {
+      const messages = await storage.getMessagesByUserAndSession(
+        req.user!.id,
+        req.params.sessionId
+      );
+      res.json(messages);
+    } catch (error) {
+      console.error("Error retrieving messages:", error);
+      res.status(500).json({
+        message: "Failed to retrieve messages",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   });
 
   const httpServer = createServer(app);

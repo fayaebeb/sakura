@@ -9,13 +9,16 @@ import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ChatMessage from "./chat-message";
 import { ScrollArea } from "./ui/scroll-area";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ChatInterface() {
   const [input, setInput] = useState("");
   const [sessionId] = useState(() => nanoid());
+  const { user } = useAuth();
 
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
     queryKey: ["/api/messages", sessionId],
+    enabled: !!user,
   });
 
   const sendMessage = useMutation({
