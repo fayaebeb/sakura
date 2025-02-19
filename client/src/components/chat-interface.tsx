@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,21 @@ import ChatMessage from "./chat-message";
 import { ScrollArea } from "./ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 
+const CHAT_SESSION_KEY = "chat_session_id";
+
 export default function ChatInterface() {
   const [input, setInput] = useState("");
-  const [sessionId] = useState(() => nanoid());
+  const [sessionId, setSessionId] = useState<string>(() => {
+    // Try to get existing sessionId from localStorage
+    const savedSessionId = localStorage.getItem(CHAT_SESSION_KEY);
+    if (savedSessionId) return savedSessionId;
+
+    // Generate new sessionId if none exists
+    const newSessionId = nanoid();
+    localStorage.setItem(CHAT_SESSION_KEY, newSessionId);
+    return newSessionId;
+  });
+
   const { user } = useAuth();
 
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
