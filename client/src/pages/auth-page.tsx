@@ -17,7 +17,6 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 
-
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
@@ -50,17 +49,15 @@ export default function AuthPage() {
       <div className="min-h-screen flex flex-col md:grid md:grid-cols-2">
         {/* Bot Logo in Mobile View */}
         <div className="flex flex-col items-center justify-center p-8 md:hidden bg-[#f8eee2]">
-          <img src="/images/slogo.png" alt="桜AI Logo" className="w-24 mb-4" />
-          
-          
+          <img src="/images/slogo.png" alt="桜AI ロゴ" className="w-24 mb-4" />
         </div>
 
         {/* Authentication Card */}
         <div className="flex flex-col items-center justify-center p-8 bg-[#f7e6d5]">
-          <img src="/images/pclogo.png" alt="Company Logo" className="w-32 mb-6" />
+          <img src="/images/pclogo.png" alt="会社ロゴ" className="w-32 mb-6" />
           <Card className="w-full max-w-md p-8 bg-[#fcf8f3]">
             <h1 className="text-3xl font-bold mb-8">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {isLogin ? "お帰りなさい" : "アカウントを作成"}
             </h1>
             <Form {...form}>
               <form onSubmit={onSubmit} className="space-y-4">
@@ -69,7 +66,7 @@ export default function AuthPage() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>メールアドレス</FormLabel>
                       <FormControl>
                         <Input type="email" {...field} />
                       </FormControl>
@@ -82,7 +79,7 @@ export default function AuthPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>パスワード</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -98,9 +95,9 @@ export default function AuthPage() {
                   {loginMutation.isPending || registerMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isLogin ? (
-                    "Sign In"
+                    "ログイン"
                   ) : (
-                    "Create Account"
+                    "アカウントを作成"
                   )}
                 </Button>
               </form>
@@ -111,7 +108,7 @@ export default function AuthPage() {
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm "
               >
-                {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
+                {isLogin ? "アカウントが必要ですか？ サインアップ" : "すでにアカウントをお持ちですか？ ログイン"}
               </Button>
             </div>
           </Card>
@@ -119,10 +116,8 @@ export default function AuthPage() {
 
         {/* Branding Section (Hidden in Mobile) */}
         <div className="hidden md:flex flex-col justify-center items-center p-8 bg-[#f8eee2] text-primary-foreground">
-          <img src="/images/slogo.png" alt="桜AI Logo" className="w-40 mb-6" />
+          <img src="/images/slogo.png" alt="桜AI ロゴ" className="w-40 mb-6" />
           <div className="max-w-md text-center">
-            
-            
           </div>
         </div>
       </div>

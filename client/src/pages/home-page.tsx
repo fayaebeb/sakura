@@ -10,28 +10,28 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f7e6d5]">
-      {/* Header Section */}
+      {/* ヘッダーセクション */}
       <header className="border-b bg-[#f8eee2] shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          {/* Company Logo */}
+          {/* 会社ロゴ */}
           <div className="flex items-center gap-3">
             <img
               src="/images/pclogo.png"
-              alt="Company Logo"
+              alt="会社ロゴ"
               className="h-10"
             />
           </div>
 
-          {/* 桜AI Branding */}
+          {/* 桜AI ブランドロゴ */}
           <div className="flex items-center">
             <img
               src="/images/slogo.png"
-              alt="桜AI Logo"
+              alt="桜AI ロゴ"
               className="h-24 w-auto"
             />
           </div>
 
-          {/* User Info & Logout */}
+          {/* ユーザー情報 & ログアウト */}
           <div className="flex items-center gap-5">
             <span className="text-sm font-bold text-gray-700">{displayName}</span>
             <Button
@@ -40,13 +40,13 @@ export default function HomePage() {
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
             >
-              Logout
+              ログアウト
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Chat Interface Section */}
+      {/* チャットインターフェースセクション */}
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-4 max-w-3xl mx-auto">
           <ChatInterface />
