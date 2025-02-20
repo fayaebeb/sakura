@@ -1,6 +1,6 @@
-import { users, messages, type User, type InsertUser, type Message, type InsertMessage } from "@shared/schema";
+import { users, messages, sessions, type User, type InsertUser, type Message, type InsertMessage, type Session } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -13,6 +13,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getMessagesByUserAndSession(userId: number, sessionId: string): Promise<Message[]>;
   createMessage(userId: number, message: InsertMessage): Promise<Message>;
+  getUserLastSession(userId: number): Promise<Session | undefined>;
+  createUserSession(userId: number, sessionId: string): Promise<Session>;
   sessionStore: session.Store;
 }
 
@@ -63,6 +65,27 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return newMessage;
+  }
+
+  async getUserLastSession(userId: number): Promise<Session | undefined> {
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.userId, userId))
+      .orderBy(desc(sessions.createdAt))
+      .limit(1);
+    return session;
+  }
+
+  async createUserSession(userId: number, sessionId: string): Promise<Session> {
+    const [session] = await db
+      .insert(sessions)
+      .values({
+        userId,
+        sessionId,
+      })
+      .returning();
+    return session;
   }
 }
 
