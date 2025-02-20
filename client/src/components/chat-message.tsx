@@ -17,7 +17,7 @@ export default function ChatMessage({ message }: { message: Message }) {
             "bg-muted": !message.isBot,
           })}
         >
-          {message.isBot ? "AI" : "You"}
+          {message.isBot ? "AI" : "あなた"}
         </div>
       </Avatar>
 

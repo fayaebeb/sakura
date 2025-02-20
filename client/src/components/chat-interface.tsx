@@ -55,7 +55,7 @@ export default function ChatInterface() {
       const res = await fetch(`/api/messages/${sessionId}`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch messages");
+      if (!res.ok) throw new Error("メッセージの取得に失敗しました");
       return res.json();
     },
     enabled: !!user && !!sessionId,
@@ -111,7 +111,7 @@ export default function ChatInterface() {
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
+          placeholder="メッセージを入力してください..."
           className="flex-1"
         />
         <Button type="submit" disabled={sendMessage.isPending}>
