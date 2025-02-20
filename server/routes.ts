@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           input_type: "chat",
           tweaks: {
             "TextInput-5f8Sb": {
-              "input_value": body.sessionId,
+              "input_value": persistentSessionId,
             },
           },
         }),
