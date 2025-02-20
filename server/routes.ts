@@ -12,6 +12,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
+    // Extract persistent sessionId from user's email
+    const persistentSessionId = req.user!.username.split('@')[0];
+
     // Validate request data
     const result = insertMessageSchema.safeParse(req.body);
     if (!result.success) {
@@ -19,13 +22,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "Invalid request data" });
     }
 
-    const body = result.data; // Parsed input data
+    const body = result.data;
 
     try {
-      // Store user message
+      // Store user message with persistent sessionId
       await storage.createMessage(req.user!.id, {
         ...body,
         isBot: false,
+        sessionId: persistentSessionId,
       });
 
       // Call Langflow API
@@ -58,7 +62,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const aiResponse = await response.json();
       console.log("Langflow API Response:", JSON.stringify(aiResponse, null, 2));
 
-      // ✅ **Improved AI Response Handling**
       let aiOutputText = null;
 
       if (aiResponse.outputs && Array.isArray(aiResponse.outputs)) {
@@ -75,11 +78,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error("Could not extract message from AI response");
       }
 
-      // Store bot message
+      // Store bot message with persistent sessionId
       const botMessage = await storage.createMessage(req.user!.id, {
         content: aiOutputText,
         isBot: true,
-        sessionId: body.sessionId,
+        sessionId: persistentSessionId,
       });
 
       res.json(botMessage);
@@ -96,9 +99,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
+      // Use the persistent sessionId from user's email
+      const persistentSessionId = req.user!.username.split('@')[0];
       const messages = await storage.getMessagesByUserAndSession(
         req.user!.id,
-        req.params.sessionId
+        persistentSessionId
       );
       res.json(messages);
     } catch (error) {
