@@ -12,39 +12,32 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-[#f7e6d5]">
       {/* ヘッダーセクション */}
       <header className="border-b bg-[#f8eee2] shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          {/* 会社ロゴ */}
-          <div className="flex items-center gap-3">
-            <img
-              src="/images/pclogo.png"
-              alt="会社ロゴ"
-              className="h-10"
-            />
-          </div>
+  <div className="container mx-auto px-4 py-2 flex justify-between items-center">
+    {/* Company Logo (Smaller on Mobile) */}
+    <div className="flex items-center">
+      <img src="/images/pclogo.png" alt="Company Logo" className="h-5 sm:h-10" />
+    </div>
 
-          {/* 桜AI ブランドロゴ */}
-          <div className="flex items-center">
-            <img
-              src="/images/slogo.png"
-              alt="桜AI ロゴ"
-              className="h-24 w-auto"
-            />
-          </div>
+    {/* AI Brand Logo (Same for All Screens) */}
+    <div className="flex items-center">
+      <img src="/images/slogo.png" alt="桜AI ロゴ" className="h-16 sm:h-24 w-auto" />
+    </div>
 
-          {/* ユーザー情報 & ログアウト */}
-          <div className="flex items-center gap-5">
-            <span className="text-sm font-bold text-gray-700">{displayName}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-            >
-              ログアウト
-            </Button>
-          </div>
-        </div>
-      </header>
+    {/* User Info & Logout (Username Hidden on Mobile) */}
+    <div className="flex items-center gap-3">
+      <span className="hidden sm:inline text-sm font-bold text-gray-700">{displayName}</span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => logoutMutation.mutate()}
+        disabled={logoutMutation.isPending}
+      >
+        ログアウト
+      </Button>
+    </div>
+  </div>
+</header>
+
 
       {/* チャットインターフェースセクション */}
       <main className="flex-1 container mx-auto px-4 py-8">
