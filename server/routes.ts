@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertMessageSchema } from "@shared/schema";
 
-const LANGFLOW_API = "https://sakurabotpckk-langflowsakura.hf.space/api/v1/run/ea69718c-2ffe-4eeb-917b-89850ed11bb8";
+const LANGFLOW_API = "https://sakurabotpckk-lfhfsk.hf.space/api/v1/run/f0709605-d904-40ee-ae88-a59dfbab06d0";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -39,14 +39,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers: {
           "Authorization": "Bearer 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",
           "Content-Type": "application/json",
-          "x-api-key": "sk-8VZ0gMpAWDCihjjLMB8KCeQREgqe1GX2bjoaNYWGs6Q",
+          "x-api-key": "sk-ge6Kg14NQxI4YQMQt7In5DRMLo_VB2C2brUAQPyE3p8",
         },
         body: JSON.stringify({
           input_value: body.content,
           output_type: "chat",
           input_type: "chat",
           tweaks: {
-            "TextInput-5f8Sb": {
+            "TextInput-0PsOz": {
               "input_value": persistentSessionId,
             },
           },
