@@ -3,37 +3,44 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send } from "lucide-react";
+import { Send, Check } from "lucide-react";
 import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ChatMessage from "./chat-message";
 import { ScrollArea } from "./ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
+
+const LoadingDots = () => {
+  return (
+    <div className="flex items-center gap-1 text-primary">
+      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+    </div>
+  );
+};
 
 export default function ChatInterface() {
   const [input, setInput] = useState("");
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const [sessionId, setSessionId] = useState<string>(() => {
     if (!user) return "";
 
-    // Create a user-specific storage key
     const storageKey = `${CHAT_SESSION_KEY_PREFIX}${user.id}`;
-
-    // Try to get existing sessionId from localStorage for this user
     const savedSessionId = localStorage.getItem(storageKey);
     if (savedSessionId) return savedSessionId;
 
-    // Generate new sessionId if none exists for this user
     const newSessionId = nanoid();
     localStorage.setItem(storageKey, newSessionId);
     return newSessionId;
   });
 
-  // Update sessionId when user changes
   useEffect(() => {
     if (!user) return;
 
@@ -55,7 +62,7 @@ export default function ChatInterface() {
       const res = await fetch(`/api/messages/${sessionId}`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("メッセージの取得に失敗しました");
+      if (!res.ok) throw new Error("メッセージを取ってこられなかったよ...ごめんね！");
       return res.json();
     },
     enabled: !!user && !!sessionId,
@@ -72,6 +79,11 @@ export default function ChatInterface() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages", sessionId] });
+      toast({
+        title: "メッセージ送信したよ！",
+        description: <div className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> メッセージ届いたよ！ありがとう♡</div>,
+        duration: 2000,
+      });
     },
   });
 
@@ -86,8 +98,9 @@ export default function ChatInterface() {
 
   if (isLoadingMessages) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center h-full gap-3">
+        <LoadingDots />
+        <p className="text-sm text-muted-foreground animate-pulse">チャット履歴をお届け中...ちょっと待っててね！</p>
       </div>
     );
   }
@@ -100,8 +113,9 @@ export default function ChatInterface() {
             <ChatMessage key={message.id} message={message} />
           ))}
           {sendMessage.isPending && (
-            <div className="flex justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex flex-col items-center gap-2 p-4">
+              <LoadingDots />
+              <p className="text-sm text-muted-foreground">桜AIが一生懸命考えてるよ...！</p>
             </div>
           )}
         </div>
@@ -111,10 +125,14 @@ export default function ChatInterface() {
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="メッセージを入力してください..."
+          placeholder="メッセージを書いてね！"
           className="flex-1"
         />
-        <Button type="submit" disabled={sendMessage.isPending}>
+        <Button 
+          type="submit" 
+          disabled={sendMessage.isPending}
+          className="relative"
+        >
           <Send className="h-4 w-4" />
         </Button>
       </form>
