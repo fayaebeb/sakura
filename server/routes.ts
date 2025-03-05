@@ -6,16 +6,29 @@ import { insertMessageSchema } from "@shared/schema";
 
 const LANGFLOW_API = "https://sakurabotpckk-lfhfsk.hf.space/api/v1/run/f0709605-d904-40ee-ae88-a59dfbab06d0";
 
+// Helper function to format the bot's response
+function formatBotResponse(text: string): string {
+  return text
+    // Ensure proper spacing for Markdown formatting
+    .replace(/(###\s?)/g, "\n\n$1") // Add spacing before headings
+    .replace(/(。)(?![\n])/g, "。\n") // Line break after sentences
+    .replace(/(！|？)(?![\n])/g, "$1\n") // Line break after punctuation
+    .replace(/\|\s+\|/g, "|") // Remove extra spaces in table pipes
+    .replace(/\n\|/g, "\n") // Remove unnecessary leading pipes in new lines
+    .replace(/\|\n/g, "\n") // Remove unnecessary trailing pipes in new lines
+    .replace(/\n{3,}/g, "\n\n") // Clean up excessive newlines
+    .trim();
+}
+
+
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   app.post("/api/chat", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    // Extract persistent sessionId from user's email
-    const persistentSessionId = req.user!.username.split('@')[0];
+    const persistentSessionId = req.user!.username.split("@")[0];
 
-    // Validate request data
     const result = insertMessageSchema.safeParse(req.body);
     if (!result.success) {
       console.error("Invalid request body:", result.error);
@@ -25,19 +38,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const body = result.data;
 
     try {
-      // Store user message with persistent sessionId
       await storage.createMessage(req.user!.id, {
         ...body,
         isBot: false,
         sessionId: persistentSessionId,
       });
 
-      // Call Langflow API
       console.log(`Sending request to Langflow API: ${body.content}`);
       const response = await fetch(LANGFLOW_API, {
         method: "POST",
         headers: {
-          "Authorization": "Bearer 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",
+          Authorization: "Bearer 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",
           "Content-Type": "application/json",
           "x-api-key": "sk-ge6Kg14NQxI4YQMQt7In5DRMLo_VB2C2brUAQPyE3p8",
         },
@@ -47,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           input_type: "chat",
           tweaks: {
             "TextInput-0PsOz": {
-              "input_value": persistentSessionId,
+              input_value: persistentSessionId,
             },
           },
         }),
@@ -56,11 +67,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Langflow API Error:", errorText);
-        throw new Error(`Langflow API responded with status ${response.status}`);
+        throw new Error(
+          `Langflow API responded with status ${response.status}`,
+        );
       }
 
       const aiResponse = await response.json();
-      console.log("Langflow API Response:", JSON.stringify(aiResponse, null, 2));
+      console.log(
+        "Langflow API Response:",
+        JSON.stringify(aiResponse, null, 2),
+      );
 
       let aiOutputText = null;
 
@@ -74,13 +90,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!aiOutputText) {
-        console.error("Unexpected AI Response Format:", JSON.stringify(aiResponse, null, 2));
+        console.error(
+          "Unexpected AI Response Format:",
+          JSON.stringify(aiResponse, null, 2),
+        );
         throw new Error("Could not extract message from AI response");
       }
 
-      // Store bot message with persistent sessionId
+      // Format the bot's response before storing it
+      const formattedResponse = formatBotResponse(aiOutputText);
+
       const botMessage = await storage.createMessage(req.user!.id, {
-        content: aiOutputText,
+        content: formattedResponse,
         isBot: true,
         sessionId: persistentSessionId,
       });
