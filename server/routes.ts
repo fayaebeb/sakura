@@ -7,17 +7,9 @@ import { insertMessageSchema } from "@shared/schema";
 const LANGFLOW_API = "https://fayaebeb-langflow.hf.space/api/v1/run/0a642fb5-bada-425f-a615-703640dac242";
 
 // Helper function to format the bot's response
+// Updated, minimal formatting function
 function formatBotResponse(text: string): string {
-  return text
-    // Ensure proper spacing for Markdown formatting
-    .replace(/(###\s?)/g, "\n\n$1") // Add spacing before headings
-    .replace(/(。)(?![\n])/g, "。\n") // Line break after sentences
-    .replace(/(！|？)(?![\n])/g, "$1\n") // Line break after punctuation
-    .replace(/\|\s+\|/g, "|") // Remove extra spaces in table pipes
-    .replace(/\n\|/g, "\n") // Remove unnecessary leading pipes in new lines
-    .replace(/\|\n/g, "\n") // Remove unnecessary trailing pipes in new lines
-    .replace(/\n{3,}/g, "\n\n") // Clean up excessive newlines
-    .trim();
+  return text.replace(/\\n/g, '\n').trim();
 }
 
 
