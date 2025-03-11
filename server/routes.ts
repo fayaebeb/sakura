@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertMessageSchema } from "@shared/schema";
 
-const LANGFLOW_API = "https://sakurabotpckk-lfhfsk.hf.space/api/v1/run/f0709605-d904-40ee-ae88-a59dfbab06d0";
+const LANGFLOW_API = "https://fayaebeb-langflow.hf.space/api/v1/run/0a642fb5-bada-425f-a615-703640dac242";
 
 // Helper function to format the bot's response
 function formatBotResponse(text: string): string {
@@ -48,16 +48,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await fetch(LANGFLOW_API, {
         method: "POST",
         headers: {
-          Authorization: "Bearer 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",
-          "Content-Type": "application/json",
-          "x-api-key": "sk-ge6Kg14NQxI4YQMQt7In5DRMLo_VB2C2brUAQPyE3p8",
+          Authorization: "Bearer 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",
+                "Content-Type": "application/json",
+                "x-api-key": "sk-k8wKMFfgyswK_0aEJgDbFdCF8vqDCTQRIGRCNpRLymw",
         },
         body: JSON.stringify({
           input_value: body.content,
           output_type: "chat",
           input_type: "chat",
           tweaks: {
-            "TextInput-0PsOz": {
+            "TextInput-xKG6l": {
               input_value: persistentSessionId,
             },
           },
