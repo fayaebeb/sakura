@@ -144,8 +144,11 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
 
 // Buttons that appear when hovering over the input field
 const EmotionButtons = ({ onSelect }: { onSelect: (emoji: string) => void }) => {
-  const emotions = ["「外部情報なし」🚫", "❤️","😊","🎉", "✨", "🌸"];
-  
+  const emotions = [
+    <span key="no-info" className="emoji-text">「外部情報なし」 🚫</span>,
+    "❤️", "😊", "🎉", "✨", "🌸"
+  ];
+
   return (
     <motion.div 
       className="absolute -top-10 left-0 flex flex-wrap gap-1 sm:gap-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full border shadow-sm max-w-[calc(100%-20px)] z-10"
@@ -158,8 +161,8 @@ const EmotionButtons = ({ onSelect }: { onSelect: (emoji: string) => void }) => 
         <motion.button
           key={index}
           type="button"
-          onClick={() => onSelect(emoji)}
-          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-pink-50 transition-colors text-sm sm:text-base"
+          onClick={() => onSelect(typeof emoji === "string" ? emoji : "「外部情報なし」 🚫")}
+          className="w-auto px-2 h-7 sm:h-8 flex items-center justify-center rounded-full hover:bg-pink-50 transition-colors text-sm sm:text-base"
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.9 }}
           initial={{ scale: 0.9, opacity: 0 }}
@@ -172,6 +175,7 @@ const EmotionButtons = ({ onSelect }: { onSelect: (emoji: string) => void }) => 
     </motion.div>
   );
 };
+
 
 export default function ChatInterface() {
   const [input, setInput] = useState("");
