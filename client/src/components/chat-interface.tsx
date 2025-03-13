@@ -143,25 +143,47 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
 };
 
 // Buttons that appear when hovering over the input field
-const EmotionButtons = ({ onSelect }: { onSelect: (emoji: string) => void }) => {
+const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => void; onClose: () => void }) => {
   const emotions = [
     "「外部情報なし」🚫", "「最高の結果を出す指示は？」🎯", "「AさんとBさんの会話形式で。」💬","❤️", "😊", "🎉", "✨", "🌸", "😂", "🥰", "👍", "🔥", "🎂", "💖", "😎", "👏", "🌿", "💡", "🚀"
   ];
 
+  // Close picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!(event.target as HTMLElement).closest(".emoji-picker")) {
+        onClose(); // Close the emoji picker
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
   return (
     <motion.div 
       className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-2 py-2 rounded-xl border shadow-sm z-10 
-                 flex flex-wrap gap-2 max-w-full max-h-40 overflow-y-auto"
+                 flex flex-wrap gap-2 max-w-full max-h-40 overflow-y-auto emoji-picker"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
     >
+      {/* Close Button (optional) */}
+      <button 
+        className="absolute top-1 right-2 text-gray-500 hover:text-red-500"
+        onClick={onClose}
+      >
+        ✖
+      </button>
+
       {emotions.map((emoji, index) => (
         <motion.button
           key={index}
           type="button"
-          onClick={() => onSelect(emoji)}
+          onClick={() => {
+            onSelect(emoji);
+            onClose(); // Close after selecting an emoji
+          }}
           className="px-3 py-2 sm:px-4 sm:py-2 text-base sm:text-lg flex items-center justify-center rounded-full 
                      hover:bg-pink-50 transition-colors"
           whileHover={{ scale: 1.1 }}
@@ -173,6 +195,7 @@ const EmotionButtons = ({ onSelect }: { onSelect: (emoji: string) => void }) => 
     </motion.div>
   );
 };
+
 
 
 
@@ -431,56 +454,57 @@ export default function ChatInterface() {
       </ScrollArea>
 
       <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t flex flex-col gap-2 relative">
-        {/* Emoji Picker Positioned Above Input */}
-        <AnimatePresence>
-          {showEmotions && (
-            <div className="absolute bottom-full left-0 w-full flex justify-center">
-              <EmotionButtons onSelect={handleEmotionSelect} />
-            </div>
-          )}
-        </AnimatePresence>
+  {/* Emoji Picker Positioned Above Input */}
+  <AnimatePresence>
+    {showEmotions && (
+      <div className="absolute bottom-full left-0 w-full flex justify-center">
+        <EmotionButtons onSelect={handleEmotionSelect} onClose={() => setShowEmotions(false)} />
+      </div>
+    )}
+  </AnimatePresence>
 
-        <div className="flex gap-2">
-          {/* Input Field */}
-          <div className="relative flex-1 min-w-0">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="メッセージを書いてね！"
-              className="pr-10 focus:ring-2 focus:ring-pink-100 text-sm sm:text-base"
-            />
-            <motion.button
-              type="button"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
-              whileHover={{ scale: 1.2, rotate: 10 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowEmotions((prev) => !prev)} // ✅ Only show when emoji button is clicked
-            >
-              <Star className="h-4 w-4" />
-            </motion.button>
-          </div>
+  <div className="flex gap-2">
+    {/* Input Field */}
+    <div className="relative flex-1 min-w-0">
+      <Input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="メッセージを書いてね！"
+        className="pr-10 focus:ring-2 focus:ring-pink-100 text-sm sm:text-base"
+      />
+      <motion.button
+        type="button"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+        whileHover={{ scale: 1.2, rotate: 10 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setShowEmotions(prev => !prev)} // Toggle emoji picker
+      >
+        <Star className="h-4 w-4" />
+      </motion.button>
+    </div>
 
-          {/* Send Button */}
-          <motion.button
-            type="submit"
-            disabled={sendMessage.isPending}
-            className="px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Send className="h-4 w-4" />
-            <span className="text-xs hidden sm:inline">送信</span>
-            {/* Send button decorations */}
-          <motion.span
+    {/* Send Button */}
+    <motion.button
+      type="submit"
+      disabled={sendMessage.isPending}
+      className="px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <Send className="h-4 w-4" />
+      <span className="text-xs hidden sm:inline">送信</span>
+      {/* Send button decorations */}
+      <motion.span
             className="absolute -top-1 -right-1 text-xs"
             animate={{ rotate: 360, scale: [1, 1.2, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
           >
             ✨
           </motion.span>
-          </motion.button>
-        </div>
-      </form>
+    </motion.button>
+  </div>
+</form>
+
 
       
       <FloatingMascot />
