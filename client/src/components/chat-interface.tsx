@@ -144,7 +144,7 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
 
 // Buttons that appear when hovering over the input field
 const EmotionButtons = ({ onSelect }: { onSelect: (emoji: string) => void }) => {
-  const emotions = ["❤️", "😊", "👋", "🎉", "✨", "🌸"];
+  const emotions = ["「外部情報なし」🚫", "❤️","😊","🎉", "✨", "🌸"];
   
   return (
     <motion.div 
