@@ -352,7 +352,7 @@ export default function AuthPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
             >
-              可愛いAIアシスタントがあなたをお待ちしています
+              いつでも気軽に話しかけられます。
             </motion.p>
           </motion.div>
         </motion.div>

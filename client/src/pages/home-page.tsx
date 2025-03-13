@@ -177,7 +177,7 @@ export default function HomePage() {
                     animate={{ scale: [1, 1.05, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    {displayName}-さん
+                    {displayName}さん
                   </motion.span>
                   <Star className="h-3 w-3 text-pink-400" />
                 </motion.div>
@@ -216,7 +216,7 @@ export default function HomePage() {
           animate={{ y: [0, -2, 0] }}
           transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
         >
-          {displayName && `${displayName}-さん、`}{currentGreeting}
+          {displayName && `${displayName}さん、`}{currentGreeting}
         </motion.h2>
       </motion.div>
 
@@ -246,7 +246,7 @@ export default function HomePage() {
             animate={{ opacity: [0.6, 1, 0.6] }}
             transition={{ duration: 3, repeat: Infinity }}
           >
-            🌸 桜AI - あなたの心に寄り添う会話パートナー 🌸
+            🌸 桜AI – あなたの業務を支えるスマートアシスタント 🌸
           </motion.p>
         </div>
       </footer>
