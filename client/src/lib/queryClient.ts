@@ -12,11 +12,30 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  console.log(`API Request: ${method} ${url}`, data ? { data } : '');
+  
+  // Enhanced fetch configuration 
+  const fetchConfig: RequestInit = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      "Accept": "application/json"
+    },
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include", 
+    cache: "no-cache",
+    mode: "cors",
+    redirect: "follow"
+  };
+  
+  console.log("Fetch config:", { ...fetchConfig, body: data ? "DATA" : undefined });
+  const res = await fetch(url, fetchConfig);
+  
+  // Log cookie headers
+  console.log(`API Response: ${res.status}`, {
+    hasCookieHeader: res.headers.has('set-cookie'),
+    ok: res.ok,
+    contentType: res.headers.get('content-type')
   });
 
   await throwIfResNotOk(res);
@@ -29,11 +48,31 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    console.log(`Query request: ${queryKey[0]}`);
+    
+    // Use the same enhanced fetch config as apiRequest
+    const fetchConfig: RequestInit = {
+      method: 'GET',
+      headers: {
+        "Accept": "application/json"
+      },
       credentials: "include",
-    });
+      cache: "no-cache",
+      mode: "cors",
+      redirect: "follow"
+    };
+    
+    console.log("Query fetch config:", fetchConfig);
+    const res = await fetch(queryKey[0] as string, fetchConfig);
 
+    console.log(`Query response status: ${res.status}`, {
+      hasCookieHeader: res.headers.has('set-cookie'),
+      ok: res.ok,
+      contentType: res.headers.get('content-type')
+    });
+    
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      console.log("401 Unauthorized - returning null as configured");
       return null;
     }
 
@@ -46,9 +85,9 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      refetchOnWindowFocus: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
     },
     mutations: {
       retry: false,

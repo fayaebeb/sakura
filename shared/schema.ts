@@ -25,7 +25,7 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   isBot: boolean("is_bot").notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
-  sessionId: text("session_id").notNull().references(() => sessions.id),
+  sessionId: text("session_id").notNull().references(() => sessions.sessionId),
 });
 
 // Add password validation to the insert schema
