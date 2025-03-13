@@ -30,6 +30,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const body = result.data;
 
     try {
+      // Check if the session exists, if not, create it
+      const existingSession = await storage.getUserLastSession(req.user!.id);
+      if (!existingSession || existingSession.sessionId !== persistentSessionId) {
+        console.log(`Creating new session for user ${req.user!.id} with sessionId ${persistentSessionId}`);
+        await storage.createUserSession(req.user!.id, persistentSessionId);
+      }
+
       await storage.createMessage(req.user!.id, {
         ...body,
         isBot: false,
@@ -114,6 +121,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Use the persistent sessionId from user's email
       const persistentSessionId = req.user!.username.split('@')[0];
+      
+      // Check if the session exists, if not, create it
+      const existingSession = await storage.getUserLastSession(req.user!.id);
+      if (!existingSession || existingSession.sessionId !== persistentSessionId) {
+        console.log(`Creating new session for user ${req.user!.id} with sessionId ${persistentSessionId}`);
+        await storage.createUserSession(req.user!.id, persistentSessionId);
+      }
+      
       const messages = await storage.getMessagesByUserAndSession(
         req.user!.id,
         persistentSessionId

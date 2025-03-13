@@ -16,11 +16,11 @@ const botDecorations = [
 const addRandomDecoration = (original: string) => {
   // Only add decorations ~30% of the time to avoid being too noisy
   if (Math.random() > 0.3) return original;
-  
+
   const decoration = botDecorations[Math.floor(Math.random() * botDecorations.length)];
   // Add decoration at start, end, or both
   const position = Math.floor(Math.random() * 3);
-  
+
   if (position === 0) return `${decoration} ${original}`;
   if (position === 1) return `${original} ${decoration}`;
   return `${decoration} ${original} ${decoration}`;
@@ -49,13 +49,55 @@ export default function ChatMessage({ message }: { message: Message }) {
   };
 
   return (
-    <div 
-      className={cn("flex w-full my-4", { 
-        "justify-end": !message.isBot,  // User messages align to the right
-        "justify-start": message.isBot  // Bot messages align to the left
+    <div
+      className={cn("flex w-full my-4 relative", { 
+        "justify-end": !message.isBot,  // User messages align right
+        "justify-start": message.isBot  // Bot messages align left
       })}
     >
-      {/* Bot Avatar (User avatar is removed for cleaner UI) */}
+      {/* Floating emoji reaction on hover (Only for bot messages) */}
+      {showEmoji && message.isBot && (
+        <motion.div
+          className="absolute text-base sm:text-lg z-10"
+          style={{
+            left: message.isBot ? "2rem" : "auto",
+            right: message.isBot ? "auto" : "2rem",
+            top: "0",
+          }}
+          initial={{ x: 0, y: 0, opacity: 0, scale: 0.5 }}
+          animate={{
+            x: emojiPosition.x,
+            y: emojiPosition.y,
+            opacity: [0, 1, 0],
+            scale: [0.5, 1.2, 0.8],
+            rotate: [-5, 5, -5],
+          }}
+          transition={{ duration: 1, ease: "easeOut" }}
+        >
+          {Math.random() > 0.5 ? "💕" : "✨"}
+        </motion.div>
+      )}
+
+      {/* Decorative elements for bot messages */}
+      {message.isBot && decoration && (
+        <motion.div 
+          className="absolute -top-2 sm:-top-3 -left-1 text-xs sm:text-sm"
+          animate={{ 
+            y: [0, -3, 0],
+            rotate: [0, 10, 0, -10, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{ 
+            duration: 3,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        >
+          {decoration}
+        </motion.div>
+      )}
+
+      {/* Bot Avatar (User avatar removed for a cleaner UI) */}
       {message.isBot && (
         <Avatar className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 border border-pink-300 shadow-md">
           <motion.div
@@ -79,8 +121,8 @@ export default function ChatMessage({ message }: { message: Message }) {
         whileHover={message.isBot ? { scale: 1.02 } : { scale: 1 }}
         onHoverStart={handleBotMessageHover}
         className={cn("max-w-[85%] sm:max-w-[75%] rounded-xl", {
-          "ml-auto self-end": !message.isBot,  // User messages to the right
-          "mr-auto self-start": message.isBot  // Bot messages to the left
+          "ml-auto self-end": !message.isBot,  // User messages align right
+          "mr-auto self-start": message.isBot,  // Bot messages align left
         })}
       >
         <Card
