@@ -145,7 +145,7 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
 // Buttons that appear when hovering over the input field
 const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => void; onClose: () => void }) => {
   const emotions = [
-    "「外部情報なし」🚫", "「最高の結果を出す指示は？」🎯", "「AさんとBさんの会話形式で。」💬","❤️", "😊", "🎉", "✨", "🌸", "😂", "🥰", "👍", "🔥", "🎂", "💖", "😎", "👏", "🌿", "💡", "🚀"
+    "「外部情報なし」🚫", "＋指示のコツ🎯", "会話形式で💬","❤️", "😊", "🎉", "✨", "🌸"
   ];
 
   // Close picker when clicking outside
