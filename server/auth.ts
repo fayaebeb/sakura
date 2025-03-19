@@ -127,23 +127,38 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: Error | null, user: Express.User | false | null, info: { message: string } | undefined) => {
+    passport.authenticate("local", async (err: Error | null, user: Express.User | false | null, info: { message: string } | undefined) => {
       if (err) {
         console.error("Auth - Login error:", err);
-        return next(err);
+        return res.status(500).json({ 
+          error: "ログイン処理中にエラーが発生しました。" 
+        });
       }
-      
+
       if (!user) {
-        console.log("Auth - Login failed: Invalid credentials");
-        return res.status(401).send("Invalid credentials");
+        // Check if user exists to provide more specific error
+        const userExists = await storage.getUserByUsername(req.body.username);
+        if (!userExists) {
+          console.log("Auth - Login failed: User not found");
+          return res.status(401).json({
+            error: "メールアドレスが見つかりません。"
+          });
+        }
+
+        console.log("Auth - Login failed: Invalid password");
+        return res.status(401).json({
+          error: "パスワードが正しくありません。"
+        });
       }
-      
+
       req.login(user, (loginErr) => {
         if (loginErr) {
           console.error(`Auth - Session creation error for ${user.username}:`, loginErr);
-          return next(loginErr);
+          return res.status(500).json({
+            error: "セッションの作成に失敗しました。"
+          });
         }
-        
+
         console.log(`Auth - Login successful: ${user.username}`);
         res.status(200).json(user);
       });
