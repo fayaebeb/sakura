@@ -117,9 +117,7 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
               {steps.map((_, idx) => (
                 <motion.div
                   key={idx}
-                  className={`w-2 h-2 rounded-full ${
-                    idx + 1 === step ? "bg-primary" : "bg-muted"
-                  }`}
+                  className={`w-2 h-2 rounded-full ${idx + 1 === step ? "bg-primary" : "bg-muted"}`}
                   animate={idx + 1 === step ? {
                     scale: [1, 1.3, 1],
                   } : {}}
@@ -194,8 +192,7 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
 
   return (
     <motion.div
-      className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl border shadow-lg z-10 
-                 emoji-picker"
+      className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl border shadow-lg z-10 emoji-picker"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
@@ -230,9 +227,7 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
                           onSelect(prompt.text);
                           onClose();
                         }}
-                        className="px-3 py-2 text-sm bg-background hover:bg-accent rounded-full
-                                 transition-colors border border-input hover:border-accent-foreground/20
-                                 flex items-center gap-1"
+                        className="px-3 py-2 text-sm bg-background hover:bg-accent rounded-full transition-colors border border-input hover:border-accent-foreground/20 flex items-center gap-1"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -253,7 +248,6 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
   );
 };
 
-
 const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
 const TUTORIAL_SHOWN_KEY_PREFIX = "tutorial_shown_user_";
 
@@ -269,6 +263,9 @@ const ChatInterface = () => {
   const [showEmotions, setShowEmotions] = useState(false);
   const [confetti, setConfetti] = useState(false);
 
+  // Detect mobile devices
+  const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
+
   // Handle tutorial display
   useEffect(() => {
     if (!user) return;
@@ -283,11 +280,11 @@ const ChatInterface = () => {
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -295,7 +292,7 @@ const ChatInterface = () => {
     if (!user) return;
     const tutorialShownKey = `${TUTORIAL_SHOWN_KEY_PREFIX}${user.id}`;
     setShowTutorial(false);
-    localStorage.setItem(tutorialShownKey, 'true');
+    localStorage.setItem(tutorialShownKey, "true");
   };
 
   const [sessionId, setSessionId] = useState<string>(() => {
@@ -365,7 +362,7 @@ const ChatInterface = () => {
         content,
         timestamp: new Date(),
         isBot: false,
-        sessionId
+        sessionId,
       };
 
       queryClient.setQueryData<Message[]>(["/api/messages", sessionId], [
@@ -419,7 +416,7 @@ const ChatInterface = () => {
   };
 
   const handleEmotionSelect = (emoji: string) => {
-    setInput(prev => prev + " " + emoji);
+    setInput((prev) => prev + " " + emoji);
   };
 
   if (isLoadingMessages) {
@@ -446,7 +443,7 @@ const ChatInterface = () => {
                   left: `${Math.random() * 100}%`,
                   opacity: 1,
                   rotate: 0,
-                  scale: 0.5 + Math.random() * 1
+                  scale: 0.5 + Math.random() * 1,
                 }}
                 animate={{
                   top: "110%",
@@ -457,12 +454,12 @@ const ChatInterface = () => {
                 exit={{ opacity: 0 }}
                 transition={{
                   duration: 2 + Math.random() * 3,
-                  ease: "easeOut"
+                  ease: "easeOut",
                 }}
               >
-                {Math.random() > 0.3 ?
-                  "🌸" :
-                  ["✨", "💮", "🎀", "🌟", "💕"][Math.floor(Math.random() * 5)]}
+                {Math.random() > 0.3
+                  ? "🌸"
+                  : ["✨", "💮", "🎀", "🌟", "💕"][Math.floor(Math.random() * 5)]}
               </motion.div>
             ))}
           </div>
@@ -501,10 +498,7 @@ const ChatInterface = () => {
 
           {sendMessage.isPending && (
             <div className="flex justify-center pt-2 pb-4">
-              <ChatLoadingIndicator
-                variant="character"
-                message="桜AIが一生懸命考えてるよ...！"
-              />
+              <ChatLoadingIndicator variant="character" message="桜AIが一生懸命考えてるよ...！" />
             </div>
           )}
           <div ref={messageEndRef} />
@@ -529,16 +523,20 @@ const ChatInterface = () => {
               onChange={(e) => {
                 setInput(e.target.value);
                 // Auto-adjust height
-                e.target.style.height = 'auto';
+                e.target.style.height = "auto";
                 e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
               }}
               placeholder="メッセージを書いてね！"
               className="pr-10 focus:ring-2 focus:ring-pink-100 text-sm sm:text-base min-h-[40px] max-h-[200px] resize-none"
               rows={1}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
+                if (e.key === "Enter" && !e.shiftKey) {
+                  // On non-mobile devices, send message on Enter.
+                  if (!isMobile) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                  // On mobile, allow Enter to insert a newline.
                 }
               }}
             />
@@ -547,11 +545,10 @@ const ChatInterface = () => {
                 <TooltipTrigger asChild>
                   <motion.button
                     type="button"
-                    className="absolute right-2 top-2 text-muted-foreground hover:text-primary transition-colors
-                             flex items-center gap-1 px-1.5 py-1 rounded-md hover:bg-accent/50"
+                    className="absolute right-2 top-2 text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 px-1.5 py-1 rounded-md hover:bg-accent/50"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setShowEmotions(prev => !prev)}
+                    onClick={() => setShowEmotions((prev) => !prev)}
                   >
                     <Lightbulb className="h-4 w-4" />
                   </motion.button>
@@ -584,7 +581,6 @@ const ChatInterface = () => {
           </motion.button>
         </div>
       </form>
-
 
       <FloatingMascot />
     </Card>
