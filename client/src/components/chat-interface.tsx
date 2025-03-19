@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Send, Check, Sparkles, Heart, Star, Music } from "lucide-react";
+import { Send, Check, Sparkles, Heart, Star, Music, Lightbulb, Wand2, MessageSquare } from "lucide-react";
 import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -14,9 +14,12 @@ import { useToast } from "@/hooks/use-toast";
 import FloatingMascot from "./floating-mascot";
 import ChatLoadingIndicator, { SakuraPetalLoading } from "./chat-loading-indicator";
 import { motion, AnimatePresence } from "framer-motion";
-
-const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
-const TUTORIAL_SHOWN_KEY_PREFIX = "tutorial_shown_user_";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Array of cute emoji mood indicators for the network status
 const onlineEmojis = ["🌸", "✨", "💮", "🌟", "🎀"];
@@ -29,33 +32,33 @@ const getRandomEmoji = (emojiArray: string[]) => {
 
 const NetworkStatus = ({ isOnline }: { isOnline: boolean }) => {
   const [emoji, setEmoji] = useState(isOnline ? getRandomEmoji(onlineEmojis) : getRandomEmoji(offlineEmojis));
-  
+
   // Change emoji periodically for fun
   useEffect(() => {
     const interval = setInterval(() => {
       setEmoji(isOnline ? getRandomEmoji(onlineEmojis) : getRandomEmoji(offlineEmojis));
     }, 8000);
-    
+
     return () => clearInterval(interval);
   }, [isOnline]);
-  
+
   return (
-    <motion.div 
+    <motion.div
       className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full bg-background/80 backdrop-blur-sm border shadow-lg z-50 text-[10px] sm:text-xs"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       whileHover={{ scale: 1.05 }}
     >
-      <motion.span 
+      <motion.span
         className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${isOnline ? "bg-green-500" : "bg-red-500"}`}
-        animate={isOnline ? { 
+        animate={isOnline ? {
           scale: [1, 1.2, 1],
-          opacity: [0.7, 1, 0.7] 
+          opacity: [0.7, 1, 0.7]
         } : {}}
         transition={{ duration: 2, repeat: Infinity }}
       />
-      <motion.span 
+      <motion.span
         className="text-muted-foreground"
         animate={{ y: [0, -1, 0] }}
         transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
@@ -85,9 +88,9 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
       icon: <Heart className="h-5 w-5 text-red-400" />
     }
   ];
-  
+
   return (
-    <motion.div 
+    <motion.div
       className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -142,17 +145,41 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-// Buttons that appear when hovering over the input field
 const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => void; onClose: () => void }) => {
-  const emotions = [
-    "「外部情報なし」🚫", "＋指示のコツ🎯", "会話形式で💬","❤️", "😊", "🎉", "✨", "🌸"
+  const promptCategories = [
+    {
+      name: "会話スタイル",
+      icon: <MessageSquare className="h-4 w-4" />,
+      prompts: [
+        { text: "会話形式で💬", description: "フレンドリーな会話形式で回答します" },
+        { text: "「外部情報なし」🚫", description: "外部情報を使わずに回答します" },
+      ]
+    },
+    {
+      name: "アシスタント",
+      icon: <Wand2 className="h-4 w-4" />,
+      prompts: [
+        { text: "＋指示のコツ🎯", description: "より良い指示の出し方をアドバイスします" },
+        { text: "簡潔に要約✨", description: "要点をまとめて簡潔に説明します" },
+      ]
+    },
+    {
+      name: "感情表現",
+      icon: <Heart className="h-4 w-4" />,
+      prompts: [
+        { text: "❤️", description: "優しく温かい雰囲気で" },
+        { text: "😊", description: "フレンドリーな雰囲気で" },
+        { text: "✨", description: "明るく元気な雰囲気で" },
+        { text: "🌸", description: "華やかで優雅な雰囲気で" },
+      ]
+    }
   ];
 
   // Close picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!(event.target as HTMLElement).closest(".emoji-picker")) {
-        onClose(); // Close the emoji picker
+        onClose();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -160,57 +187,81 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
   }, [onClose]);
 
   return (
-    <motion.div 
-      className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-2 py-2 rounded-xl border shadow-sm z-10 
-                 flex flex-wrap gap-2 max-w-full max-h-40 overflow-y-auto emoji-picker"
+    <motion.div
+      className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl border shadow-lg z-10 
+                 emoji-picker"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Close Button (optional) */}
-      <button 
-        className="absolute top-1 right-2 text-gray-500 hover:text-red-500"
-        onClick={onClose}
-      >
-        ✖
-      </button>
-
-      {emotions.map((emoji, index) => (
-        <motion.button
-          key={index}
-          type="button"
-          onClick={() => {
-            onSelect(emoji);
-            onClose(); // Close after selecting an emoji
-          }}
-          className="px-3 py-2 sm:px-4 sm:py-2 text-base sm:text-lg flex items-center justify-center rounded-full 
-                     hover:bg-pink-50 transition-colors"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm font-medium text-muted-foreground">プロンプトを選択</h3>
+        <button
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          onClick={onClose}
         >
-          {emoji}
-        </motion.button>
-      ))}
+          ✖
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {promptCategories.map((category, idx) => (
+          <div key={idx} className="space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {category.icon}
+              <span>{category.name}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {category.prompts.map((prompt, promptIdx) => (
+                <TooltipProvider key={promptIdx}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        type="button"
+                        onClick={() => {
+                          onSelect(prompt.text);
+                          onClose();
+                        }}
+                        className="px-3 py-2 text-sm bg-background hover:bg-accent rounded-full
+                                 transition-colors border border-input hover:border-accent-foreground/20
+                                 flex items-center gap-1"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {prompt.text}
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>{prompt.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </motion.div>
   );
 };
 
 
+const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
+const TUTORIAL_SHOWN_KEY_PREFIX = "tutorial_shown_user_";
 
-
-export default function ChatInterface() {
+const ChatInterface = () => {
   const [input, setInput] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
-  
+
   const [showTutorial, setShowTutorial] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [showEmotions, setShowEmotions] = useState(false);
   const [confetti, setConfetti] = useState(false);
-  
+
   // Handle tutorial display
   useEffect(() => {
     if (!user) return;
@@ -220,7 +271,7 @@ export default function ChatInterface() {
       setShowTutorial(true);
     }
   }, [user]);
-  
+
   // Handle online/offline status
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -232,7 +283,7 @@ export default function ChatInterface() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-  
+
   const handleCloseTutorial = () => {
     if (!user) return;
     const tutorialShownKey = `${TUTORIAL_SHOWN_KEY_PREFIX}${user.id}`;
@@ -278,7 +329,7 @@ export default function ChatInterface() {
     },
     enabled: !!user && !!sessionId,
   });
-  
+
   // Auto-scroll to bottom of messages
   useEffect(() => {
     if (messageEndRef.current) {
@@ -297,9 +348,9 @@ export default function ChatInterface() {
     },
     onMutate: async (content: string) => {
       await queryClient.cancelQueries({ queryKey: ["/api/messages", sessionId] });
-  
+
       const previousMessages = queryClient.getQueryData<Message[]>(["/api/messages", sessionId]) || [];
-  
+
       // Use a temporary ID for optimistic updates
       const optimisticUserMessage: Message = {
         id: Date.now(), // Using timestamp as a temporary numeric ID
@@ -309,12 +360,12 @@ export default function ChatInterface() {
         isBot: false,
         sessionId
       };
-  
+
       queryClient.setQueryData<Message[]>(["/api/messages", sessionId], [
         ...previousMessages,
         optimisticUserMessage,
       ]);
-  
+
       return { previousMessages };
     },
     onSuccess: (newBotMessage: Message) => {
@@ -331,7 +382,7 @@ export default function ChatInterface() {
         ),
         duration: 2000,
       });
-      
+
       // Show celebration confetti occasionally
       if (Math.random() > 0.7) {
         setConfetti(true);
@@ -353,13 +404,13 @@ export default function ChatInterface() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || sendMessage.isPending) return;
-  
+
     const message = input;
     setInput("");
     setShowEmotions(false);
-    sendMessage.mutate(message); 
+    sendMessage.mutate(message);
   };
-  
+
   const handleEmotionSelect = (emoji: string) => {
     setInput(prev => prev + " " + emoji);
   };
@@ -383,40 +434,40 @@ export default function ChatInterface() {
               <motion.div
                 key={i}
                 className="absolute"
-                initial={{ 
-                  top: "-10%", 
+                initial={{
+                  top: "-10%",
                   left: `${Math.random() * 100}%`,
                   opacity: 1,
                   rotate: 0,
                   scale: 0.5 + Math.random() * 1
                 }}
-                animate={{ 
-                  top: "110%", 
+                animate={{
+                  top: "110%",
                   left: `${Math.random() * 100}%`,
                   opacity: [1, 1, 0],
                   rotate: Math.random() * 360,
                 }}
                 exit={{ opacity: 0 }}
-                transition={{ 
+                transition={{
                   duration: 2 + Math.random() * 3,
                   ease: "easeOut"
                 }}
               >
-                {Math.random() > 0.3 ? 
-                  "🌸" : 
+                {Math.random() > 0.3 ?
+                  "🌸" :
                   ["✨", "💮", "🎀", "🌟", "💕"][Math.floor(Math.random() * 5)]}
               </motion.div>
             ))}
           </div>
         )}
       </AnimatePresence>
-      
+
       <AnimatePresence>
         {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
       </AnimatePresence>
-      
+
       <NetworkStatus isOnline={isOnline} />
-      
+
       <ScrollArea className="flex-1 px-1 sm:px-4 py-3 w-full" ref={scrollAreaRef}>
         <div className="space-y-4 w-full max-w-full">
           {messages.length === 0 ? (
@@ -440,12 +491,12 @@ export default function ChatInterface() {
               </div>
             ))
           )}
-          
+
           {sendMessage.isPending && (
             <div className="flex justify-center pt-2 pb-4">
-              <ChatLoadingIndicator 
-                variant="character" 
-                message="桜AIが一生懸命考えてるよ...！" 
+              <ChatLoadingIndicator
+                variant="character"
+                message="桜AIが一生懸命考えてるよ...！"
               />
             </div>
           )}
@@ -454,60 +505,83 @@ export default function ChatInterface() {
       </ScrollArea>
 
       <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t flex flex-col gap-2 relative">
-  {/* Emoji Picker Positioned Above Input */}
-  <AnimatePresence>
-    {showEmotions && (
-      <div className="absolute bottom-full left-0 w-full flex justify-center">
-        <EmotionButtons onSelect={handleEmotionSelect} onClose={() => setShowEmotions(false)} />
-      </div>
-    )}
-  </AnimatePresence>
+        {/* Emoji Picker Positioned Above Input */}
+        <AnimatePresence>
+          {showEmotions && (
+            <div className="absolute bottom-full left-0 w-full flex justify-center">
+              <EmotionButtons onSelect={handleEmotionSelect} onClose={() => setShowEmotions(false)} />
+            </div>
+          )}
+        </AnimatePresence>
 
-  <div className="flex gap-2">
-    {/* Input Field */}
-    <div className="relative flex-1 min-w-0">
-      <Input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="メッセージを書いてね！"
-        className="pr-10 focus:ring-2 focus:ring-pink-100 text-sm sm:text-base"
-      />
-      <motion.button
-        type="button"
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
-        whileHover={{ scale: 1.2, rotate: 10 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setShowEmotions(prev => !prev)} // Toggle emoji picker
-      >
-        <Star className="h-4 w-4" />
-      </motion.button>
-    </div>
+        <div className="flex gap-2">
+          {/* Textarea Field */}
+          <div className="relative flex-1 min-w-0">
+            <Textarea
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // Auto-adjust height
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+              }}
+              placeholder="メッセージを書いてね！"
+              className="pr-10 focus:ring-2 focus:ring-pink-100 text-sm sm:text-base min-h-[40px] max-h-[200px] resize-none"
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    type="button"
+                    className="absolute right-2 top-2 text-muted-foreground hover:text-primary transition-colors
+                             flex items-center gap-1 px-1.5 py-1 rounded-md hover:bg-accent/50"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowEmotions(prev => !prev)}
+                  >
+                    <Lightbulb className="h-4 w-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>プロンプトを選択</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
-    {/* Send Button */}
-    <motion.button
-      type="submit"
-      disabled={sendMessage.isPending}
-      className="px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      <Send className="h-4 w-4" />
-      <span className="text-xs hidden sm:inline">送信</span>
-      {/* Send button decorations */}
-      <motion.span
-            className="absolute -top-1 -right-1 text-xs"
-            animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-            transition={{ duration: 3, repeat: Infinity }}
+          {/* Send Button */}
+          <motion.button
+            type="submit"
+            disabled={sendMessage.isPending}
+            className="px-3 sm:px-4 py-2 h-[40px] rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            ✨
-          </motion.span>
-    </motion.button>
-  </div>
-</form>
+            <Send className="h-4 w-4" />
+            <span className="text-xs hidden sm:inline">送信</span>
+            {/* Send button decorations */}
+            <motion.span
+              className="absolute -top-1 -right-1 text-xs"
+              animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              ✨
+            </motion.span>
+          </motion.button>
+        </div>
+      </form>
 
 
-      
       <FloatingMascot />
     </Card>
   );
-}
+};
+
+export default ChatInterface;

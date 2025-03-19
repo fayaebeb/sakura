@@ -233,9 +233,9 @@ export default function ChatMessage({ message }: { message: Message }) {
                 </div>
               </>
             ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <div className="whitespace-pre-wrap break-words font-sans">
                 {message.content}
-              </ReactMarkdown>
+              </div>
             )}
           </div>
 
