@@ -175,6 +175,12 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
     }
   ];
 
+  // Handle close button click
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent any form submission
+    onClose();
+  };
+
   // Close picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -198,8 +204,9 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm font-medium text-muted-foreground">プロンプトを選択</h3>
         <button
+          type="button" // Explicitly set button type to prevent form submission
           className="text-muted-foreground hover:text-foreground transition-colors"
-          onClick={onClose}
+          onClick={handleClose}
         >
           ✖
         </button>
@@ -218,7 +225,7 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <motion.button
-                        type="button"
+                        type="button" // Explicitly set button type
                         onClick={() => {
                           onSelect(prompt.text);
                           onClose();
