@@ -6,6 +6,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight, FileText, Globe } from "lucide-react";
+import { Button } from "./ui/button";
 
 // Cute decorative elements to randomly add to bot messages
 const botDecorations = [
@@ -14,16 +17,86 @@ const botDecorations = [
 
 // Helper function to add decorations to bot messages
 const addRandomDecoration = (original: string) => {
-  // Only add decorations ~30% of the time to avoid being too noisy
   if (Math.random() > 0.3) return original;
-
   const decoration = botDecorations[Math.floor(Math.random() * botDecorations.length)];
-  // Add decoration at start, end, or both
   const position = Math.floor(Math.random() * 3);
-
   if (position === 0) return `${decoration} ${original}`;
   if (position === 1) return `${original} ${decoration}`;
   return `${decoration} ${original} ${decoration}`;
+};
+
+// Helper function to parse message content into sections
+const parseMessageContent = (content: string) => {
+  const sections = {
+    mainText: "",
+    companyDocs: "",
+    onlineInfo: ""
+  };
+
+  // Split by company docs marker
+  const [beforeCompanyDocs, afterCompanyDocs = ""] = content.split("### 社内文書情報:");
+  sections.mainText = beforeCompanyDocs.trim();
+
+  // Split remaining content by online info marker
+  const [companyDocs, onlineInfo = ""] = afterCompanyDocs.split("### オンラインWeb情報:");
+  sections.companyDocs = companyDocs.trim();
+  sections.onlineInfo = onlineInfo.trim();
+
+  return sections;
+};
+
+const MessageSection = ({ 
+  title, 
+  content, 
+  icon: Icon 
+}: { 
+  title: string; 
+  content: string; 
+  icon: React.ComponentType<any>; 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!content) return null;
+
+  return (
+    <Collapsible 
+      open={isOpen} 
+      onOpenChange={setIsOpen}
+      className="mt-3 rounded-lg border border-pink-100 overflow-hidden transition-all duration-200"
+    >
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          className="w-full flex items-center justify-between p-2 hover:bg-pink-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Icon className="h-4 w-4 text-pink-500" />
+            <span className="text-sm font-medium text-pink-700">{title}</span>
+          </div>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className="h-4 w-4 text-pink-500" />
+          </motion.div>
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="p-3 bg-pink-50/50"
+        >
+          <div className="prose prose-sm max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {content}
+            </ReactMarkdown>
+          </div>
+        </motion.div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
 };
 
 export default function ChatMessage({ message }: { message: Message }) {
@@ -48,14 +121,16 @@ export default function ChatMessage({ message }: { message: Message }) {
     }
   };
 
+  // Parse message content if it's a bot message
+  const sections = message.isBot ? parseMessageContent(message.content) : null;
+
   return (
     <div
-      className={cn("flex w-full my-4 relative", { 
-        "justify-end": !message.isBot,  // User messages align right
-        "justify-start": message.isBot  // Bot messages align left
+      className={cn("flex w-full my-4 relative", {
+        "justify-end": !message.isBot,
+        "justify-start": message.isBot
       })}
     >
-      {/* Floating emoji reaction on hover (Only for bot messages) */}
       {showEmoji && message.isBot && (
         <motion.div
           className="absolute text-base sm:text-lg z-10"
@@ -78,7 +153,6 @@ export default function ChatMessage({ message }: { message: Message }) {
         </motion.div>
       )}
 
-      {/* Decorative elements for bot messages */}
       {message.isBot && decoration && (
         <motion.div 
           className="absolute -top-2 sm:-top-3 -left-1 text-xs sm:text-sm"
@@ -97,7 +171,6 @@ export default function ChatMessage({ message }: { message: Message }) {
         </motion.div>
       )}
 
-      {/* Bot Avatar (User avatar removed for a cleaner UI) */}
       {message.isBot && (
         <Avatar className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 border border-pink-300 shadow-md">
           <motion.div
@@ -113,7 +186,6 @@ export default function ChatMessage({ message }: { message: Message }) {
         </Avatar>
       )}
 
-      {/* Chat Message Card (Properly aligned) */}
       <motion.div
         initial={message.isBot ? { x: -10, opacity: 0 } : { x: 10, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -121,8 +193,8 @@ export default function ChatMessage({ message }: { message: Message }) {
         whileHover={message.isBot ? { scale: 1.02 } : { scale: 1 }}
         onHoverStart={handleBotMessageHover}
         className={cn("max-w-[85%] sm:max-w-[75%] rounded-xl", {
-          "ml-auto self-end": !message.isBot,  // User messages align right
-          "mr-auto self-start": message.isBot,  // Bot messages align left
+          "ml-auto self-end": !message.isBot,
+          "mr-auto self-start ml-2 sm:ml-3": message.isBot,
         })}
       >
         <Card
@@ -134,25 +206,37 @@ export default function ChatMessage({ message }: { message: Message }) {
             }
           )}
         >
-          <div className="prose prose-xs sm:prose-sm break-words font-medium w-full">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                table: ({ node, ...props }) => (
-                  <div className="overflow-x-auto w-full">
-                    <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
-                  </div>
-                ),
-                td: ({ node, ...props }) => (
-                  <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-                ),
-                th: ({ node, ...props }) => (
-                  <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-                ),
-              }}
-            >
-              {message.content}
-            </ReactMarkdown>
+          <div className="prose prose-sm max-w-none">
+            {message.isBot && sections ? (
+              <>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {sections.mainText}
+                </ReactMarkdown>
+
+                {/* Source sections */}
+                <div className="space-y-2">
+                  {sections.companyDocs && (
+                    <MessageSection
+                      title="社内文書情報"
+                      content={sections.companyDocs}
+                      icon={FileText}
+                    />
+                  )}
+
+                  {sections.onlineInfo && (
+                    <MessageSection
+                      title="オンラインWeb情報"
+                      content={sections.onlineInfo}
+                      icon={Globe}
+                    />
+                  )}
+                </div>
+              </>
+            ) : (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.content}
+              </ReactMarkdown>
+            )}
           </div>
 
           {message.timestamp && (
