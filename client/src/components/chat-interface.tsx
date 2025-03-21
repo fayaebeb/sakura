@@ -168,18 +168,18 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
               },
               {
                 text: "箇条書き形式で📝",
-                message: "箇条書き形式でで出力して",
-                description: "箇条書き形式でで出力します",
+                message: "箇条書き形式で出力して",
+                description: "箇条書き形式で出力します",
               },
               {
                 text: "表形式で📊",
                 message: "表形式で出力して",
-                description: "表形式（テーブル）でで出力します",
+                description: "表形式で出力します",
               },
               {
                 text: "FAQ形式で❓",
-                message: "FAQ形式でで出力して",
-                description: "FAQ形式でで出力します",
+                message: "FAQ形式で出力して",
+                description: "FAQ形式で出力します",
               },
               {
                 text: "比喩・たとえ話形式🎭",
