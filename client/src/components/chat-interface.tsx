@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Send, Check, Sparkles, Heart, Star, Music, Lightbulb, Wand2, MessageSquare } from "lucide-react";
+import { Send, Check, Sparkles, Heart,Lightbulb, Wand2, MessageSquare } from "lucide-react";
 import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -74,19 +74,14 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
   const steps = [
     {
       title: "ようこそ！",
-      description: "桜AIへようこそ！私があなたのチャット相手です♪",
+      description: "「桜AI」は、PCKKにおいて、情報提供や質問への回答を行うAIです。私の役割は、さまざまなトピックについて正確で分かりやすい情報を提供し、ユーザーのリクエストに的確にお応えすることです。たとえば、データに基づくご質問には、社内資料や外部情報を参照しながら丁寧にお答えします。",
       icon: <Sparkles className="h-5 w-5 text-pink-400" />
     },
     {
-      title: "メッセージを送ってみよう！",
-      description: "下のテキストボックスにメッセージを入力して、送信ボタンを押してね！",
-      icon: <Send className="h-5 w-5 text-blue-400" />
-    },
-    {
       title: "楽しくお話ししましょう！",
-      description: "私が返事をするのを待っている間は、かわいい待機アニメーションが表示されるよ♪",
+      description: "「桜AI」は、OpenAIの生成モデル「ChatGPT-4o」を使用しています。社内の全国うごき統計に関する営業資料や、人流に関する社内ミニ講座の内容を基礎データとして取り込み、さらにWikipediaやGoogleのAPIを通じてインターネット上の情報も収集しています。これらの情報をもとに、最適な回答を生成しています。",
       icon: <Heart className="h-5 w-5 text-red-400" />
-    }
+    },
   ];
 
   return (
@@ -134,7 +129,7 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
                 }
               }}
             >
-              {step < steps.length ? "次へ" : "始めましょう！"}
+              {step < steps.length ? "次へ" : "さあ、始めましょう！！"}
             </Button>
           </div>
         </Card>
@@ -143,28 +138,87 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => void; onClose: () => void }) => {
-  const promptCategories = [
-    {
-      name: "会話スタイル",
-      icon: <MessageSquare className="h-4 w-4" />,
-      prompts: [
-        { text: "会話形式で💬", description: "フレンドリーな会話形式で回答します" },
-        { text: "「外部情報なし」🚫", description: "外部情報を使わずに回答します" },
-      ]
-    },
-    {
-      name: "アシスタント",
-      icon: <Wand2 className="h-4 w-4" />,
-      prompts: [
-        { text: "＋指示のコツ🎯", description: "より良い指示の出し方をアドバイスします" },
-        { text: "簡潔に要約✨", description: "要点をまとめて簡潔に説明します" },
-      ]
-    },
+    interface Prompt {
+      text: string;
+      message?: string;
+      description: string;
+    }
+
+    interface PromptCategory {
+      name: string;
+      icon: JSX.Element;
+      prompts: Prompt[];
+    }
+
+    interface EmotionButtonsProps {
+      onSelect: (message: string) => void;
+      onClose: () => void;
+    }
+
+    const EmotionButtons: React.FC<EmotionButtonsProps> = ({ onSelect, onClose }) => {
+      const promptCategories: PromptCategory[] = [
+        {
+          name: "出力形式",
+          icon: <MessageSquare className="h-4 w-4" />,
+            prompts: [
+              {
+                text: "会話形式で💬",
+                message: "AさんとBさんの会話形式で出力して",
+                description: "フレンドリーな会話形式で回答します",
+              },
+              {
+                text: "箇条書き形式で📝",
+                message: "箇条書き形式でで出力して",
+                description: "箇条書き形式でで出力します",
+              },
+              {
+                text: "表形式で📊",
+                message: "表形式で出力して",
+                description: "表形式（テーブル）でで出力します",
+              },
+              {
+                text: "FAQ形式で❓",
+                message: "FAQ形式でで出力して",
+                description: "FAQ形式でで出力します",
+              },
+              {
+                text: "比喩・たとえ話形式🎭",
+                message: "比喩・たとえ話形式で出力して",
+                description: "比喩・たとえ話形式で出力します",
+              },
+              {
+                text: "簡潔に要約✨",
+                message: "簡潔に要約で出力して",
+                description: "簡潔に要約で出力します",
+          },
+            ],
+          },
+          {
+              name: "アシスタント",
+              icon: <Wand2 className="h-4 w-4" />,
+              prompts: [
+                {
+                  text: "＋指示のコツ🎯",
+                  message: "質問に対してさらに理解を深めるために、どのような指示をすればよいか提案して",
+                  description: "より良い指示の出し方をアドバイスします",
+                },
+                {
+                  text: "「外部情報なし」🚫",
+                  message: "インターネットからの情報を利用しないで",
+                  description: "外部情報を使わずに回答します",
+                },
+                {
+                  text: "初心者向け📘",
+                  message: "説明に出てくる専門用語には、それぞれ説明を加え、初心者でも理解しやすいように。具体的な例を挙げながら丁寧に解説して",
+                  description: "具体的な例を挙げながら丁寧に解説します",
+                },
+
+          ],
+        },
     {
       name: "感情表現",
       icon: <Heart className="h-4 w-4" />,
-      prompts: [
+        prompts: [
         { text: "❤️", description: "優しく温かい雰囲気で" },
         { text: "😊", description: "フレンドリーな雰囲気で" },
         { text: "✨", description: "明るく元気な雰囲気で" },
@@ -209,43 +263,44 @@ const EmotionButtons = ({ onSelect, onClose }: { onSelect: (emoji: string) => vo
         </button>
       </div>
 
-      <div className="space-y-4">
-        {promptCategories.map((category, idx) => (
-          <div key={idx} className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {category.icon}
-              <span>{category.name}</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {category.prompts.map((prompt, promptIdx) => (
-                <TooltipProvider key={promptIdx}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.button
-                        type="button" // Explicitly set button type
-                        onClick={() => {
-                          onSelect(prompt.text);
-                          onClose();
-                        }}
-                        className="px-3 py-2 text-sm bg-background hover:bg-accent rounded-full transition-colors border border-input hover:border-accent-foreground/20 flex items-center gap-1"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {prompt.text}
-                      </motion.button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>{prompt.description}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-            </div>
-          </div>
+<div className="space-y-4">
+  {promptCategories.map((category, idx) => (
+    <div key={idx} className="space-y-2">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        {category.icon}
+        <span>{category.name}</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {category.prompts.map((prompt, promptIdx) => (
+          <TooltipProvider key={promptIdx}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    // Use prompt.message if available, otherwise fallback to prompt.text
+                    onSelect(prompt.message ? prompt.message : prompt.text);
+                    onClose();
+                  }}
+                  className="px-3 py-2 text-sm bg-background hover:bg-accent rounded-full transition-colors border border-input hover:border-accent-foreground/20 flex items-center gap-1"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {prompt.text}
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>{prompt.description}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ))}
       </div>
-    </motion.div>
-  );
+    </div>
+  ))}
+</div>
+</motion.div>
+);
 };
 
 const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";

@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertMessageSchema } from "@shared/schema";
 
-const LANGFLOW_API = "https://fayaebeb-langflow.hf.space/api/v1/run/0a642fb5-bada-425f-a615-703640dac242";
+const LANGFLOW_API = process.env.LANGFLOW_API;
 
 // Helper function to format the bot's response
 // Updated, minimal formatting function
@@ -47,9 +47,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await fetch(LANGFLOW_API, {
         method: "POST",
         headers: {
-          Authorization: "Bearer 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",
+          Authorization: process.env.AUTHORIZATION_TOKEN,
                 "Content-Type": "application/json",
-                "x-api-key": "sk-k8wKMFfgyswK_0aEJgDbFdCF8vqDCTQRIGRCNpRLymw",
+                "x-api-key": process.env.X_API_KEY,
         },
         body: JSON.stringify({
           input_value: body.content,
