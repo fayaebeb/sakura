@@ -198,53 +198,84 @@ export default function ChatMessage({ message }: { message: Message }) {
         })}
       >
         <Card
-          className={cn(
-            "px-2 py-1.5 sm:px-4 sm:py-3 text-sm sm:text-base",
-            {
-              "bg-[#FFB7C5] text-black border border-[#FF98A5] shadow-md": !message.isBot,
-              "bg-gradient-to-br from-white to-pink-50 text-black border border-pink-100 shadow-md": message.isBot,
-            }
-          )}
-        >
-          <div className="prose prose-sm max-w-none">
-            {message.isBot && sections ? (
-              <>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {sections.mainText}
-                </ReactMarkdown>
-
-                {/* Source sections */}
-                <div className="space-y-2">
-                  {sections.companyDocs && (
-                    <MessageSection
-                      title="社内文書情報"
-                      content={sections.companyDocs}
-                      icon={FileText}
-                    />
-                  )}
-
-                  {sections.onlineInfo && (
-                    <MessageSection
-                      title="オンラインWeb情報"
-                      content={sections.onlineInfo}
-                      icon={Globe}
-                    />
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="whitespace-pre-wrap break-words font-sans">
-                {message.content}
+  className={cn(
+    "px-2 py-1.5 sm:px-4 sm:py-3 text-sm sm:text-base",
+    {
+      "bg-[#FFB7C5] text-black border border-[#FF98A5] shadow-md": !message.isBot,
+      "bg-gradient-to-br from-white to-pink-50 text-black border border-pink-100 shadow-md": message.isBot,
+    }
+  )}
+>
+  <div className="prose prose-xs sm:prose-sm break-words font-medium w-full">
+    {message.isBot && sections ? (
+      <>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            table: ({ node, ...props }) => (
+              <div className="overflow-x-auto w-full">
+                <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
               </div>
-            )}
-          </div>
+            ),
+            td: ({ node, ...props }) => (
+              <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+            ),
+            th: ({ node, ...props }) => (
+              <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+            ),
+          }}
+        >
+          {sections.mainText}
+        </ReactMarkdown>
 
-          {message.timestamp && (
-            <div className="text-[9px] sm:text-[10px] text-gray-400 mt-1 text-right">
-              {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </div>
+        {/* Source sections */}
+        <div className="space-y-2">
+          {sections.companyDocs && (
+            <MessageSection
+              title="社内文書情報"
+              content={sections.companyDocs}
+              icon={FileText}
+            />
           )}
-        </Card>
+
+          {sections.onlineInfo && (
+            <MessageSection
+              title="オンラインWeb情報"
+              content={sections.onlineInfo}
+              icon={Globe}
+            />
+          )}
+        </div>
+      </>
+    ) : (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          table: ({ node, ...props }) => (
+            <div className="overflow-x-auto w-full">
+              <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
+            </div>
+          ),
+          td: ({ node, ...props }) => (
+            <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+          ),
+          th: ({ node, ...props }) => (
+            <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+          ),
+        }}
+      >
+        {message.content}
+      </ReactMarkdown>
+    )}
+  </div>
+
+  {message.timestamp && (
+    <div className="text-[9px] sm:text-[10px] text-gray-400 mt-1 text-right">
+      {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+    </div>
+  )}
+</Card>
+
       </motion.div>
     </div>
   );
