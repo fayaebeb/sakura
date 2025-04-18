@@ -312,6 +312,7 @@ const ChatInterface = () => {
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [showTutorial, setShowTutorial] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
@@ -320,6 +321,12 @@ const ChatInterface = () => {
 
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
+
+  useEffect(() => { 
+    if (!showTutorial && !showEmotions) { 
+      textareaRef.current?.focus(); 
+    } 
+  }, [showTutorial, showEmotions]);
 
   // Handle tutorial display
   useEffect(() => {
@@ -574,6 +581,8 @@ const ChatInterface = () => {
           {/* Textarea Field */}
           <div className="relative flex-1 min-w-0">
             <Textarea
+              ref={textareaRef}
+              autoFocus
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
