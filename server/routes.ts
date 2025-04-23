@@ -1,10 +1,19 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertMessageSchema } from "@shared/schema";
+import { transcribeAudio } from "./apis/openai";
+import { textToSpeech } from "./apis/unrealspeech";
+import multer from "multer";
 
 const LANGFLOW_API = process.env.LANGFLOW_API;
+
+// Setup multer for handling file uploads (in-memory storage)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 // Helper function to format the bot's response
 // Updated, minimal formatting function
@@ -12,10 +21,68 @@ function formatBotResponse(text: string): string {
   return text.replace(/\\n/g, '\n').trim();
 }
 
+// Helper function to send message to Langflow API
+async function sendMessageToLangflow(content: string, persistentSessionId: string) {
+  console.log(`Sending request to Langflow API: ${content}`);
+  const response = await fetch(LANGFLOW_API, {
+    method: "POST",
+    headers: {
+      Authorization: process.env.AUTHORIZATION_TOKEN,
+      "Content-Type": "application/json",
+      "x-api-key": process.env.X_API_KEY,
+    },
+    body: JSON.stringify({
+      input_value: content,
+      output_type: "chat",
+      input_type: "chat",
+      tweaks: {
+        "TextInput-nni38": {
+          input_value: persistentSessionId,
+        },
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Langflow API Error:", errorText);
+    throw new Error(
+      `Langflow API responded with status ${response.status}`,
+    );
+  }
+
+  const aiResponse = await response.json();
+  console.log(
+    "Langflow API Response:",
+    JSON.stringify(aiResponse, null, 2),
+  );
+
+  let aiOutputText = null;
+
+  if (aiResponse.outputs && Array.isArray(aiResponse.outputs)) {
+    const firstOutput = aiResponse.outputs[0];
+    if (firstOutput?.outputs?.[0]?.results?.message?.data?.text) {
+      aiOutputText = firstOutput.outputs[0].results.message.data.text;
+    } else if (firstOutput?.outputs?.[0]?.messages?.[0]?.message) {
+      aiOutputText = firstOutput.outputs[0].messages[0].message;
+    }
+  }
+
+  if (!aiOutputText) {
+    console.error(
+      "Unexpected AI Response Format:",
+      JSON.stringify(aiResponse, null, 2),
+    );
+    throw new Error("Could not extract message from AI response");
+  }
+
+  return formatBotResponse(aiOutputText);
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
+  // Text-based chat endpoint
   app.post("/api/chat", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -43,61 +110,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId: persistentSessionId,
       });
 
-      console.log(`Sending request to Langflow API: ${body.content}`);
-      const response = await fetch(LANGFLOW_API, {
-        method: "POST",
-        headers: {
-          Authorization: process.env.AUTHORIZATION_TOKEN,
-                "Content-Type": "application/json",
-                "x-api-key": process.env.X_API_KEY,
-        },
-        body: JSON.stringify({
-          input_value: body.content,
-          output_type: "chat",
-          input_type: "chat",
-          tweaks: {
-            "TextInput-nni38": {
-              input_value: persistentSessionId,
-            },
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Langflow API Error:", errorText);
-        throw new Error(
-          `Langflow API responded with status ${response.status}`,
-        );
-      }
-
-      const aiResponse = await response.json();
-      console.log(
-        "Langflow API Response:",
-        JSON.stringify(aiResponse, null, 2),
-      );
-
-      let aiOutputText = null;
-
-      if (aiResponse.outputs && Array.isArray(aiResponse.outputs)) {
-        const firstOutput = aiResponse.outputs[0];
-        if (firstOutput?.outputs?.[0]?.results?.message?.data?.text) {
-          aiOutputText = firstOutput.outputs[0].results.message.data.text;
-        } else if (firstOutput?.outputs?.[0]?.messages?.[0]?.message) {
-          aiOutputText = firstOutput.outputs[0].messages[0].message;
-        }
-      }
-
-      if (!aiOutputText) {
-        console.error(
-          "Unexpected AI Response Format:",
-          JSON.stringify(aiResponse, null, 2),
-        );
-        throw new Error("Could not extract message from AI response");
-      }
-
-      // Format the bot's response before storing it
-      const formattedResponse = formatBotResponse(aiOutputText);
+      // Get response from Langflow
+      const formattedResponse = await sendMessageToLangflow(body.content, persistentSessionId);
 
       const botMessage = await storage.createMessage(req.user!.id, {
         content: formattedResponse,
@@ -110,6 +124,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error in chat processing:", error);
       res.status(500).json({
         message: "Failed to process message",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Voice input endpoint - transcribes audio and processes as text
+  // Voice input endpoint - transcribes audio only
+  app.post(
+    "/api/voice/transcribe",
+    upload.single("audio"),
+    async (req, res) => {
+      if (!req.isAuthenticated()) return res.sendStatus(401);
+      if (!req.file) return res.status(400).json({ error: "No audio file uploaded" });
+
+      try {
+        // 1️⃣ transcribe audio to text
+        console.log("Transcribing audio file...");
+        const transcribedText = await transcribeAudio(req.file.buffer);
+        console.log("Transcribed text:", transcribedText);
+
+        // 2️⃣ return ONLY the transcript
+        return res.status(200).json({ transcribedText });
+      } catch (error) {
+        console.error("Error processing voice input:", error);
+        return res.status(500).json({
+          message: "Failed to process voice input",
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+  );
+
+  // Text-to-speech endpoint - converts bot response to speech
+  app.post("/api/voice/speech", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { text, voiceId } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: "No text provided" });
+      }
+      
+      console.log("Converting text to speech...");
+      const audioBuffer = await textToSpeech(text, voiceId);
+      
+      // Set appropriate headers for audio file
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length);
+      
+      // Send the audio buffer as the response
+      res.send(audioBuffer);
+    } catch (error) {
+      console.error("Error generating speech:", error);
+      res.status(500).json({
+        message: "Failed to generate speech",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }

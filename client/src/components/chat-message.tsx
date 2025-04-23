@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, FileText, Globe } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Globe, Volume2 } from "lucide-react";
 import { Button } from "./ui/button";
 
 // Cute decorative elements to randomly add to bot messages
@@ -99,7 +99,17 @@ const MessageSection = ({
   );
 };
 
-export default function ChatMessage({ message }: { message: Message }) {
+  export default function ChatMessage({
+    message,
+    isPlayingAudio,
+    playingMessageId,
+    onPlayAudio,
+  }: {
+    message: Message;
+    isPlayingAudio: boolean;
+    playingMessageId: number | null;
+    onPlayAudio: (messageId: number, text: string) => void;
+  }) {
   const [showEmoji, setShowEmoji] = useState(false);
   const [emojiPosition, setEmojiPosition] = useState({ x: 0, y: 0 });
   const [decoration, setDecoration] = useState<string | null>(null);
@@ -268,13 +278,31 @@ export default function ChatMessage({ message }: { message: Message }) {
       </ReactMarkdown>
     )}
   </div>
+          {message.isBot && (
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-[9px] sm:text-[10px] text-gray-400">
+                {message.timestamp && new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 p-1 rounded-full"
+                onClick={() => onPlayAudio(message.id, message.content)}
+                disabled={isPlayingAudio && playingMessageId !== message.id}
+              >
+                {isPlayingAudio && playingMessageId === message.id ? (
+                  <span className="animate-pulse text-xs">■</span>
+                ) : (
+                  <Volume2 className="h-4 w-4 text-pink-500" />
+                )}
+              </Button>
+            </div>
+          )}
 
-  {message.timestamp && (
-    <div className="text-[9px] sm:text-[10px] text-gray-400 mt-1 text-right">
-      {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-    </div>
-  )}
+
 </Card>
+
+
 
       </motion.div>
     </div>

@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Send, Check, Sparkles, Heart,Lightbulb, Wand2, MessageSquare } from "lucide-react";
+import { Check, Sparkles, Heart, Wand2, MessageSquare, } from "lucide-react";
 import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ChatMessage from "./chat-message";
+import ChatInput from "./chatInput";
 import { ScrollArea } from "./ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -21,13 +21,37 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Array of cute emoji mood indicators for the network status
 const onlineEmojis = ["🌸", "✨", "💮", "🌟", "🎀"];
 const offlineEmojis = ["😴", "💤", "🥱", "🌙", "☁️"];
 
 // Helper to get random emoji
 const getRandomEmoji = (emojiArray: string[]) => {
   return emojiArray[Math.floor(Math.random() * emojiArray.length)];
+};
+
+// Audio player for bot responses
+const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string, isPlaying: boolean, onPlayComplete: () => void }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch(err => console.error("Audio playback error:", err));
+      } else {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    }
+  }, [isPlaying]);
+
+  return (
+    <audio 
+      ref={audioRef} 
+      src={audioUrl} 
+      onEnded={onPlayComplete}
+      className="hidden"
+    />
+  );
 };
 
 const NetworkStatus = ({ isOnline }: { isOnline: boolean }) => {
@@ -318,6 +342,11 @@ const ChatInterface = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [showEmotions, setShowEmotions] = useState(false);
   const [confetti, setConfetti] = useState(false);
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
+  const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
+
 
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
@@ -414,6 +443,10 @@ const ChatInterface = () => {
     },
     onMutate: async (content: string) => {
       await queryClient.cancelQueries({ queryKey: ["/api/messages", sessionId] });
+      
+
+      
+
 
       const previousMessages = queryClient.getQueryData<Message[]>(["/api/messages", sessionId]) || [];
 
@@ -466,6 +499,83 @@ const ChatInterface = () => {
       });
     },
   });
+  const handleVoiceRecording = async (audioBlob: Blob) => {
+    setIsProcessingVoice(true);
+    try {
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "recording.webm");
+
+      const res = await fetch("/api/voice/transcribe", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error();
+
+      const { transcribedText } = await res.json();
+      setTimeout(() => setInput(transcribedText), 50);
+
+      toast({
+        title: "音声認識成功",
+        description: "テキストに変換されました！",
+        duration: 3000,
+      });
+    } catch {
+      toast({
+        title: "音声処理エラー",
+        description: "認識できませんでした。もう一度試してね！",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingVoice(false);
+    }
+  };
+
+  const playMessageAudio = async (messageId: number, text: string) => {
+    if (isPlayingAudio) {
+      setIsPlayingAudio(false);
+      setCurrentAudioUrl(null);
+      setPlayingMessageId(null);
+      return;
+    }
+
+    try {
+      setIsPlayingAudio(true);
+      setPlayingMessageId(messageId);
+
+      const res = await fetch('/api/voice/speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+        credentials: 'include',
+      });
+
+      if (!res.ok) throw new Error();
+
+      const audioBlob = await res.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      setCurrentAudioUrl(audioUrl);
+    } catch (error) {
+      toast({
+        title: "音声生成エラー",
+        description: "音声を生成できませんでした。",
+        variant: "destructive",
+      });
+      setIsPlayingAudio(false);
+      setPlayingMessageId(null);
+    }
+  };
+  
+  // Handle audio playback completion
+  const handlePlaybackComplete = () => {
+    setIsPlayingAudio(false);
+    setPlayingMessageId(null);
+    if (currentAudioUrl) {
+      URL.revokeObjectURL(currentAudioUrl);
+      setCurrentAudioUrl(null);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -533,6 +643,14 @@ const ChatInterface = () => {
       </AnimatePresence>
 
       <NetworkStatus isOnline={isOnline} />
+      {currentAudioUrl && (
+        <AudioPlayer 
+          audioUrl={currentAudioUrl} 
+          isPlaying={isPlayingAudio} 
+          onPlayComplete={handlePlaybackComplete} 
+        />
+      )}
+
 
       <ScrollArea className="flex-1 px-1 sm:px-4 py-3 w-full" ref={scrollAreaRef}>
         <div className="space-y-4 w-full max-w-full">
@@ -552,8 +670,14 @@ const ChatInterface = () => {
             </div>
           ) : (
             messages.map((message) => (
-              <div className="w-full max-w-full" key={message.id}>
-                <ChatMessage message={message} />
+              <div className="w-full max-w-full group" key={message.id}>
+                <ChatMessage 
+                  message={message}
+                  isPlayingAudio={isPlayingAudio}
+                  playingMessageId={playingMessageId}
+                  onPlayAudio={playMessageAudio}
+                />
+                
               </div>
             ))
           )}
@@ -567,84 +691,19 @@ const ChatInterface = () => {
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t flex flex-col gap-2 relative">
-        {/* Emoji Picker Positioned Above Input */}
-        <AnimatePresence>
-          {showEmotions && (
-            <div className="absolute bottom-full left-0 w-full flex justify-center">
-              <EmotionButtons onSelect={handleEmotionSelect} onClose={() => setShowEmotions(false)} />
-            </div>
-          )}
-        </AnimatePresence>
+      <ChatInput
+        input={input}
+        setInput={setInput}
+        handleSubmit={handleSubmit}
+        handleVoiceRecording={handleVoiceRecording}
+        isProcessing={isProcessingVoice || sendMessage.isPending}
+        sendDisabled={sendMessage.isPending}
+        showEmotions={showEmotions}
+        setShowEmotions={setShowEmotions}
+        isMobile={isMobile}
+        textareaRef={textareaRef}
+      />
 
-        <div className="flex gap-2">
-          {/* Textarea Field */}
-          <div className="relative flex-1 min-w-0">
-            <Textarea
-              ref={textareaRef}
-              autoFocus
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                // Auto-adjust height
-                e.target.style.height = "auto";
-                e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
-              }}
-              placeholder="メッセージを書いてね！"
-              className="pr-10 focus:ring-2 focus:ring-pink-100 text-sm sm:text-base min-h-[40px] max-h-[200px] resize-none"
-              rows={1}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  // On non-mobile devices, send message on Enter.
-                  if (!isMobile) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                  // On mobile, allow Enter to insert a newline.
-                }
-              }}
-            />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    type="button"
-                    className="absolute right-2 top-2 text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 px-1.5 py-1 rounded-md hover:bg-accent/50"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setShowEmotions((prev) => !prev)}
-                  >
-                    <Lightbulb className="h-4 w-4" />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>プロンプトを選択</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          {/* Send Button */}
-          <motion.button
-            type="submit"
-            disabled={sendMessage.isPending}
-            className="px-3 sm:px-4 py-2 h-[40px] rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Send className="h-4 w-4" />
-            <span className="text-xs hidden sm:inline">送信</span>
-            {/* Send button decorations */}
-            <motion.span
-              className="absolute -top-1 -right-1 text-xs"
-              animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              ✨
-            </motion.span>
-          </motion.button>
-        </div>
-      </form>
 
       <FloatingMascot />
     </Card>
