@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
-  const [showPetals, setShowPetals] = useState(false);
   const [currentGreeting, setCurrentGreeting] = useState("");
 
   // Extract username before '@' from email
@@ -27,7 +26,7 @@ export default function HomePage() {
   useEffect(() => {
     const hour = new Date().getHours();
     let greeting = "";
-    
+
     if (hour >= 5 && hour < 12) {
       greeting = greetings[0]; // Good morning
     } else if (hour >= 12 && hour < 17) {
@@ -35,68 +34,15 @@ export default function HomePage() {
     } else {
       greeting = greetings[2]; // Good evening
     }
-    
+
     // Add a random additional greeting sometimes
     if (Math.random() > 0.7) {
       const randomIndex = Math.floor(Math.random() * (greetings.length - 3)) + 3;
       greeting += " " + greetings[randomIndex];
     }
-    
+
     setCurrentGreeting(greeting);
   }, []);
-
-  // Floating cherry blossom petals animation trigger
-  useEffect(() => {
-    // Show petal animation on initial load
-    setShowPetals(true);
-    const timer = setTimeout(() => setShowPetals(false), 5000);
-    
-    // Show petals again every so often
-    const interval = setInterval(() => {
-      setShowPetals(true);
-      setTimeout(() => setShowPetals(false), 5000);
-    }, 25000);
-    
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Cherry blossom petal animation
-  const CherryBlossomPetals = () => (
-    <AnimatePresence>
-      {showPetals && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
-          {Array.from({ length: 20 }).map((_, index) => (
-            <motion.div
-              key={index}
-              className="absolute text-lg"
-              initial={{ 
-                top: `-5%`,
-                left: `${Math.random() * 100}%`,
-                rotate: 0,
-                opacity: 0
-              }}
-              animate={{ 
-                top: `${Math.random() * 110 + 10}%`,
-                left: `${Math.random() * 100}%`,
-                rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
-                opacity: [0, 1, 0.8, 0]
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ 
-                duration: 5 + Math.random() * 7,
-                ease: "easeInOut"
-              }}
-            >
-              {Math.random() > 0.5 ? "🌸" : "💮"}
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </AnimatePresence>
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#ffefd5] to-[#fff0f5] relative">
@@ -115,7 +61,7 @@ export default function HomePage() {
           <Heart className="h-16 w-16 text-pink-200" />
         </motion.div>
       </div>
-      
+
       <div className="absolute bottom-20 left-10 opacity-20 hidden md:block">
         <motion.div
           animate={{ 
@@ -130,9 +76,6 @@ export default function HomePage() {
           <Sparkles className="h-20 w-20 text-yellow-300" />
         </motion.div>
       </div>
-      
-      {/* Cherry blossom petal animation */}
-      <CherryBlossomPetals />
 
       {/* ヘッダーセクション (Header section) */}
       <header className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20">
@@ -183,7 +126,7 @@ export default function HomePage() {
                 </motion.div>
               )}
             </AnimatePresence>
-            
+
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 variant="outline"
@@ -233,11 +176,11 @@ export default function HomePage() {
           <div className="absolute top-2 right-2 text-lg opacity-40">✨</div>
           <div className="absolute bottom-2 left-2 text-lg opacity-40">💮</div>
           <div className="absolute bottom-2 right-2 text-lg opacity-40">🌟</div>
-          
+
           <ChatInterface />
         </motion.div>
       </main>
-      
+
       {/* Footer with subtle branding */}
       <footer className="border-t border-pink-100 py-2 bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 text-center">
