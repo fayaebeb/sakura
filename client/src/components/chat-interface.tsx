@@ -502,16 +502,14 @@ const ChatInterface = () => {
   
   // Handle confirming the transcribed text
   const handleConfirmTranscription = (confirmedText: string) => {
-    setInput(confirmedText);
+    // Instead of setting the input text, send the message directly
     setTranscribedText(null);
     setShowTranscriptionConfirmation(false);
     
-    // Focus on the textarea after confirmation
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
-    }, 100);
+    // Send the message directly if it has content
+    if (confirmedText.trim()) {
+      sendMessage.mutate(confirmedText);
+    }
   };
   
   // Handle editing the transcribed text

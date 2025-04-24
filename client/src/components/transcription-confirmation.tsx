@@ -96,8 +96,9 @@ export default function TranscriptionConfirmation({
             音声トランスクリプション
           </span>
           {!isMobile && !isEditing && (
-            <span className="text-xs text-muted-foreground">
-              Enterキーで送信
+            <span className="text-xs px-2 py-1 bg-muted rounded-md flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-xs bg-background border rounded">Enter</kbd>
+              <span>キーで送信</span>
             </span>
           )}
         </div>
