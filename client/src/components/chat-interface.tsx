@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import FloatingMascot from "./floating-mascot";
 import ChatLoadingIndicator, { SakuraPetalLoading } from "./chat-loading-indicator";
 import { motion, AnimatePresence } from "framer-motion";
+import TranscriptionConfirmation from "./transcription-confirmation";
 import {
   Tooltip,
   TooltipContent,
@@ -21,13 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const onlineEmojis = ["🌸", "✨", "💮", "🌟", "🎀"];
-const offlineEmojis = ["😴", "💤", "🥱", "🌙", "☁️"];
 
-// Helper to get random emoji
-const getRandomEmoji = (emojiArray: string[]) => {
-  return emojiArray[Math.floor(Math.random() * emojiArray.length)];
-};
+
 
 // Audio player for bot responses
 const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string, isPlaying: boolean, onPlayComplete: () => void }) => {
@@ -54,44 +50,7 @@ const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string
   );
 };
 
-const NetworkStatus = ({ isOnline }: { isOnline: boolean }) => {
-  const [emoji, setEmoji] = useState(isOnline ? getRandomEmoji(onlineEmojis) : getRandomEmoji(offlineEmojis));
 
-  // Change emoji periodically for fun
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setEmoji(isOnline ? getRandomEmoji(onlineEmojis) : getRandomEmoji(offlineEmojis));
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, [isOnline]);
-
-  return (
-    <motion.div
-      className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full bg-background/80 backdrop-blur-sm border shadow-lg z-50 text-[10px] sm:text-xs"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ scale: 1.05 }}
-    >
-      <motion.span
-        className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${isOnline ? "bg-green-500" : "bg-red-500"}`}
-        animate={isOnline ? {
-          scale: [1, 1.2, 1],
-          opacity: [0.7, 1, 0.7]
-        } : {}}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-      <motion.span
-        className="text-muted-foreground"
-        animate={{ y: [0, -1, 0] }}
-        transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-      >
-        {emoji} {isOnline ? "オンライン" : "オフライン"}
-      </motion.span>
-    </motion.div>
-  );
-};
 
 const Tutorial = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState(1);
@@ -257,10 +216,17 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
     onClose();
   };
 
-  // Close picker when clicking outside
+  // Close picker when clicking outside, but ignore the Lightbulb icon
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (!(event.target as HTMLElement).closest(".emoji-picker")) {
+      const targetElement = event.target as HTMLElement;
+      // Don't close if the clicked element is inside the emoji-picker
+      // Also don't close if clicking on the Lightbulb button or its parent
+      if (
+        !targetElement.closest(".emoji-picker") && 
+        !targetElement.closest(".lightbulb-button") &&
+        !targetElement.closest("svg") // This helps catch the Lightbulb icon itself
+      ) {
         onClose();
       }
     };
@@ -270,11 +236,12 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <motion.div
-      className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl border shadow-lg z-10 emoji-picker"
+      className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl border shadow-lg z-50 emoji-picker"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
+      onClick={(e) => e.stopPropagation()} // Prevent clicks from closing the picker
     >
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm font-medium text-muted-foreground">プロンプトを選択</h3>
@@ -346,6 +313,8 @@ const ChatInterface = () => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
+  const [transcribedText, setTranscribedText] = useState<string | null>(null);
+  const [showTranscriptionConfirmation, setShowTranscriptionConfirmation] = useState(false);
 
 
   // Detect mobile devices
@@ -482,11 +451,7 @@ const ChatInterface = () => {
         duration: 2000,
       });
 
-      // Show celebration confetti occasionally
-      if (Math.random() > 0.7) {
-        setConfetti(true);
-        setTimeout(() => setConfetti(false), 2000);
-      }
+      
     },
     onError: (_, __, context) => {
       if (context?.previousMessages) {
@@ -513,12 +478,15 @@ const ChatInterface = () => {
 
       if (!res.ok) throw new Error();
 
-      const { transcribedText } = await res.json();
-      setTimeout(() => setInput(transcribedText), 50);
+      const { transcribedText: text } = await res.json();
+      
+      // Show confirmation instead of directly setting input
+      setTranscribedText(text);
+      setShowTranscriptionConfirmation(true);
 
       toast({
         title: "音声認識成功",
-        description: "テキストに変換されました！",
+        description: "内容を確認してから送信してください",
         duration: 3000,
       });
     } catch {
@@ -530,6 +498,31 @@ const ChatInterface = () => {
     } finally {
       setIsProcessingVoice(false);
     }
+  };
+  
+  // Handle confirming the transcribed text
+  const handleConfirmTranscription = (confirmedText: string) => {
+    setInput(confirmedText);
+    setTranscribedText(null);
+    setShowTranscriptionConfirmation(false);
+    
+    // Focus on the textarea after confirmation
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 100);
+  };
+  
+  // Handle editing the transcribed text
+  const handleEditTranscription = (editedText: string) => {
+    setTranscribedText(editedText);
+  };
+  
+  // Handle canceling the transcription
+  const handleCancelTranscription = () => {
+    setTranscribedText(null);
+    setShowTranscriptionConfirmation(false);
   };
 
   const playMessageAudio = async (messageId: number, text: string) => {
@@ -587,8 +580,63 @@ const ChatInterface = () => {
     sendMessage.mutate(message);
   };
 
-  const handleEmotionSelect = (emoji: string) => {
-    setInput((prev) => prev + " " + emoji);
+  // Optimized emotion selection handler with direct DOM manipulation for better performance
+  const handleEmotionSelect = (message: string) => {
+    try {
+      // Ensure we have access to the textarea element
+      if (!textareaRef.current) {
+        console.warn("Textarea ref not available");
+        setInput(message);
+        return;
+      }
+      
+      // Direct DOM manipulation for better performance
+      const textarea = textareaRef.current;
+      
+      // Focus first to ensure we have the correct selection
+      textarea.focus();
+      
+      // Get the current cursor positions
+      const cursorStart = textarea.selectionStart || 0;
+      const cursorEnd = textarea.selectionEnd || 0;
+      
+      // Get the current value directly from the DOM
+      const currentValue = textarea.value;
+      
+      // Create the new value with the insertion
+      const beforeCursor = currentValue.substring(0, cursorStart);
+      const afterCursor = currentValue.substring(cursorEnd);
+      const newValue = beforeCursor + message + afterCursor;
+      
+      // Calculate new cursor position
+      const newCursorPosition = cursorStart + message.length;
+      
+      // Directly set the value using the DOM API (faster than React state updates)
+      textarea.value = newValue;
+      
+      // Set the cursor position immediately
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      
+      // Update React state after direct DOM updates (for consistency)
+      setInput(newValue);
+      
+      // Close the emotion picker immediately
+      setShowEmotions(false);
+      
+      // Make sure the cursor is visible by scrolling if needed
+      const textareaLineHeight = parseInt(getComputedStyle(textarea).lineHeight);
+      const cursorLine = (newValue.substring(0, newCursorPosition).match(/\n/g) || []).length;
+      const approxScrollTop = cursorLine * textareaLineHeight;
+      
+      if (approxScrollTop > textarea.clientHeight) {
+        textarea.scrollTop = approxScrollTop - textarea.clientHeight / 2;
+      }
+    } catch (error) {
+      console.error("Error inserting text:", error);
+      // Fallback - direct state setting
+      setInput(prev => prev + message);
+      setShowEmotions(false);
+    }
   };
 
   if (isLoadingMessages) {
@@ -602,47 +650,13 @@ const ChatInterface = () => {
 
   return (
     <Card className="flex flex-col h-[calc(100vh-12rem)] relative overflow-hidden">
-      {/* Celebration confetti animation */}
-      <AnimatePresence>
-        {confetti && (
-          <div className="absolute inset-0 pointer-events-none z-10">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{
-                  top: "-10%",
-                  left: `${Math.random() * 100}%`,
-                  opacity: 1,
-                  rotate: 0,
-                  scale: 0.5 + Math.random() * 1,
-                }}
-                animate={{
-                  top: "110%",
-                  left: `${Math.random() * 100}%`,
-                  opacity: [1, 1, 0],
-                  rotate: Math.random() * 360,
-                }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  duration: 2 + Math.random() * 3,
-                  ease: "easeOut",
-                }}
-              >
-                {Math.random() > 0.3
-                  ? "🌸"
-                  : ["✨", "💮", "🎀", "🌟", "💕"][Math.floor(Math.random() * 5)]}
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
+     
 
       <AnimatePresence>
         {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
       </AnimatePresence>
 
-      <NetworkStatus isOnline={isOnline} />
+      
       {currentAudioUrl && (
         <AudioPlayer 
           audioUrl={currentAudioUrl} 
@@ -691,18 +705,45 @@ const ChatInterface = () => {
         </div>
       </ScrollArea>
 
-      <ChatInput
-        input={input}
-        setInput={setInput}
-        handleSubmit={handleSubmit}
-        handleVoiceRecording={handleVoiceRecording}
-        isProcessing={isProcessingVoice || sendMessage.isPending}
-        sendDisabled={sendMessage.isPending}
-        showEmotions={showEmotions}
-        setShowEmotions={setShowEmotions}
-        isMobile={isMobile}
-        textareaRef={textareaRef}
-      />
+      {/* Form with emotions picker */}
+      <div className="relative">
+        {/* Emotion Buttons / Prompt Picker (positioned above the input) */}
+        <AnimatePresence>
+          {showEmotions && (
+            <EmotionButtons 
+              onSelect={handleEmotionSelect} 
+              onClose={() => setShowEmotions(false)} 
+            />
+          )}
+        </AnimatePresence>
+        
+        {/* Transcription Confirmation */}
+        <AnimatePresence>
+          {showTranscriptionConfirmation && transcribedText && (
+            <div className="px-4 pt-2">
+              <TranscriptionConfirmation
+                text={transcribedText}
+                onConfirm={handleConfirmTranscription}
+                onCancel={handleCancelTranscription}
+                onEdit={handleEditTranscription}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          handleSubmit={handleSubmit}
+          handleVoiceRecording={handleVoiceRecording}
+          isProcessing={isProcessingVoice || sendMessage.isPending}
+          sendDisabled={sendMessage.isPending}
+          showEmotions={showEmotions}
+          setShowEmotions={setShowEmotions}
+          isMobile={isMobile}
+          textareaRef={textareaRef}
+        />
+      </div>
 
 
       <FloatingMascot />
