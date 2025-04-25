@@ -36,7 +36,7 @@ async function sendMessageToLangflow(content: string, persistentSessionId: strin
       output_type: "chat",
       input_type: "chat",
       tweaks: {
-        "TextInput-nni38": {
+        "TextInput-c5nef": {
           input_value: persistentSessionId,
         },
       },
