@@ -4,10 +4,21 @@ import ChatInterface from "@/components/chat-interface";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Music, Star } from "lucide-react";
 import { useState, useEffect } from "react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"; 
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [currentGreeting, setCurrentGreeting] = useState("");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Extract username before '@' from email
   const displayName = user?.username?.split("@")[0];
@@ -131,7 +142,7 @@ export default function HomePage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => logoutMutation.mutate()}
+                onClick={() => setShowLogoutConfirm(true)}
                 disabled={logoutMutation.isPending}
                 className="border-pink-200 text-pink-700 hover:bg-pink-50"
               >
@@ -143,9 +154,36 @@ export default function HomePage() {
                 </motion.span>
               </Button>
             </motion.div>
+
+
+            
+
           </div>
         </div>
       </header>
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="mx-auto max-w-[90%] sm:max-w-md md:max-w-lg lg:max-w-xl rounded-xl p-6">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-pink-600">本当にログアウトしますか？</AlertDialogTitle>
+            <AlertDialogDescription className="text-pink-400/80">
+              寂しくなっちゃうよ…🌸<br />
+              桜AIは、いつでもあなたを待っています！
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white text-pink-500 border-pink-200 hover:bg-pink-50">
+              もう少し一緒にいる
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => logoutMutation.mutate()}
+              className="bg-pink-500 hover:bg-pink-600 text-white border border-pink-400"
+            >
+              ログアウト
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Greeting message */}
       <motion.div 
