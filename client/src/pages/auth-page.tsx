@@ -37,7 +37,7 @@ export default function AuthPage() {
       const randomIndex = Math.floor(Math.random() * loginCharacters.length);
       setCurrentCharacter(loginCharacters[randomIndex]);
     }, 3000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -74,7 +74,7 @@ export default function AuthPage() {
     });
 
     return (
-      <div className="min-h-screen flex flex-col md:grid md:grid-cols-2 overflow-hidden">
+        <div className="min-h-screen flex flex-col md:grid md:grid-cols-2 overflow-hidden">
         {/* Floating sakura petals */}
         <AnimatePresence>
           {Array.from({ length: sakuraCount }).map((_, index) => (
@@ -108,7 +108,7 @@ export default function AuthPage() {
 
         {/* Bot Logo in Mobile View */}
         <motion.div 
-          className="flex flex-col items-center justify-center p-8 md:hidden bg-gradient-to-b from-pink-50 to-pink-100"
+          className="flex-1 md:flex-none flex flex-col items-center justify-center p-8 md:hidden bg-gradient-to-b from-pink-50 to-pink-100"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -122,18 +122,11 @@ export default function AuthPage() {
             transition={{ rotate: { duration: 0.5, repeat: 1 } }}
             onClick={addSakuraPetal}
           />
-          <motion.div
-            className="text-xl"
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-          >
-            {currentCharacter}
-          </motion.div>
         </motion.div>
 
         {/* Authentication Card */}
         <motion.div 
-          className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-pink-50 to-pink-100"
+          className="flex-1 md:flex-none flex flex-col items-center justify-center p-8 bg-gradient-to-b from-pink-50 to-pink-100"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -157,23 +150,25 @@ export default function AuthPage() {
             }}
             className="w-full max-w-md"
           >
-            <Card className="p-8 bg-white/90 backdrop-blur-sm border border-pink-100 shadow-lg rounded-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <motion.h1 
-                  className="text-2xl font-bold text-pink-800"
-                  animate={{ scale: [1, 1.03, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-                >
-                  {isLogin ? "お帰りなさい" : "アカウントを作成"}
-                </motion.h1>
-                <motion.div 
-                  className="text-2xl"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
-                >
-                  {currentCharacter}
-                </motion.div>
-              </div>
+              <Card className="p-8 bg-white/90 backdrop-blur-sm border border-pink-100 shadow-lg rounded-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <motion.h1 
+                    className="text-2xl font-bold text-pink-800 break-keep"
+                    animate={{ scale: [1, 1.03, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                  >
+                    {isLogin ? "お帰りなさい" : "アカウントを作成"}
+                  </motion.h1>
+
+                  <motion.div 
+                    className="text-2xl break-keep shrink-0 min-w-fit"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
+                  >
+                    {currentCharacter}
+                  </motion.div>
+
+                </div>
 
               <Form {...form}>
                 <form onSubmit={onSubmit} className="space-y-6">
@@ -247,7 +242,7 @@ export default function AuthPage() {
                       ) : (
                         "アカウントを作成"
                       )}
-                      
+
                       {/* Decorative elements on button */}
                       <motion.span 
                         className="absolute -top-1 -right-1 text-xs pointer-events-none"
@@ -277,10 +272,11 @@ export default function AuthPage() {
                 <Button
                   variant="link"
                   onClick={() => setIsLogin(!isLogin)}
-                  className="text-sm text-pink-600 hover:text-pink-700"
+                  className="w-full text-sm text-pink-600 hover:text-pink-700 text-center"
                 >
                   {isLogin ? "アカウントが必要ですか？ サインアップ" : "すでにアカウントをお持ちですか？ ログイン"}
                 </Button>
+
               </motion.div>
             </Card>
           </motion.div>
@@ -315,7 +311,7 @@ export default function AuthPage() {
               {["🌸", "💮", "✨", "⭐", "🌟", "💕"][index]}
             </motion.div>
           ))}
-          
+
           <motion.img 
             src="/images/slogo.png" 
             alt="桜AI ロゴ" 
@@ -324,7 +320,7 @@ export default function AuthPage() {
             whileTap={{ scale: 0.95 }}
             onClick={addSakuraPetal}
           />
-          
+
           <motion.div 
             className="max-w-md text-center bg-white/40 backdrop-blur-sm p-6 rounded-2xl border border-pink-100 shadow-md z-10"
             initial={{ y: 20, opacity: 0 }}
