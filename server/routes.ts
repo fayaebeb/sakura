@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertMessageSchema } from "@shared/schema";
 import { transcribeAudio } from "./apis/openai";
-import { textToSpeech } from "./apis/unrealspeech";
+import { textToSpeechStream } from "./apis/openaitts";
+//import { textToSpeech } from "./apis/unrealspeech";
 import multer from "multer";
 
 const LANGFLOW_API = process.env.LANGFLOW_API;
@@ -36,7 +37,7 @@ async function sendMessageToLangflow(content: string, persistentSessionId: strin
       output_type: "chat",
       input_type: "chat",
       tweaks: {
-        "TextInput-vvYQh": {
+        "TextInput-DpRro": {
           input_value: persistentSessionId,
         },
       },
@@ -159,27 +160,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Text-to-speech endpoint - converts bot response to speech
   app.post("/api/voice/speech", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const { text, voiceId } = req.body;
-      
+
       if (!text) {
         return res.status(400).json({ error: "No text provided" });
       }
-      
-      console.log("Converting text to speech...");
-      const audioBuffer = await textToSpeech(text, voiceId);
-      
-      // Set appropriate headers for audio file
-      res.setHeader('Content-Type', 'audio/mpeg');
-      res.setHeader('Content-Length', audioBuffer.length);
-      
-      // Send the audio buffer as the response
-      res.send(audioBuffer);
+
+      console.log("Streaming TTS audio...");
+
+      const openaiResponse = await textToSpeechStream(text, voiceId);
+
+      // Set headers for streaming audio
+      res.setHeader("Content-Type", "audio/wav");
+      res.setHeader("Transfer-Encoding", "chunked");
+
+      // Stream OpenAI's audio response directly to the client
+      openaiResponse.data.pipe(res);
     } catch (error) {
-      console.error("Error generating speech:", error);
+      console.error("Streaming error:", error);
       res.status(500).json({
-        message: "Failed to generate speech",
+        message: "Failed to stream speech",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }

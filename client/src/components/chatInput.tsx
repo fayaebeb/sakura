@@ -1,14 +1,14 @@
 import { memo, useCallback, useRef, useEffect } from "react";
-import { Lightbulb, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import { motion } from "framer-motion";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import VoiceRecorder from "./voice-recorder";
+import PromptPicker from "./prompt-picker";
 
 // Debounce function to improve input performance
 function useDebounce(callback: Function, delay: number) {
   const timeoutRef = useRef<number | null>(null);
-  
+
   useEffect(() => {
     // Cleanup on unmount
     return () => {
@@ -17,12 +17,12 @@ function useDebounce(callback: Function, delay: number) {
       }
     };
   }, []);
-  
+
   return useCallback((...args: any[]) => {
     if (timeoutRef.current) {
       window.clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = window.setTimeout(() => {
       callback(...args);
     }, delay);
@@ -37,8 +37,7 @@ const ChatInput = memo(function ChatInput({
   handleVoiceRecording,
   isProcessing,
   sendDisabled,
-  showEmotions,
-  setShowEmotions,
+  handlePromptSelect,
   isMobile,
   textareaRef,
 }: {
@@ -48,24 +47,23 @@ const ChatInput = memo(function ChatInput({
   handleVoiceRecording: (audio: Blob) => void;
   isProcessing: boolean;
   sendDisabled: boolean;
-  showEmotions: boolean;
-  setShowEmotions: React.Dispatch<React.SetStateAction<boolean>>;
+  handlePromptSelect: (text: string) => void;
   isMobile: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
 }) {
   // Local input state for smoother typing experience
   const localInputRef = useRef<string>(input);
-  
+
   // Update the parent state in a debounced way to avoid lag
   const debouncedSetInput = useDebounce((value: string) => {
     setInput(value);
   }, 5); // Very small delay - just enough to batch updates
-  
+
   // Update local ref when parent input changes
   useEffect(() => {
     localInputRef.current = input;
   }, [input]);
-  
+
   // Handle Enter key for submission - optimize deps array
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -79,17 +77,17 @@ const ChatInput = memo(function ChatInput({
       }
     }
   }, [isMobile, handleSubmit, sendDisabled, textareaRef]);
-  
+
   // Handle immediate input change for better responsiveness
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     localInputRef.current = newValue; // Update local ref immediately
     debouncedSetInput(newValue); // Update parent state in a debounced way
   }, [debouncedSetInput]);
-  
+
   return (
     <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t flex flex-col gap-2 relative">
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 sm:gap-2">
         <div className="flex-shrink-0">
           <VoiceRecorder 
             onRecordingComplete={handleVoiceRecording} 
@@ -104,7 +102,7 @@ const ChatInput = memo(function ChatInput({
             defaultValue={input} // Use defaultValue instead of value for smoother typing
             onChange={handleInputChange}
             placeholder="メッセージを書いてね！"
-            className="pr-10 pl-3 py-2 focus:ring-2 focus:ring-pink-100 text-sm sm:text-base min-h-[40px] max-h-[200px] resize-none w-full border rounded-md"
+            className="px-3 py-2 focus:ring-2 focus:ring-pink-100 text-xs sm:text-sm min-h-[40px] max-h-[200px] resize-none w-full border rounded-md"
             minRows={1}
             maxRows={6}
             onKeyDown={handleKeyDown}
@@ -112,31 +110,16 @@ const ChatInput = memo(function ChatInput({
             autoComplete="off" // Disable browser autocomplete
             autoCorrect="off" // Disable autocorrect
           />
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  type="button"
-                  className="absolute right-2 top-2 text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 px-1.5 py-1 rounded-md hover:bg-accent/50 lightbulb-button"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowEmotions((prev) => !prev)}
-                >
-                  <Lightbulb className="h-4 w-4" />
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>プロンプトを選択</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        </div>
+        
+        <div className="flex-shrink-0 relative z-20">
+          <PromptPicker onSelect={handlePromptSelect} />
         </div>
 
         <motion.button
           type="submit"
           disabled={sendDisabled}
-          className="px-3 sm:px-4 py-2 h-[40px] rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
+          className="px-2 sm:px-3 py-2 h-[40px] rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >

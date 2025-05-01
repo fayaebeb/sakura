@@ -6,34 +6,45 @@ import os from "os";
 // Use environment variables for API keys
 export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// Use GPT-4o for text generation
 export const OPENAI_MODEL = "gpt-4o";
 
-// Function to transcribe audio using OpenAI's Whisper model
+// The transcription model to use for audio-to-text
+export const TRANSCRIPTION_MODEL = "gpt-4o-mini-transcribe";
+
+/**
+ * Transcribes audio using OpenAI's transcription API (gpt-4o-mini-transcribe).
+ * Supports audio formats: mp3, mp4, mpeg, mpga, m4a, wav, and webm (must be under 25 MB).
+ *
+ * @param audioBuffer - Audio data in Buffer format.
+ * @returns The transcribed text.
+ */
 export async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
+  const tempFilePath = path.join(os.tmpdir(), `audio-${Date.now()}.webm`);
+
   try {
     console.log(`Transcribing audio of size ${audioBuffer.byteLength} bytes`);
-    
-    // Create a temporary file to store the audio data
-    const tempFilePath = path.join(os.tmpdir(), `audio-${Date.now()}.webm`);
-    fs.writeFileSync(tempFilePath, audioBuffer);
-    
-    // OpenAI Node.js SDK expects a ReadStream for file uploads
-    const fileStream = fs.createReadStream(tempFilePath);
-    
-    // Use the file stream with OpenAI's API
-    const transcription = await openai.audio.transcriptions.create({
-      file: fileStream,
-      model: "whisper-1",
-    });
-    
-    // Clean up the temporary file when done
-    fs.unlinkSync(tempFilePath);
 
-    console.log(`Transcription result: ${transcription.text}`);
-    return transcription.text;
+    fs.writeFileSync(tempFilePath, audioBuffer);
+    const fileStream = fs.createReadStream(tempFilePath);
+
+    const transcriptionText = await openai.audio.transcriptions.create({
+      file: fileStream,
+      model: TRANSCRIPTION_MODEL,
+      response_format: "text", // returns raw string, not an object
+    });
+
+    // Now `transcriptionText` is a plain string
+    console.log(`Transcription result: ${transcriptionText}`);
+    return transcriptionText;
+
   } catch (error) {
     console.error("Error transcribing audio:", error);
     throw new Error(`Failed to transcribe audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    // Clean up temporary file
+    if (fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
+    }
   }
 }

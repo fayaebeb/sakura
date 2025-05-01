@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles, Heart, Wand2, MessageSquare, } from "lucide-react";
+import { Check, Sparkles, Heart} from "lucide-react";
 import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,13 +15,6 @@ import FloatingMascot from "./floating-mascot";
 import ChatLoadingIndicator, { SakuraPetalLoading } from "./chat-loading-indicator";
 import { motion, AnimatePresence } from "framer-motion";
 import TranscriptionConfirmation from "./transcription-confirmation";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
 
 
 
@@ -54,36 +47,44 @@ const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string
 
 const Tutorial = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState(1);
+
   const steps = [
     {
       title: "ようこそ！",
-      description: "「桜AI」は、PCKKにおいて、情報提供や質問への回答を行うAIです。私の役割は、さまざまなトピックについて正確で分かりやすい情報を提供し、ユーザーのリクエストに的確にお応えすることです。たとえば、データに基づくご質問には、社内資料や外部情報を参照しながら丁寧にお答えします。",
-      icon: <Sparkles className="h-5 w-5 text-pink-400" />
+      description:
+        "「桜AI」は、PCKKにおいて、情報提供や質問への回答を行うAIです。私の役割は、さまざまなトピックについて正確で分かりやすい情報を提供し、ユーザーのリクエストに的確にお応えすることです。たとえば、データに基づくご質問には、社内資料や外部情報を参照しながら丁寧にお答えします。",
+      icon: <Sparkles className="h-5 w-5 text-pink-400" />,
     },
     {
       title: "楽しくお話ししましょう！",
-      description: "「桜AI」は、OpenAIの生成モデル「ChatGPT-4o」を使用しています。社内の全国うごき統計に関する営業資料や、人流に関する社内ミニ講座の内容を基礎データとして取り込み、さらにWikipediaやGoogleのAPIを通じてインターネット上の情報も収集しています。これらの情報をもとに、最適な回答を生成しています。",
-      icon: <Heart className="h-5 w-5 text-red-400" />
+      description:
+        "「桜AI」は、OpenAIの生成モデル「ChatGPT-4o」を使用しています。社内の全国うごき統計に関する営業資料や、人流に関する社内ミニ講座の内容を基礎データとして取り込み、さらにWikipediaやGoogleのAPIを通じてインターネット上の情報も収集しています。これらの情報をもとに、最適な回答を生成しています。",
+      icon: <Heart className="h-5 w-5 text-red-400" />,
     },
   ];
 
   return (
     <motion.div
-      className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
+        className="flex items-center justify-center"
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
         transition={{ type: "spring", duration: 0.5 }}
       >
         <Card className="w-[80%] max-w-md p-6 space-y-4">
           <div className="flex items-center gap-3">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
             >
               {steps[step - 1].icon}
             </motion.div>
@@ -95,10 +96,16 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
               {steps.map((_, idx) => (
                 <motion.div
                   key={idx}
-                  className={`w-2 h-2 rounded-full ${idx + 1 === step ? "bg-primary" : "bg-muted"}`}
-                  animate={idx + 1 === step ? {
-                    scale: [1, 1.3, 1],
-                  } : {}}
+                  className={`w-2 h-2 rounded-full ${
+                    idx + 1 === step ? "bg-primary" : "bg-muted"
+                  }`}
+                  animate={
+                    idx + 1 === step
+                      ? {
+                          scale: [1, 1.3, 1],
+                        }
+                      : {}
+                  }
                   transition={{ duration: 1.5, repeat: Infinity }}
                 />
               ))}
@@ -120,180 +127,6 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
     </motion.div>
   );
 };
-
-    interface Prompt {
-      text: string;
-      message?: string;
-      description: string;
-    }
-
-    interface PromptCategory {
-      name: string;
-      icon: JSX.Element;
-      prompts: Prompt[];
-    }
-
-    interface EmotionButtonsProps {
-      onSelect: (message: string) => void;
-      onClose: () => void;
-    }
-
-    const EmotionButtons: React.FC<EmotionButtonsProps> = ({ onSelect, onClose }) => {
-      const promptCategories: PromptCategory[] = [
-        {
-          name: "出力形式",
-          icon: <MessageSquare className="h-4 w-4" />,
-            prompts: [
-              {
-                text: "会話形式で💬",
-                message: "AさんとBさんの会話形式で出力して",
-                description: "フレンドリーな会話形式で回答します",
-              },
-              {
-                text: "箇条書き形式で📝",
-                message: "箇条書き形式で出力して",
-                description: "箇条書き形式で出力します",
-              },
-              {
-                text: "表形式で📊",
-                message: "表形式で出力して",
-                description: "表形式で出力します",
-              },
-              {
-                text: "FAQ形式で❓",
-                message: "FAQ形式で出力して",
-                description: "FAQ形式で出力します",
-              },
-              {
-                text: "比喩・たとえ話形式🎭",
-                message: "比喩・たとえ話形式で出力して",
-                description: "比喩・たとえ話形式で出力します",
-              },
-              {
-                text: "簡潔に要約✨",
-                message: "簡潔に要約で出力して",
-                description: "簡潔に要約で出力します",
-          },
-            ],
-          },
-          {
-              name: "アシスタント",
-              icon: <Wand2 className="h-4 w-4" />,
-              prompts: [
-                {
-                  text: "＋指示のコツ🎯",
-                  message: "質問に対してさらに理解を深めるために、どのような指示をすればよいか提案して",
-                  description: "より良い指示の出し方をアドバイスします",
-                },
-                {
-                  text: "「外部情報なし」🚫",
-                  message: "インターネットからの情報を利用しないで",
-                  description: "外部情報を使わずに回答します",
-                },
-                {
-                  text: "初心者向け📘",
-                  message: "説明に出てくる専門用語には、それぞれ説明を加え、初心者でも理解しやすいように。具体的な例を挙げながら丁寧に解説して",
-                  description: "具体的な例を挙げながら丁寧に解説します",
-                },
-
-          ],
-        },
-    {
-      name: "感情表現",
-      icon: <Heart className="h-4 w-4" />,
-        prompts: [
-        { text: "❤️", description: "優しく温かい雰囲気で" },
-        { text: "😊", description: "フレンドリーな雰囲気で" },
-        { text: "✨", description: "明るく元気な雰囲気で" },
-        { text: "🌸", description: "華やかで優雅な雰囲気で" },
-      ]
-    }
-  ];
-
-  // Handle close button click
-  const handleClose = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent any form submission
-    onClose();
-  };
-
-  // Close picker when clicking outside, but ignore the Lightbulb icon
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const targetElement = event.target as HTMLElement;
-      // Don't close if the clicked element is inside the emoji-picker
-      // Also don't close if clicking on the Lightbulb button or its parent
-      if (
-        !targetElement.closest(".emoji-picker") && 
-        !targetElement.closest(".lightbulb-button") &&
-        !targetElement.closest("svg") // This helps catch the Lightbulb icon itself
-      ) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
-
-  return (
-    <motion.div
-      className="absolute bottom-full left-0 mb-2 w-full bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl border shadow-lg z-50 emoji-picker"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.2 }}
-      onClick={(e) => e.stopPropagation()} // Prevent clicks from closing the picker
-    >
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-medium text-muted-foreground">プロンプトを選択</h3>
-        <button
-          type="button" // Explicitly set button type to prevent form submission
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          onClick={handleClose}
-        >
-          ✖
-        </button>
-      </div>
-
-<div className="space-y-4">
-  {promptCategories.map((category, idx) => (
-    <div key={idx} className="space-y-2">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {category.icon}
-        <span>{category.name}</span>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {category.prompts.map((prompt, promptIdx) => (
-          <TooltipProvider key={promptIdx}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  type="button"
-                  onClick={() => {
-                    // Use prompt.message if available, otherwise fallback to prompt.text
-                    onSelect(prompt.message ? prompt.message : prompt.text);
-                    onClose();
-                  }}
-                  className="px-3 py-2 text-sm bg-background hover:bg-accent rounded-full transition-colors border border-input hover:border-accent-foreground/20 flex items-center gap-1"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {prompt.text}
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>{prompt.description}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
-    </div>
-  ))}
-</div>
-</motion.div>
-);
-};
-
 const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
 const TUTORIAL_SHOWN_KEY_PREFIX = "tutorial_shown_user_";
 
@@ -304,11 +137,7 @@ const ChatInterface = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   const [showTutorial, setShowTutorial] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [showEmotions, setShowEmotions] = useState(false);
-  const [confetti, setConfetti] = useState(false);
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
@@ -321,10 +150,10 @@ const ChatInterface = () => {
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
 
   useEffect(() => { 
-    if (!showTutorial && !showEmotions) { 
+    if (!showTutorial) { 
       textareaRef.current?.focus(); 
     } 
-  }, [showTutorial, showEmotions]);
+  }, [showTutorial]);
 
   // Handle tutorial display
   useEffect(() => {
@@ -336,17 +165,6 @@ const ChatInterface = () => {
     }
   }, [user]);
 
-  // Handle online/offline status
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
 
   const handleCloseTutorial = () => {
     if (!user) return;
@@ -355,31 +173,51 @@ const ChatInterface = () => {
     localStorage.setItem(tutorialShownKey, "true");
   };
 
-  const [sessionId, setSessionId] = useState<string>(() => {
-    if (!user) return "";
+  const [sessionId, setSessionId] = useState<string>("");
 
-    const storageKey = `${CHAT_SESSION_KEY_PREFIX}${user.id}`;
-    const savedSessionId = localStorage.getItem(storageKey);
-    if (savedSessionId) return savedSessionId;
-
-    const newSessionId = nanoid();
-    localStorage.setItem(storageKey, newSessionId);
-    return newSessionId;
-  });
-
+  // Initialize and manage session ID based on user
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     const storageKey = `${CHAT_SESSION_KEY_PREFIX}${user.id}`;
-    const savedSessionId = localStorage.getItem(storageKey);
+    let savedSessionId = localStorage.getItem(storageKey);
 
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
-    } else {
-      const newSessionId = nanoid();
-      localStorage.setItem(storageKey, newSessionId);
-      setSessionId(newSessionId);
+    // Validate saved session ID
+    if (!savedSessionId || savedSessionId.trim() === "") {
+      console.log("Creating new session ID - no previous ID found");
+      savedSessionId = nanoid();
+      localStorage.setItem(storageKey, savedSessionId);
     }
+
+    console.log(`Using session ID: ${savedSessionId}`);
+    setSessionId(savedSessionId);
+
+    // Use persistent session ID derived from username for server requests
+    // This ensures consistent data even if local storage is cleared
+    const persistentSessionId = user.username.split('@')[0];
+    
+    // If sessionId doesn't match username-based ID,
+    // log it (but still respect the local storage session for now)
+    if (savedSessionId !== persistentSessionId) {
+      console.log(
+        `Note: localStorage session ID (${savedSessionId}) differs from persistent ID (${persistentSessionId})`
+      );
+    }
+
+    // Setup periodic check for session integrity
+    const interval = setInterval(() => {
+      const currentStoredId = localStorage.getItem(storageKey);
+      if (currentStoredId !== savedSessionId) {
+        console.log("Session ID changed in another tab, updating");
+        setSessionId(currentStoredId || savedSessionId);
+        // Restore the session ID if it was accidentally cleared
+        if (!currentStoredId) {
+          localStorage.setItem(storageKey, savedSessionId);
+        }
+      }
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
   }, [user]);
 
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
@@ -403,40 +241,55 @@ const ChatInterface = () => {
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
+      if (!user?.id) {
+        throw new Error("ユーザー情報が見つかりません。再ログインしてください。");
+      }
+      
+      if (!sessionId) {
+        throw new Error("セッションIDが見つかりません。再ログインしてください。");
+      }
+      
       const res = await apiRequest("POST", "/api/chat", {
         content,
         sessionId,
         isBot: false,
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "Unknown error");
+        throw new Error(`Failed to send message: ${res.status} ${errorText}`);
+      }
+      
       return res.json();
     },
     onMutate: async (content: string) => {
+      // Cancel any outgoing refetches to avoid overwriting our optimistic update
       await queryClient.cancelQueries({ queryKey: ["/api/messages", sessionId] });
-      
 
-      
-
-
+      // Get current messages
       const previousMessages = queryClient.getQueryData<Message[]>(["/api/messages", sessionId]) || [];
 
-      // Use a temporary ID for optimistic updates
+      // Create optimistic user message with a temporary negative ID to avoid conflicts
+      // This helps distinguish it from real IDs which are always positive
       const optimisticUserMessage: Message = {
-        id: Date.now(), // Using timestamp as a temporary numeric ID
-        userId: user?.id || 0, // Default to 0 if user id is not available
+        id: -Date.now(), // Using negative timestamp as a temporary ID to avoid conflicts
+        userId: user?.id || 0,
         content,
         timestamp: new Date(),
         isBot: false,
         sessionId,
       };
 
+      // Update the messages in the cache with our optimistic message
       queryClient.setQueryData<Message[]>(["/api/messages", sessionId], [
         ...previousMessages,
         optimisticUserMessage,
       ]);
 
-      return { previousMessages };
+      // Return previous messages for potential rollback
+      return { previousMessages, optimisticUserMessage };
     },
-    onSuccess: (newBotMessage: Message) => {
+  onSuccess: (newBotMessage: Message) => {
       queryClient.setQueryData<Message[]>(["/api/messages", sessionId], (old) => [
         ...(old || []),
         newBotMessage,
@@ -451,7 +304,7 @@ const ChatInterface = () => {
         duration: 2000,
       });
 
-      
+
     },
     onError: (_, __, context) => {
       if (context?.previousMessages) {
@@ -466,7 +319,25 @@ const ChatInterface = () => {
   });
   const handleVoiceRecording = async (audioBlob: Blob) => {
     setIsProcessingVoice(true);
+    
     try {
+      // Show a toast to indicate processing
+      toast({
+        title: "音声認識中...",
+        description: "あなたの声を認識しています。少々お待ちください。",
+        duration: 2500,
+      });
+      
+      // Validate audio blob
+      if (!audioBlob || audioBlob.size === 0) {
+        throw new Error("音声データが空です。もう一度録音してください。");
+      }
+      
+      // Check audio blob type 
+      if (!audioBlob.type.includes('audio') && !audioBlob.type.includes('webm')) {
+        console.warn(`Unexpected audio blob type: ${audioBlob.type}, size: ${audioBlob.size}`);
+      }
+      
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
 
@@ -476,12 +347,21 @@ const ChatInterface = () => {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "Unknown error");
+        throw new Error(`Transcription failed with status ${res.status}: ${errorText}`);
+      }
 
-      const { transcribedText: text } = await res.json();
+      const data = await res.json().catch(() => {
+        throw new Error("Invalid JSON response from transcription service");
+      });
       
-      // Show confirmation instead of directly setting input
-      setTranscribedText(text);
+      if (!data || !data.transcribedText) {
+        throw new Error("音声認識結果が取得できませんでした。");
+      }
+
+      // Show confirmation with the transcribed text
+      setTranscribedText(data.transcribedText);
       setShowTranscriptionConfirmation(true);
 
       toast({
@@ -489,34 +369,38 @@ const ChatInterface = () => {
         description: "内容を確認してから送信してください",
         duration: 3000,
       });
-    } catch {
+    } catch (error) {
+      console.error("Voice transcription error:", error);
       toast({
         title: "音声処理エラー",
-        description: "認識できませんでした。もう一度試してね！",
+        description: error instanceof Error 
+          ? `認識できませんでした: ${error.message}`
+          : "認識できませんでした。もう一度試してね！",
         variant: "destructive",
+        duration: 4000,
       });
     } finally {
       setIsProcessingVoice(false);
     }
   };
-  
+
   // Handle confirming the transcribed text
   const handleConfirmTranscription = (confirmedText: string) => {
     // Instead of setting the input text, send the message directly
     setTranscribedText(null);
     setShowTranscriptionConfirmation(false);
-    
+
     // Send the message directly if it has content
     if (confirmedText.trim()) {
       sendMessage.mutate(confirmedText);
     }
   };
-  
+
   // Handle editing the transcribed text
   const handleEditTranscription = (editedText: string) => {
     setTranscribedText(editedText);
   };
-  
+
   // Handle canceling the transcription
   const handleCancelTranscription = () => {
     setTranscribedText(null);
@@ -524,16 +408,27 @@ const ChatInterface = () => {
   };
 
   const playMessageAudio = async (messageId: number, text: string) => {
-    if (isPlayingAudio) {
+    // If the same message is already playing, toggle it off
+    if (isPlayingAudio && playingMessageId === messageId) {
       setIsPlayingAudio(false);
-      setCurrentAudioUrl(null);
       setPlayingMessageId(null);
+      if (currentAudioUrl) {
+        URL.revokeObjectURL(currentAudioUrl);
+        setCurrentAudioUrl(null);
+      }
       return;
     }
 
     try {
       setIsPlayingAudio(true);
       setPlayingMessageId(messageId);
+
+      // Show a toast to indicate audio is being prepared
+      toast({
+        title: "音声生成中...",
+        description: "音声を準備しています。しばらくお待ちください。",
+        duration: 2000,
+      });
 
       const res = await fetch('/api/voice/speech', {
         method: 'POST',
@@ -542,22 +437,83 @@ const ChatInterface = () => {
         credentials: 'include',
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "Unknown error");
+        throw new Error(`Failed to fetch TTS stream: ${res.status} ${errorText}`);
+      }
+      
+      if (!res.body) {
+        throw new Error("Response body is null");
+      }
 
-      const audioBlob = await res.blob();
+      const reader = res.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let totalLength = 0;
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            chunks.push(value);
+            totalLength += value.length;
+          }
+        }
+      } catch (readError) {
+        console.error("Error reading stream:", readError);
+        throw new Error("音声データの読み込み中にエラーが発生しました。");
+      }
+
+      // Make sure we got some data
+      if (totalLength === 0) {
+        throw new Error("No audio data received");
+      }
+
+      const audioData = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        audioData.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      const audioBlob = new Blob([audioData], { type: "audio/wav" });
+      if (audioBlob.size === 0) {
+        throw new Error("Empty audio blob created");
+      }
+
+      // Revoke any previously active audio URL
+      if (currentAudioUrl) {
+        URL.revokeObjectURL(currentAudioUrl);
+      }
+
       const audioUrl = URL.createObjectURL(audioBlob);
       setCurrentAudioUrl(audioUrl);
+      
+      toast({
+        title: "音声準備完了",
+        description: "音声の再生を開始します。",
+        duration: 1500,
+      });
     } catch (error) {
+      console.error("TTS Error:", error);
       toast({
         title: "音声生成エラー",
-        description: "音声を生成できませんでした。",
+        description: error instanceof Error ? 
+          `音声を生成できませんでした: ${error.message}` : 
+          "音声を生成できませんでした。",
         variant: "destructive",
       });
       setIsPlayingAudio(false);
       setPlayingMessageId(null);
+      // Clean up any partial resources
+      if (currentAudioUrl) {
+        URL.revokeObjectURL(currentAudioUrl);
+        setCurrentAudioUrl(null);
+      }
     }
   };
-  
+
+
   // Handle audio playback completion
   const handlePlaybackComplete = () => {
     setIsPlayingAudio(false);
@@ -574,7 +530,6 @@ const ChatInterface = () => {
 
     const message = input;
     setInput("");
-    setShowEmotions(false);
     sendMessage.mutate(message);
   };
 
@@ -587,45 +542,42 @@ const ChatInterface = () => {
         setInput(message);
         return;
       }
-      
+
       // Direct DOM manipulation for better performance
       const textarea = textareaRef.current;
-      
+
       // Focus first to ensure we have the correct selection
       textarea.focus();
-      
+
       // Get the current cursor positions
       const cursorStart = textarea.selectionStart || 0;
       const cursorEnd = textarea.selectionEnd || 0;
-      
+
       // Get the current value directly from the DOM
       const currentValue = textarea.value;
-      
+
       // Create the new value with the insertion
       const beforeCursor = currentValue.substring(0, cursorStart);
       const afterCursor = currentValue.substring(cursorEnd);
       const newValue = beforeCursor + message + afterCursor;
-      
+
       // Calculate new cursor position
       const newCursorPosition = cursorStart + message.length;
-      
+
       // Directly set the value using the DOM API (faster than React state updates)
       textarea.value = newValue;
-      
+
       // Set the cursor position immediately
       textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-      
+
       // Update React state after direct DOM updates (for consistency)
       setInput(newValue);
-      
-      // Close the emotion picker immediately
-      setShowEmotions(false);
-      
+
       // Make sure the cursor is visible by scrolling if needed
       const textareaLineHeight = parseInt(getComputedStyle(textarea).lineHeight);
       const cursorLine = (newValue.substring(0, newCursorPosition).match(/\n/g) || []).length;
       const approxScrollTop = cursorLine * textareaLineHeight;
-      
+
       if (approxScrollTop > textarea.clientHeight) {
         textarea.scrollTop = approxScrollTop - textarea.clientHeight / 2;
       }
@@ -633,7 +585,6 @@ const ChatInterface = () => {
       console.error("Error inserting text:", error);
       // Fallback - direct state setting
       setInput(prev => prev + message);
-      setShowEmotions(false);
     }
   };
 
@@ -648,13 +599,13 @@ const ChatInterface = () => {
 
   return (
     <Card className="flex flex-col h-[calc(100vh-12rem)] relative overflow-hidden">
-     
+
 
       <AnimatePresence>
         {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
       </AnimatePresence>
 
-      
+
       {currentAudioUrl && (
         <AudioPlayer 
           audioUrl={currentAudioUrl} 
@@ -689,7 +640,7 @@ const ChatInterface = () => {
                   playingMessageId={playingMessageId}
                   onPlayAudio={playMessageAudio}
                 />
-                
+
               </div>
             ))
           )}
@@ -705,16 +656,6 @@ const ChatInterface = () => {
 
       {/* Form with emotions picker */}
       <div className="relative">
-        {/* Emotion Buttons / Prompt Picker (positioned above the input) */}
-        <AnimatePresence>
-          {showEmotions && (
-            <EmotionButtons 
-              onSelect={handleEmotionSelect} 
-              onClose={() => setShowEmotions(false)} 
-            />
-          )}
-        </AnimatePresence>
-        
         {/* Transcription Confirmation */}
         <AnimatePresence>
           {showTranscriptionConfirmation && transcribedText && (
@@ -736,8 +677,7 @@ const ChatInterface = () => {
           handleVoiceRecording={handleVoiceRecording}
           isProcessing={isProcessingVoice || sendMessage.isPending}
           sendDisabled={sendMessage.isPending}
-          showEmotions={showEmotions}
-          setShowEmotions={setShowEmotions}
+          handlePromptSelect={handleEmotionSelect}
           isMobile={isMobile}
           textareaRef={textareaRef}
         />

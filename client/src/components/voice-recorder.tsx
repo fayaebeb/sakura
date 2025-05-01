@@ -17,7 +17,7 @@ export default function VoiceRecorder({ onRecordingComplete, isProcessing }: Voi
   const timerRef = useRef<number | null>(null);
   const { toast } = useToast();
 
-  // Initialize timer for recording duration
+  // Initialize timer for recording duration and cleanup resources
   useEffect(() => {
     if (isRecording) {
       timerRef.current = window.setInterval(() => {
@@ -31,9 +31,21 @@ export default function VoiceRecorder({ onRecordingComplete, isProcessing }: Voi
     }
 
     return () => {
+      // Clean up timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
+      }
+      
+      // Clean up MediaRecorder when component unmounts
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+        
+        // Stop all audio tracks if any exist
+        if (mediaRecorderRef.current.stream) {
+          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        }
       }
     };
   }, [isRecording]);

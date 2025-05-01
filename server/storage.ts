@@ -15,6 +15,7 @@ export interface IStorage {
   createMessage(userId: number, message: InsertMessage): Promise<Message>;
   getUserLastSession(userId: number): Promise<Session | undefined>;
   createUserSession(userId: number, sessionId: string): Promise<Session>;
+  deleteMessagesByUserAndSession(userId: number, sessionId: string): Promise<void>;
   sessionStore: session.Store;
 }
 
@@ -86,6 +87,17 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return session;
+  }
+
+  async deleteMessagesByUserAndSession(userId: number, sessionId: string): Promise<void> {
+    await db
+      .delete(messages)
+      .where(
+        and(
+          eq(messages.userId, userId),
+          eq(messages.sessionId, sessionId)
+        )
+      );
   }
 }
 

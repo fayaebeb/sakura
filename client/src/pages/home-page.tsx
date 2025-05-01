@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import ChatInterface from "@/components/chat-interface";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Sparkles, Music, Star } from "lucide-react";
+import { Heart, Sparkles, Music, Star, Trash2,LogOut  } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -17,8 +20,53 @@ import {
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
   const [currentGreeting, setCurrentGreeting] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Get session ID from local storage
+  const getSessionId = () => {
+    if (!user?.id) return "";
+    const storageKey = `chat_session_id_user_${user.id}`;
+    return localStorage.getItem(storageKey) || "";
+  };
+  
+  // Delete chat history mutation
+  const deleteChatMutation = useMutation({
+    mutationFn: async () => {
+      const sessionId = getSessionId();
+      if (!sessionId) {
+        throw new Error("セッションIDが見つかりません。");
+      }
+      
+      const res = await apiRequest("DELETE", `/api/messages/${sessionId}`);
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "Unknown error");
+        throw new Error(`Failed to delete chat history: ${res.status} ${errorText}`);
+      }
+      
+      return res.json();
+    },
+    onSuccess: () => {
+      // Clear current messages in the cache
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      
+      toast({
+        title: "履歴削除完了",
+        description: "チャット履歴が削除されました。",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "削除エラー",
+        description: error instanceof Error ? error.message : "履歴の削除に失敗しました。",
+        variant: "destructive",
+        duration: 4000,
+      });
+    }
+  });
 
   // Extract username before '@' from email
   const displayName = user?.username?.split("@")[0];
@@ -115,7 +163,7 @@ export default function HomePage() {
             />
           </motion.div>
 
-          {/* User Info & Logout */}
+          {/* User Info & Buttons */}
           <div className="flex items-center gap-3">
             <AnimatePresence>
               {displayName && (
@@ -138,29 +186,59 @@ export default function HomePage() {
               )}
             </AnimatePresence>
 
+            {/* Delete Chat History Button */}
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleteChatMutation.isPending}
+                className="border-pink-200 text-pink-700 hover:bg-pink-50 flex items-center gap-1"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <motion.span
+                  animate={{ scale: deleteChatMutation.isPending ? [1, 1.1, 1] : 1 }}
+                  transition={{ duration: 0.5, repeat: deleteChatMutation.isPending ? Infinity : 0 }}
+                  className="hidden sm:inline"
+                >
+                  履歴削除
+                </motion.span>
+              </Button>
+            </motion.div>
+
+            {/* Logout Button */}
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowLogoutConfirm(true)}
                 disabled={logoutMutation.isPending}
-                className="border-pink-200 text-pink-700 hover:bg-pink-50"
+                className="border-pink-200 text-pink-700 hover:bg-pink-50 flex items-center gap-1"
               >
+                {/* Icon for mobile */}
                 <motion.span
+                  className="sm:hidden"
+                  animate={{ scale: logoutMutation.isPending ? [1, 1.1, 1] : 1 }}
+                  transition={{ duration: 0.5, repeat: logoutMutation.isPending ? Infinity : 0 }}
+                >
+                  <LogOut className="h-4 w-4" />
+                </motion.span>
+
+                {/* Text for desktop */}
+                <motion.span
+                  className="hidden sm:inline"
                   animate={{ scale: logoutMutation.isPending ? [1, 1.1, 1] : 1 }}
                   transition={{ duration: 0.5, repeat: logoutMutation.isPending ? Infinity : 0 }}
                 >
                   ログアウト
                 </motion.span>
               </Button>
+
             </motion.div>
-
-
-            
-
           </div>
         </div>
       </header>
+      {/* Logout Confirmation Dialog */}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <AlertDialogContent className="mx-auto max-w-[90%] sm:max-w-md md:max-w-lg lg:max-w-xl rounded-xl p-6">
           <AlertDialogHeader>
@@ -179,6 +257,29 @@ export default function HomePage() {
               className="bg-pink-500 hover:bg-pink-600 text-white border border-pink-400"
             >
               ログアウト
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Chat History Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="mx-auto max-w-[90%] sm:max-w-md md:max-w-lg lg:max-w-xl rounded-xl p-6">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-pink-600">チャット履歴を削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription className="text-pink-400/80">
+              全ての会話履歴が削除されます。この操作は元に戻せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white text-pink-500 border-pink-200 hover:bg-pink-50">
+              キャンセル
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteChatMutation.mutate()}
+              className="bg-pink-500 hover:bg-pink-600 text-white border border-pink-400"
+            >
+              削除する
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
