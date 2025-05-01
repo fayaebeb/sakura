@@ -215,6 +215,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete all messages for a user's session
+  app.delete("/api/messages/:sessionId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      // Use the persistent sessionId from user's email
+      const persistentSessionId = req.user!.username.split('@')[0];
+      
+      await storage.deleteMessagesByUserAndSession(
+        req.user!.id,
+        persistentSessionId
+      );
+      
+      console.log(`Deleted all messages for user ${req.user!.id} with sessionId ${persistentSessionId}`);
+      res.status(200).json({ message: "Chat history deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting messages:", error);
+      res.status(500).json({
+        message: "Failed to delete messages",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
