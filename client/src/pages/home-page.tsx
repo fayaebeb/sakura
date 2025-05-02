@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import ChatInterface from "@/components/chat-interface";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Sparkles, Music, Star, Trash2,LogOut  } from "lucide-react";
+import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -17,6 +18,15 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"; 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -163,79 +173,84 @@ export default function HomePage() {
             />
           </motion.div>
 
-          {/* User Info & Buttons */}
-          <div className="flex items-center gap-3">
-            <AnimatePresence>
-              {displayName && (
-                <motion.div 
-                  className="hidden sm:flex items-center gap-2 bg-pink-50 px-3 py-1 rounded-full border border-pink-100"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
+          {/* User Dropdown Menu */}
+          <motion.div 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            className="relative"
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 flex items-center gap-2 rounded-full pl-2 pr-3"
                 >
+                  <Avatar className="h-7 w-7 border border-pink-200 bg-pink-100/70">
+                    <AvatarFallback className="text-pink-700 text-xs">
+                      {displayName ? displayName[0].toUpperCase() : ""}
+                    </AvatarFallback>
+                  </Avatar>
                   <motion.span 
-                    className="text-sm font-medium text-pink-700"
+                    className="text-sm font-medium hidden sm:flex items-center"
                     animate={{ scale: [1, 1.05, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
                     {displayName}さん
+                    <Gem className="h-3 w-3 text-pink-400 ml-1" />
                   </motion.span>
-                  <Star className="h-3 w-3 text-pink-400" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Delete Chat History Button */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={deleteChatMutation.isPending}
-                className="border-pink-200 text-pink-700 hover:bg-pink-50 flex items-center gap-1"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                <motion.span
-                  animate={{ scale: deleteChatMutation.isPending ? [1, 1.1, 1] : 1 }}
-                  transition={{ duration: 0.5, repeat: deleteChatMutation.isPending ? Infinity : 0 }}
-                  className="hidden sm:inline"
+                  <Menu className="h-4 w-4 sm:hidden" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 border-pink-100 bg-white/95 backdrop-blur-sm">
+                <DropdownMenuLabel className="text-pink-700 flex items-center gap-2">
+                  <User className="h-4 w-4 text-pink-500" />
+                  <span>{displayName}さん</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-pink-100/70" />
+                
+                {/* Voice Mode Option */}
+                <Link href="/voice">
+                  <DropdownMenuItem className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800">
+                    <AudioLines className="h-4 w-4 text-pink-500" />
+                    音声モード
+                  </DropdownMenuItem>
+                </Link>
+                
+                {/* Delete Chat History Option */}
+                <DropdownMenuItem 
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={deleteChatMutation.isPending}
+                  className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
                 >
-                  履歴削除
-                </motion.span>
-              </Button>
-            </motion.div>
-
-            {/* Logout Button */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowLogoutConfirm(true)}
-                disabled={logoutMutation.isPending}
-                className="border-pink-200 text-pink-700 hover:bg-pink-50 flex items-center gap-1"
-              >
-                {/* Icon for mobile */}
-                <motion.span
-                  className="sm:hidden"
-                  animate={{ scale: logoutMutation.isPending ? [1, 1.1, 1] : 1 }}
-                  transition={{ duration: 0.5, repeat: logoutMutation.isPending ? Infinity : 0 }}
+                  <Trash2 className="h-4 w-4 text-pink-500" />
+                  <motion.span
+                    animate={{ scale: deleteChatMutation.isPending ? [1, 1.1, 1] : 1 }}
+                    transition={{ duration: 0.5, repeat: deleteChatMutation.isPending ? Infinity : 0 }}
+                  >
+                    履歴削除
+                  </motion.span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator className="bg-pink-100/70" />
+                
+                {/* Logout Option */}
+                <DropdownMenuItem 
+                  onClick={() => setShowLogoutConfirm(true)}
+                  disabled={logoutMutation.isPending}
+                  className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
                 >
-                  <LogOut className="h-4 w-4" />
-                </motion.span>
-
-                {/* Text for desktop */}
-                <motion.span
-                  className="hidden sm:inline"
-                  animate={{ scale: logoutMutation.isPending ? [1, 1.1, 1] : 1 }}
-                  transition={{ duration: 0.5, repeat: logoutMutation.isPending ? Infinity : 0 }}
-                >
-                  ログアウト
-                </motion.span>
-              </Button>
-
-            </motion.div>
-          </div>
+                  <LogOut className="h-4 w-4 text-pink-500" />
+                  <motion.span
+                    animate={{ scale: logoutMutation.isPending ? [1, 1.1, 1] : 1 }}
+                    transition={{ duration: 0.5, repeat: logoutMutation.isPending ? Infinity : 0 }}
+                  >
+                    ログアウト
+                  </motion.span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </motion.div>
         </div>
       </header>
       {/* Logout Confirmation Dialog */}

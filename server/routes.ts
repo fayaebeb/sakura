@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -7,8 +7,9 @@ import { transcribeAudio } from "./apis/openai";
 import { textToSpeechStream } from "./apis/openaitts";
 //import { textToSpeech } from "./apis/unrealspeech";
 import multer from "multer";
+import { WebSocketServer, WebSocket } from "ws";
 
-const LANGFLOW_API = process.env.LANGFLOW_API;
+const LANGFLOW_API = process.env.LANGFLOW_API || '';
 
 // Setup multer for handling file uploads (in-memory storage)
 const upload = multer({ 
@@ -28,16 +29,16 @@ async function sendMessageToLangflow(content: string, persistentSessionId: strin
   const response = await fetch(LANGFLOW_API, {
     method: "POST",
     headers: {
-      Authorization: process.env.AUTHORIZATION_TOKEN,
+      Authorization: process.env.AUTHORIZATION_TOKEN || "",
       "Content-Type": "application/json",
-      "x-api-key": process.env.X_API_KEY,
+      "x-api-key": process.env.X_API_KEY || "",
     },
     body: JSON.stringify({
       input_value: content,
       output_type: "chat",
       input_type: "chat",
       tweaks: {
-        "TextInput-DpRro": {
+        "TextInput-vvYQh": {
           input_value: persistentSessionId,
         },
       },
@@ -240,5 +241,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Set up WebSocket server on a separate path
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  interface VoiceModeClient {
+    userId: number;
+    username: string;
+    ws: WebSocket;
+    sessionId: string;
+  }
+  
+  const voiceModeClients: VoiceModeClient[] = [];
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    
+    // Handle client connection
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('WebSocket message received:', data);
+        
+        if (data.type === 'auth') {
+          // Authenticate user and store connection info
+          if (data.userId && data.username && data.sessionId) {
+            const existingClientIndex = voiceModeClients.findIndex(
+              client => client.userId === data.userId
+            );
+            
+            if (existingClientIndex !== -1) {
+              // Update existing client
+              voiceModeClients[existingClientIndex].ws = ws;
+              console.log(`Updated WebSocket connection for user ${data.username}`);
+            } else {
+              // Add new client
+              voiceModeClients.push({
+                userId: data.userId,
+                username: data.username,
+                ws,
+                sessionId: data.sessionId
+              });
+              console.log(`Registered WebSocket connection for user ${data.username}`);
+            }
+            
+            // Send confirmation
+            ws.send(JSON.stringify({ type: 'auth_success' }));
+          }
+        } else if (data.type === 'speech') {
+          // Verify client is authenticated
+          const clientIndex = voiceModeClients.findIndex(
+            client => client.ws === ws
+          );
+          
+          if (clientIndex === -1) {
+            ws.send(JSON.stringify({ 
+              type: 'error', 
+              message: 'Not authenticated' 
+            }));
+            return;
+          }
+          
+          const client = voiceModeClients[clientIndex];
+          
+          // Handle transcription
+          if (data.audioData) {
+            try {
+              // Decode base64 audio data
+              const buffer = Buffer.from(data.audioData, 'base64');
+              
+              // Transcribe audio
+              console.log("Transcribing voice mode audio...");
+              const transcribedText = await transcribeAudio(buffer);
+              console.log("Voice mode transcribed text:", transcribedText);
+              
+              // Send transcription back to client
+              ws.send(JSON.stringify({ 
+                type: 'transcription', 
+                text: transcribedText 
+              }));
+              
+              // Process message with Langflow
+              const persistentSessionId = client.username.split('@')[0];
+              
+              // Create user message in database
+              await storage.createMessage(client.userId, {
+                content: transcribedText,
+                isBot: false,
+                sessionId: persistentSessionId,
+              });
+
+              // Save user message in DB and keep a reference
+              const userMessage = await storage.createMessage(client.userId, {
+                content: transcribedText,
+                isBot: false,
+                sessionId: persistentSessionId,
+              });
+
+              
+              // Send to AI and get response
+              console.log("Processing voice mode message with AI...");
+              const formattedResponse = await sendMessageToLangflow(transcribedText, persistentSessionId);
+              
+              // Create bot message in database
+              const botMessage = await storage.createMessage(client.userId, {
+                content: formattedResponse,
+                isBot: true,
+                sessionId: persistentSessionId,
+              });
+              
+              // Send AI response to client
+              ws.send(JSON.stringify({ 
+                type: 'ai_response', 
+                userMessage,
+                message: botMessage 
+              }));
+
+              
+              // Generate speech from AI response
+              console.log("Generating speech for voice mode response...");
+              try {
+                const openaiResponse = await textToSpeechStream(formattedResponse);
+                
+                // Convert stream to buffer
+                const chunks: Buffer[] = [];
+                openaiResponse.data.on('data', (chunk: Buffer) => {
+                  chunks.push(chunk);
+                });
+                
+                openaiResponse.data.on('end', () => {
+                  const audioBuffer = Buffer.concat(chunks);
+                  const base64Audio = audioBuffer.toString('base64');
+                  
+                  // Send audio to client
+                  ws.send(JSON.stringify({ 
+                    type: 'speech_response', 
+                    audioData: base64Audio 
+                  }));
+                });
+                
+                openaiResponse.data.on('error', (err: Error) => {
+                  console.error("Error streaming TTS:", err);
+                  ws.send(JSON.stringify({ 
+                    type: 'error', 
+                    message: 'Failed to generate speech' 
+                  }));
+                });
+              } catch (error) {
+                console.error("Error generating speech:", error);
+                ws.send(JSON.stringify({ 
+                  type: 'error', 
+                  message: 'Failed to generate speech response' 
+                }));
+              }
+            } catch (error) {
+              console.error("Error processing voice mode message:", error);
+              ws.send(JSON.stringify({ 
+                type: 'error', 
+                message: error instanceof Error ? error.message : 'Unknown error' 
+              }));
+            }
+          }
+        }
+      } catch (error) {
+        console.error("WebSocket message error:", error);
+        ws.send(JSON.stringify({ 
+          type: 'error', 
+          message: 'Invalid message format' 
+        }));
+      }
+    });
+    
+    // Handle client disconnection
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      
+      // Remove client from active connections
+      const clientIndex = voiceModeClients.findIndex(client => client.ws === ws);
+      if (clientIndex !== -1) {
+        const client = voiceModeClients[clientIndex];
+        console.log(`User ${client.username} disconnected from voice mode`);
+        voiceModeClients.splice(clientIndex, 1);
+      }
+    });
+    
+    // Send initial connection acknowledgment
+    ws.send(JSON.stringify({ type: 'connected' }));
+  });
+  
   return httpServer;
 }
