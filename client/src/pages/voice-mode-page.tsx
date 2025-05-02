@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, AudioLines } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, AudioLines, Play, Pause, Square } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,12 +21,15 @@ export default function VoiceModePage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentTranscript, setCurrentTranscript] = useState<string | null>(null);
   const [autoListenTimeout, setAutoListenTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [isAudioPaused, setIsAudioPaused] = useState(false);
   
   const wsRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
 
   // Get session ID from local storage
@@ -107,11 +110,28 @@ export default function VoiceModePage() {
           case "speech_response":
             console.log("Speech response received");
             if (data.audioData && isListening) {
+              // Stop any currently playing audio
+              stopCurrentAudio();
+              
               // Play audio if listening is enabled
               const audio = new Audio(`data:audio/mp3;base64,${data.audioData}`);
-              audio.play().catch(err => {
-                console.error("Error playing audio:", err);
-              });
+              
+              // Store reference to the current audio element
+              currentAudioRef.current = audio;
+              
+              // Play the audio
+              audio.play()
+                .then(() => {
+                  // Set playing state when audio starts
+                  setIsAudioPlaying(true);
+                  setIsAudioPaused(false);
+                })
+                .catch(err => {
+                  console.error("Error playing audio:", err);
+                  currentAudioRef.current = null;
+                  setIsAudioPlaying(false);
+                  setIsAudioPaused(false);
+                });
               
               // Setup auto-listen after speech ends
               if (autoListenTimeout) {
@@ -119,6 +139,11 @@ export default function VoiceModePage() {
               }
               
               audio.addEventListener("ended", () => {
+                // Clear reference and states when audio ends
+                currentAudioRef.current = null;
+                setIsAudioPlaying(false);
+                setIsAudioPaused(false);
+                
                 if (isListening) {
                   // Auto start listening again after a delay
                   const timeout = setTimeout(() => {
@@ -179,6 +204,12 @@ export default function VoiceModePage() {
       
       if (autoListenTimeout) {
         clearTimeout(autoListenTimeout);
+      }
+      
+      // Stop any playing audio when component unmounts
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
       }
     };
   }, [user, toast]);
@@ -265,6 +296,9 @@ export default function VoiceModePage() {
   
   const startRecording = async () => {
     if (!isConnected || isProcessing) return;
+    
+    // Stop any currently playing audio before starting to record
+    stopCurrentAudio();
     
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -370,9 +404,43 @@ export default function VoiceModePage() {
     }
   };
 
+  // Function to stop current audio playback
+  const stopCurrentAudio = () => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+      setIsAudioPlaying(false);
+      setIsAudioPaused(false);
+    }
+  };
+  
+  // Function to pause current audio playback
+  const pauseCurrentAudio = () => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      setIsAudioPlaying(false);
+      setIsAudioPaused(true);
+    }
+  };
+  
+  // Function to resume audio playback
+  const resumeCurrentAudio = () => {
+    if (currentAudioRef.current && isAudioPaused) {
+      currentAudioRef.current.play();
+      setIsAudioPlaying(true);
+      setIsAudioPaused(false);
+    }
+  };
+  
   // Toggle speech feedback
   const toggleListening = () => {
     const isMobile = window.innerWidth <= 768; // Tailwind's `md` breakpoint is 768px
+
+    // If turning off audio feedback, stop any currently playing audio
+    if (isListening) {
+      stopCurrentAudio();
+    }
 
     setIsListening(!isListening);
 
@@ -528,34 +596,89 @@ export default function VoiceModePage() {
               </div>
             )}
             
-            {/* Recording button */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                disabled={!isConnected || isProcessing}
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`h-16 w-16 rounded-full ${
-                  isRecording 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-pink-500 hover:bg-pink-600'
-                }`}
+            {/* Audio playback controls */}
+            {isAudioPlaying || isAudioPaused ? (
+              <div className="flex items-center gap-3">
+                {/* Play/Pause button */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    onClick={isAudioPaused ? resumeCurrentAudio : pauseCurrentAudio}
+                    className="h-12 w-12 rounded-full bg-blue-500 hover:bg-blue-600"
+                  >
+                    {isAudioPaused ? (
+                      <Play className="h-5 w-5" />
+                    ) : (
+                      <Pause className="h-5 w-5" />
+                    )}
+                  </Button>
+                </motion.div>
+                
+                {/* Stop button */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    onClick={stopCurrentAudio}
+                    className="h-12 w-12 rounded-full bg-red-500 hover:bg-red-600"
+                  >
+                    <Square className="h-5 w-5" />
+                  </Button>
+                </motion.div>
+                
+                {/* Microphone button */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    disabled={!isConnected || isProcessing}
+                    onClick={isRecording ? stopRecording : startRecording}
+                    className="h-12 w-12 rounded-full bg-pink-500 hover:bg-pink-600"
+                  >
+                    {isRecording ? (
+                      <MicOff className="h-5 w-5" />
+                    ) : (
+                      <Mic className="h-5 w-5" />
+                    )}
+                  </Button>
+                </motion.div>
+              </div>
+            ) : (
+              /* Recording button (when no audio is playing) */
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {isRecording ? (
-                  <MicOff className="h-6 w-6" />
-                ) : (
-                  <Mic className="h-6 w-6" />
-                )}
-              </Button>
-            </motion.div>
+                <Button
+                  disabled={!isConnected || isProcessing}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`h-16 w-16 rounded-full ${
+                    isRecording 
+                      ? 'bg-red-500 hover:bg-red-600' 
+                      : 'bg-pink-500 hover:bg-pink-600'
+                  }`}
+                >
+                  {isRecording ? (
+                    <MicOff className="h-6 w-6" />
+                  ) : (
+                    <Mic className="h-6 w-6" />
+                  )}
+                </Button>
+              </motion.div>
+            )}
             
             <p className="text-sm text-pink-600 mt-2">
               {isRecording 
                 ? "録音中... 話し終わると自動的に停止します" 
                 : isProcessing 
                   ? "処理中..." 
-                  : "録音ボタンを押して話しかけてください"}
+                  : isAudioPlaying || isAudioPaused
+                    ? "音声再生中です。録音するには停止してください"
+                    : "録音ボタンを押して話しかけてください"}
             </p>
           </div>
         </div>
