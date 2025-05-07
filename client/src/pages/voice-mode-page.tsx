@@ -433,27 +433,7 @@ export default function VoiceModePage() {
     }
   };
   
-  // Toggle speech feedback
-  const toggleListening = () => {
-    const isMobile = window.innerWidth <= 768; // Tailwind's `md` breakpoint is 768px
-
-    // If turning off audio feedback, stop any currently playing audio
-    if (isListening) {
-      stopCurrentAudio();
-    }
-
-    setIsListening(!isListening);
-
-    if (!isMobile) {
-      toast({
-        title: isListening ? "音声フィードバック無効" : "音声フィードバック有効",
-        description: isListening
-          ? "AIの応答は表示されますが、読み上げられません"
-          : "AIの応答が読み上げられます",
-        duration: 2000,
-      });
-    }
-  };
+  
 
 
   // Format time as MM:SS
@@ -490,15 +470,7 @@ export default function VoiceModePage() {
               <span className="whitespace-nowrap">{isConnected ? 'オンライン' : 'オフライン'}</span>
             </div>
 
-            {/* Toggle speech feedback */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleListening}
-              className="border-pink-200 text-pink-700 hover:bg-pink-50"
-            >
-              {isListening ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-            </Button>
+            
 
             {/* Text mode link */}
             <Link href="/">

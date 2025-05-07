@@ -5,7 +5,6 @@ import { setupAuth } from "./auth";
 import { insertMessageSchema } from "@shared/schema";
 import { transcribeAudio } from "./apis/openai";
 import { textToSpeechStream } from "./apis/openaitts";
-//import { textToSpeech } from "./apis/unrealspeech";
 import multer from "multer";
 import { WebSocketServer, WebSocket } from "ws";
 
@@ -38,7 +37,7 @@ async function sendMessageToLangflow(content: string, persistentSessionId: strin
       output_type: "chat",
       input_type: "chat",
       tweaks: {
-        "TextInput-vvYQh": {
+        "TextInput-TD5W3": {
           input_value: persistentSessionId,
         },
       },
@@ -324,14 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Process message with Langflow
               const persistentSessionId = client.username.split('@')[0];
               
-              // Create user message in database
-              await storage.createMessage(client.userId, {
-                content: transcribedText,
-                isBot: false,
-                sessionId: persistentSessionId,
-              });
-
-              // Save user message in DB and keep a reference
+              // Create user message in database and keep a reference
               const userMessage = await storage.createMessage(client.userId, {
                 content: transcribedText,
                 isBot: false,
