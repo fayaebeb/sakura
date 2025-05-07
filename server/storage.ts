@@ -1,4 +1,4 @@
-import { users, messages, sessions, type User, type InsertUser, type Message, type InsertMessage, type Session } from "@shared/schema";
+import { users, messages, sessions, feedback, type User, type InsertUser, type Message, type InsertMessage, type Session, type Feedback, type InsertFeedback } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import session from "express-session";
@@ -16,6 +16,7 @@ export interface IStorage {
   getUserLastSession(userId: number): Promise<Session | undefined>;
   createUserSession(userId: number, sessionId: string): Promise<Session>;
   deleteMessagesByUserAndSession(userId: number, sessionId: string): Promise<void>;
+  createFeedback(userId: number, feedbackData: InsertFeedback): Promise<Feedback>;
   sessionStore: session.Store;
 }
 
@@ -98,6 +99,17 @@ export class DatabaseStorage implements IStorage {
           eq(messages.sessionId, sessionId)
         )
       );
+  }
+
+  async createFeedback(userId: number, feedbackData: InsertFeedback): Promise<Feedback> {
+    const [newFeedback] = await db
+      .insert(feedback)
+      .values({
+        userId,
+        ...feedbackData,
+      })
+      .returning();
+    return newFeedback;
   }
 }
 

@@ -2,12 +2,13 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import ChatInterface from "@/components/chat-interface";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu } from "lucide-react";
+import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import FeedbackDialog from "@/components/feedback-dialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -34,6 +35,7 @@ export default function HomePage() {
   const [currentGreeting, setCurrentGreeting] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   
   // Get session ID from local storage
   const getSessionId = () => {
@@ -232,6 +234,15 @@ export default function HomePage() {
                   </motion.span>
                 </DropdownMenuItem>
                 
+                {/* Feedback Option */}
+                <DropdownMenuItem 
+                  onClick={() => setShowFeedbackDialog(true)}
+                  className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
+                >
+                  <MessageSquare className="h-4 w-4 text-pink-500" />
+                  フィードバック
+                </DropdownMenuItem>
+                
                 <DropdownMenuSeparator className="bg-pink-100/70" />
                 
                 {/* Logout Option */}
@@ -347,6 +358,9 @@ export default function HomePage() {
           </motion.p>
         </div>
       </footer>
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog} />
     </div>
   );
 }

@@ -29,6 +29,19 @@ export const messages = pgTable("messages", {
   category: text("category").default("SELF").notNull(),
 });
 
+// Representing the feedback table that already exists in the database
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  sessionId: text("session_id").references(() => sessions.sessionId),
+  messageId: integer("message_id").references(() => messages.id),
+  comment: text("comment"),
+  rating: integer("rating"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Add password validation to the insert schema
 export const insertUserSchema = createInsertSchema(users)
   .pick({
@@ -51,8 +64,17 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   category: true,
 });
 
+export const insertFeedbackSchema = createInsertSchema(feedback).pick({
+  comment: true,
+  rating: true,
+  messageId: true,
+  sessionId: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type Feedback = typeof feedback.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;

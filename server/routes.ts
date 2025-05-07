@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertMessageSchema } from "@shared/schema";
+import { insertMessageSchema, insertFeedbackSchema } from "@shared/schema";
 import { transcribeAudio } from "./apis/openai";
 import { textToSpeechStream } from "./apis/openaitts";
 import multer from "multer";
@@ -236,6 +236,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error deleting messages:", error);
       res.status(500).json({
         message: "Failed to delete messages",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Submit feedback
+  app.post("/api/feedback", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const result = insertFeedbackSchema.safeParse(req.body);
+    if (!result.success) {
+      console.error("Invalid feedback data:", result.error);
+      return res.status(400).json({ error: "Invalid feedback data" });
+    }
+
+    try {
+      // Get the user's persistent session ID
+      const persistentSessionId = req.user!.username.split('@')[0];
+      
+      // Create feedback entry
+      const feedback = await storage.createFeedback(req.user!.id, {
+        ...result.data,
+        sessionId: persistentSessionId, // Use the persistent session ID
+      });
+      
+      console.log(`Feedback submitted for user ${req.user!.id}`);
+      res.status(201).json(feedback);
+    } catch (error) {
+      console.error("Error saving feedback:", error);
+      res.status(500).json({
+        message: "Failed to save feedback",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
