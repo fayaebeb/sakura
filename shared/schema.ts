@@ -26,6 +26,7 @@ export const messages = pgTable("messages", {
   isBot: boolean("is_bot").notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
   sessionId: text("session_id").notNull().references(() => sessions.sessionId),
+  category: text("category").default("SELF").notNull(),
 });
 
 // Add password validation to the insert schema
@@ -47,6 +48,7 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   content: true,
   isBot: true,
   sessionId: true,
+  category: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

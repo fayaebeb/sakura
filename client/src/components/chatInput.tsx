@@ -1,9 +1,11 @@
-import { memo, useCallback, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
+import { memo, useCallback, useRef, useEffect, useState } from "react";
+import { Send, User, Building, Landmark } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import { motion } from "framer-motion";
 import VoiceRecorder from "./voice-recorder";
 import PromptPicker from "./prompt-picker";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Debounce function to improve input performance
 function useDebounce(callback: Function, delay: number) {
@@ -30,10 +32,13 @@ function useDebounce(callback: Function, delay: number) {
 }
 
 // Optimized version to reduce input lag
+// Message category type
+export type MessageCategory = "SELF" | "PRIVATE" | "ADMINISTRATIVE";
+
 const ChatInput = memo(function ChatInput({
   input,
   setInput,
-  handleSubmit,
+  handleSubmit: originalHandleSubmit,
   handleVoiceRecording,
   isProcessing,
   sendDisabled,
@@ -43,7 +48,7 @@ const ChatInput = memo(function ChatInput({
 }: {
   input: string;
   setInput: React.Dispatch<React.SetStateAction<string>>;
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (e: React.FormEvent, category?: MessageCategory) => void;
   handleVoiceRecording: (audio: Blob) => void;
   isProcessing: boolean;
   sendDisabled: boolean;
@@ -51,8 +56,16 @@ const ChatInput = memo(function ChatInput({
   isMobile: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
 }) {
+  // Category selection state
+  const [category, setCategory] = useState<MessageCategory>("SELF");
+  
   // Local input state for smoother typing experience
   const localInputRef = useRef<string>(input);
+
+  // Wrap the original submit handler to include the category
+  const handleSubmit = (e: React.FormEvent) => {
+    originalHandleSubmit(e, category);
+  };
 
   // Update the parent state in a debounced way to avoid lag
   const debouncedSetInput = useDebounce((value: string) => {
@@ -86,7 +99,84 @@ const ChatInput = memo(function ChatInput({
   }, [debouncedSetInput]);
 
   return (
-    <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t flex flex-col gap-2 relative">
+      <form onSubmit={handleSubmit} className="pt-2 sm:pt-1 pb-2 sm:pb-2 px-2 sm:px-4 border-t flex flex-col gap-1 relative">
+
+      {/* Category selection toggle group */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-0.5 mb-0.5">
+
+        
+        <TooltipProvider>
+          <ToggleGroup
+            type="single"
+            value={category}
+            onValueChange={(value) => {
+              if (value) setCategory(value as MessageCategory);
+            }}
+            className="flex border rounded-md p-0.5 bg-gray-50 shadow-sm"
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ToggleGroupItem 
+                  value="SELF" 
+                  aria-label="個人" 
+                  className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
+                    category === "SELF" 
+                      ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 shadow-sm" 
+                      : "hover:bg-blue-50"
+                  }`}
+                >
+                  <User size={12} className={category === "SELF" ? "text-blue-600" : "text-gray-500"} />
+                  <span>自分</span>
+                </ToggleGroupItem>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">個人としてメッセージを送信</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ToggleGroupItem 
+                  value="PRIVATE" 
+                  aria-label="民間" 
+                  className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
+                    category === "PRIVATE" 
+                      ? "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 shadow-sm" 
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  <Building size={12} className={category === "PRIVATE" ? "text-gray-600" : "text-gray-500"} />
+                  <span>民間</span>
+                </ToggleGroupItem>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">民間企業としてメッセージを送信</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ToggleGroupItem 
+                  value="ADMINISTRATIVE" 
+                  aria-label="行政" 
+                  className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
+                    category === "ADMINISTRATIVE" 
+                      ? "bg-gradient-to-r from-red-100 to-red-200 text-red-700 shadow-sm" 
+                      : "hover:bg-red-50"
+                  }`}
+                >
+                  <Landmark size={12} className={category === "ADMINISTRATIVE" ? "text-red-600" : "text-gray-500"} />
+                  <span>行政</span>
+                </ToggleGroupItem>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">行政機関としてメッセージを送信</p>
+              </TooltipContent>
+            </Tooltip>
+          </ToggleGroup>
+        </TooltipProvider>
+      </div>
+
       <div className="flex gap-1.5 sm:gap-2">
         <div className="flex-shrink-0">
           <VoiceRecorder 

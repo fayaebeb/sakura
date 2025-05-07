@@ -114,10 +114,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get response from Langflow
       const formattedResponse = await sendMessageToLangflow(body.content, persistentSessionId);
 
+      // Bot message should inherit the same category as the user message
       const botMessage = await storage.createMessage(req.user!.id, {
         content: formattedResponse,
         isBot: true,
         sessionId: persistentSessionId,
+        category: body.category, // Inherit the category from the user message
       });
 
       res.json(botMessage);
@@ -328,6 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 content: transcribedText,
                 isBot: false,
                 sessionId: persistentSessionId,
+                category: "SELF", // Default to SELF for voice messages
               });
 
               
@@ -335,11 +338,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log("Processing voice mode message with AI...");
               const formattedResponse = await sendMessageToLangflow(transcribedText, persistentSessionId);
               
-              // Create bot message in database
+              // Create bot message in database - inherit category from user message
               const botMessage = await storage.createMessage(client.userId, {
                 content: formattedResponse,
                 isBot: true,
                 sessionId: persistentSessionId,
+                category: userMessage.category, // Bot message inherits the same category
               });
               
               // Send AI response to client

@@ -7,7 +7,7 @@ import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ChatMessage from "./chat-message";
-import ChatInput from "./chatInput";
+import ChatInput, { MessageCategory } from "./chatInput";
 import { ScrollArea } from "./ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -240,7 +240,7 @@ const ChatInterface = () => {
   }, [messages]);
 
   const sendMessage = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, category }: { content: string, category: MessageCategory }) => {
       if (!user?.id) {
         throw new Error("ユーザー情報が見つかりません。再ログインしてください。");
       }
@@ -253,6 +253,7 @@ const ChatInterface = () => {
         content,
         sessionId,
         isBot: false,
+        category,
       });
       
       if (!res.ok) {
@@ -262,7 +263,7 @@ const ChatInterface = () => {
       
       return res.json();
     },
-    onMutate: async (content: string) => {
+    onMutate: async ({ content, category }: { content: string, category: MessageCategory }) => {
       // Cancel any outgoing refetches to avoid overwriting our optimistic update
       await queryClient.cancelQueries({ queryKey: ["/api/messages", sessionId] });
 
@@ -278,6 +279,7 @@ const ChatInterface = () => {
         timestamp: new Date(),
         isBot: false,
         sessionId,
+        category,
       };
 
       // Update the messages in the cache with our optimistic message
@@ -289,11 +291,41 @@ const ChatInterface = () => {
       // Return previous messages for potential rollback
       return { previousMessages, optimisticUserMessage };
     },
-  onSuccess: (newBotMessage: Message) => {
-      queryClient.setQueryData<Message[]>(["/api/messages", sessionId], (old) => [
-        ...(old || []),
-        newBotMessage,
-      ]);
+    onSuccess: (newBotMessage: Message, variables, context) => {
+      // Create a user message with the same data as the optimistic one, but with real ID
+      // First, extract the content and category from variables
+      const { content, category } = variables;
+      
+      // We need to ensure both the user message and bot message are in the cache
+      queryClient.setQueryData<Message[]>(["/api/messages", sessionId], (old = []) => {
+        // Filter out our optimistic message if it exists
+        const filteredMessages = context?.optimisticUserMessage 
+          ? old.filter(msg => msg.id !== context.optimisticUserMessage.id) 
+          : old;
+        
+        // Create a proper user message (the optimistic one gets replaced with this)
+        const userMessage: Message = {
+          id: newBotMessage.id - 1, // User message would have been created right before the bot message
+          userId: user?.id || 0,
+          content,
+          timestamp: new Date(new Date(newBotMessage.timestamp).getTime() - 1000), // Slightly earlier
+          isBot: false,
+          sessionId,
+          category,
+        };
+        
+        // Add both messages to the cache and sort them by ID to ensure correct order
+        const allMessages = [...filteredMessages, userMessage, newBotMessage];
+        return allMessages.sort((a, b) => {
+          // For negative IDs (optimistic updates), always sort them at the end
+          if (a.id < 0 && b.id < 0) return a.id - b.id;
+          if (a.id < 0) return 1;
+          if (b.id < 0) return -1;
+          return a.id - b.id;
+        });
+      });
+      
+      // Show a success toast
       toast({
         title: "メッセージ送信したよ！",
         description: (
@@ -303,16 +335,19 @@ const ChatInterface = () => {
         ),
         duration: 2000,
       });
-
-
     },
-    onError: (_, __, context) => {
+    onError: (error, _, context) => {
+      // On error, revert to the previous state
       if (context?.previousMessages) {
         queryClient.setQueryData(["/api/messages", sessionId], context.previousMessages);
       }
+      
+      // Show an error toast with more detailed message
       toast({
         title: "送信エラー",
-        description: "メッセージが送れなかったよ...もう一度試してみてね！",
+        description: error instanceof Error 
+          ? `メッセージが送れませんでした: ${error.message}` 
+          : "メッセージが送れなかったよ...もう一度試してみてね！",
         variant: "destructive",
       });
     },
@@ -392,7 +427,7 @@ const ChatInterface = () => {
 
     // Send the message directly if it has content
     if (confirmedText.trim()) {
-      sendMessage.mutate(confirmedText);
+      sendMessage.mutate({ content: confirmedText, category: "SELF" });
     }
   };
 
@@ -524,13 +559,13 @@ const ChatInterface = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent, category: MessageCategory = "SELF") => {
     e.preventDefault();
     if (!input.trim() || sendMessage.isPending) return;
 
     const message = input;
     setInput("");
-    sendMessage.mutate(message);
+    sendMessage.mutate({ content: message, category });
   };
 
   // Optimized emotion selection handler with direct DOM manipulation for better performance

@@ -7,8 +7,9 @@ import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, FileText, Globe, Volume2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Globe, Volume2, Tag } from "lucide-react";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 
 // Cute decorative elements to randomly add to bot messages
 const botDecorations = [
@@ -99,17 +100,31 @@ const MessageSection = ({
   );
 };
 
-  export default function ChatMessage({
-    message,
-    isPlayingAudio,
-    playingMessageId,
-    onPlayAudio,
-  }: {
-    message: Message;
-    isPlayingAudio: boolean;
-    playingMessageId: number | null;
-    onPlayAudio: (messageId: number, text: string) => void;
-  }) {
+// Get badge variant based on category
+const getCategoryBadgeVariant = (category: string) => {
+  switch (category) {
+    case "SELF":
+      return "default"; // Default blue-ish style
+    case "PRIVATE":
+      return "secondary"; // Gray style
+    case "ADMINISTRATIVE":
+      return "destructive"; // Red style
+    default:
+      return "default";
+  }
+};
+
+export default function ChatMessage({
+  message,
+  isPlayingAudio,
+  playingMessageId,
+  onPlayAudio,
+}: {
+  message: Message;
+  isPlayingAudio: boolean;
+  playingMessageId: number | null;
+  onPlayAudio: (messageId: number, text: string) => void;
+}) {
   const [showEmoji, setShowEmoji] = useState(false);
   const [emojiPosition, setEmojiPosition] = useState({ x: 0, y: 0 });
   const [decoration, setDecoration] = useState<string | null>(null);
@@ -182,7 +197,7 @@ const MessageSection = ({
       )}
 
       {message.isBot && (
-        <Avatar className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 border border-pink-300 shadow-md">
+          <Avatar className="hidden sm:flex flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 border border-pink-300 shadow-md">
           <motion.div
             whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
             transition={{ rotate: { duration: 0.5 } }}
@@ -202,87 +217,106 @@ const MessageSection = ({
         transition={{ duration: 0.3 }}
         whileHover={message.isBot ? { scale: 1.02 } : { scale: 1 }}
         onHoverStart={handleBotMessageHover}
-        className={cn("max-w-[85%] sm:max-w-[75%] rounded-xl", {
-          "ml-auto self-end": !message.isBot,
+        className={cn("rounded-xl", {
+          "w-full": message.isBot,
+          "max-w-[85%] sm:max-w-[75%] ml-auto self-end": !message.isBot,
           "mr-auto self-start ml-2 sm:ml-3": message.isBot,
         })}
       >
         <Card
-  className={cn(
-    "px-2 py-1.5 sm:px-4 sm:py-3 text-sm sm:text-base",
-    {
-      "bg-[#FFB7C5] text-black border border-[#FF98A5] shadow-md": !message.isBot,
-      "bg-gradient-to-br from-white to-pink-50 text-black border border-pink-100 shadow-md": message.isBot,
-    }
-  )}
->
-  <div className="prose prose-xs sm:prose-sm break-words font-medium w-full">
-    {message.isBot && sections ? (
-      <>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            table: ({ node, ...props }) => (
-              <div className="overflow-x-auto w-full">
-                <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
-              </div>
-            ),
-            td: ({ node, ...props }) => (
-              <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-            ),
-            th: ({ node, ...props }) => (
-              <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-            ),
-          }}
+          className={cn(
+            "px-2 py-1.5 sm:px-4 sm:py-3 text-sm sm:text-base",
+            {
+              "bg-[#FFB7C5] text-black border border-[#FF98A5] shadow-md": !message.isBot,
+              "bg-gradient-to-br from-white to-pink-50 text-black border border-pink-100 shadow-md": message.isBot,
+            }
+          )}
         >
-          {sections.mainText}
-        </ReactMarkdown>
-
-        {/* Source sections */}
-        <div className="space-y-2">
-          {sections.companyDocs && (
-            <MessageSection
-              title="社内文書情報"
-              content={sections.companyDocs}
-              icon={FileText}
-            />
-          )}
-
-          {sections.onlineInfo && (
-            <MessageSection
-              title="オンラインWeb情報"
-              content={sections.onlineInfo}
-              icon={Globe}
-            />
-          )}
-        </div>
-      </>
-    ) : (
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          table: ({ node, ...props }) => (
-            <div className="overflow-x-auto w-full">
-              <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
+          {/* Display category badge */}
+          {message.category && message.category !== "SELF" && !message.isBot && (
+            <div className="flex justify-end mb-1">
+              <Badge variant={getCategoryBadgeVariant(message.category)} className="text-[10px] py-0 h-4 flex items-center">
+                <Tag className="h-2.5 w-2.5 mr-1" />
+                {{
+                  PRIVATE: "民間",
+                  SELF: "自分",
+                  ADMINISTRATIVE: "行政"
+                }[message.category] ?? message.category}
+              </Badge>
             </div>
-          ),
-          td: ({ node, ...props }) => (
-            <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-          ),
-          th: ({ node, ...props }) => (
-            <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-          ),
-        }}
-      >
-        {message.content}
-      </ReactMarkdown>
-    )}
-  </div>
-          {message.isBot && (
-            <div className="mt-2 flex items-center justify-between">
-              <div className="text-[9px] sm:text-[10px] text-gray-400">
-                {message.timestamp && new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              </div>
+          )}
+
+
+              <div className="prose prose-xs sm:prose-sm break-words font-medium max-w-none w-full">
+
+
+            {message.isBot && sections ? (
+              <>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    table: ({ node, ...props }) => (
+                      <div className="overflow-x-auto w-full">
+                        <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
+                      </div>
+                    ),
+                    td: ({ node, ...props }) => (
+                      <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+                    ),
+                    th: ({ node, ...props }) => (
+                      <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+                    ),
+                  }}
+                >
+                  {sections.mainText}
+                </ReactMarkdown>
+
+                {/* Source sections */}
+                <div className="space-y-2">
+                  {sections.companyDocs && (
+                    <MessageSection
+                      title="社内文書情報"
+                      content={sections.companyDocs}
+                      icon={FileText}
+                    />
+                  )}
+
+                  {sections.onlineInfo && (
+                    <MessageSection
+                      title="オンラインWeb情報"
+                      content={sections.onlineInfo}
+                      icon={Globe}
+                    />
+                  )}
+                </div>
+              </>
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  table: ({ node, ...props }) => (
+                    <div className="overflow-x-auto w-full">
+                      <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
+                    </div>
+                  ),
+                  td: ({ node, ...props }) => (
+                    <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+                  ),
+                  th: ({ node, ...props }) => (
+                    <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+                  ),
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            )}
+          </div>
+          
+          <div className="mt-2 flex items-center justify-between">
+            <div className="text-[9px] sm:text-[10px] text-gray-400">
+              {message.timestamp && new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </div>
+            {message.isBot ? (
               <Button
                 variant="ghost"
                 size="icon"
@@ -295,15 +329,10 @@ const MessageSection = ({
                 ) : (
                   <Volume2 className="h-4 w-4 text-pink-500" />
                 )}
-              </Button>
-            </div>
-          )}
-
-
-</Card>
-
-
-
+          </Button>
+            ) : null}
+          </div>
+        </Card>
       </motion.div>
     </div>
   );
