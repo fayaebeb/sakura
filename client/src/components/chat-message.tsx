@@ -218,9 +218,8 @@ export default function ChatMessage({
         whileHover={message.isBot ? { scale: 1.02 } : { scale: 1 }}
         onHoverStart={handleBotMessageHover}
         className={cn("rounded-xl", {
-          "w-full": message.isBot,
           "max-w-[85%] sm:max-w-[75%] ml-auto self-end": !message.isBot,
-          "mr-auto self-start ml-2 sm:ml-3": message.isBot,
+          "max-w-[90%] sm:max-w-[90%] mr-auto self-start ml-2 sm:ml-3": message.isBot,
         })}
       >
         <Card
