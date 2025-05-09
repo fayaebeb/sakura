@@ -90,7 +90,19 @@ const MessageSection = ({
           className="p-3 bg-pink-50/50"
         >
           <div className="prose prose-sm max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({ href, children }) => (
+                  <a
+                    href={href}
+                    className="text-[#C04C75] hover:text-[#F28CA8] underline"
+                  >
+                    {children}
+                  </a>
+                ),
+              }}
+            >
               {content}
             </ReactMarkdown>
           </div>
@@ -254,6 +266,14 @@ export default function ChatMessage({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
+                      a: ({ href, children }) => (
+                        <a
+                          href={href}
+                          className="text-[#CC3366] hover:text-[#FF98A5] underline"
+                        >
+                          {children}
+                        </a>
+                    ),
                     table: ({ node, ...props }) => (
                       <div className="overflow-x-auto w-full">
                         <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
@@ -293,6 +313,14 @@ export default function ChatMessage({
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
+                  a: ({ href, children }) => (
+                      <a
+                        href={href}
+                        className="text-[#CC3366] hover:text-[#FF98A5] underline"
+                      >
+                        {children}
+                      </a>
+                  ),
                   table: ({ node, ...props }) => (
                     <div className="overflow-x-auto w-full">
                       <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
@@ -310,7 +338,7 @@ export default function ChatMessage({
               </ReactMarkdown>
             )}
           </div>
-          
+
           <div className="mt-2 flex items-center justify-between">
             <div className="text-[9px] sm:text-[10px] text-gray-400">
               {message.timestamp && new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
