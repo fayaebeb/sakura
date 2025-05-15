@@ -37,9 +37,9 @@ async function sendMessageToLangflow(content: string, persistentSessionId: strin
       output_type: "chat",
       input_type: "chat",
       tweaks: {
-        "TextInput-EqvOU": {
-          input_value: persistentSessionId,
-        },
+        "ChatOutput-U51HT": {
+    "should_store_message": false
+  },
       },
     }),
   });
