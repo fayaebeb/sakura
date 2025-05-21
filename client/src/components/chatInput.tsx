@@ -1,11 +1,13 @@
 import { memo, useCallback, useRef, useEffect, useState } from "react";
-import { Send, User, Building, Landmark } from "lucide-react";
+import { Send, User, Building, Landmark, Globe, Database, ChevronDown } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import { motion } from "framer-motion";
 import VoiceRecorder from "./voice-recorder";
 import PromptPicker from "./prompt-picker";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import React from "react";
+
 
 // Debounce function to improve input performance
 function useDebounce(callback: Function, delay: number) {
@@ -45,26 +47,34 @@ const ChatInput = memo(function ChatInput({
   handlePromptSelect,
   isMobile,
   textareaRef,
+  useWeb,
+  setUseWeb,
+  useDb,
+  setUseDb,
 }: {
   input: string;
   setInput: React.Dispatch<React.SetStateAction<string>>;
-  handleSubmit: (e: React.FormEvent, category?: MessageCategory) => void;
+  handleSubmit: (e: React.FormEvent, category: MessageCategory, useWeb: boolean, useDb: boolean) => void;
   handleVoiceRecording: (audio: Blob) => void;
   isProcessing: boolean;
   sendDisabled: boolean;
   handlePromptSelect: (text: string) => void;
   isMobile: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
+  useWeb: boolean;
+  setUseWeb: React.Dispatch<React.SetStateAction<boolean>>;
+  useDb: boolean;
+  setUseDb: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   // Category selection state
   const [category, setCategory] = useState<MessageCategory>("SELF");
-  
+
   // Local input state for smoother typing experience
   const localInputRef = useRef<string>(input);
 
   // Wrap the original submit handler to include the category
   const handleSubmit = (e: React.FormEvent) => {
-    originalHandleSubmit(e, category);
+    originalHandleSubmit(e, category, useWeb, useDb);
   };
 
   // Update the parent state in a debounced way to avoid lag
@@ -98,14 +108,16 @@ const ChatInput = memo(function ChatInput({
     debouncedSetInput(newValue); // Update parent state in a debounced way
   }, [debouncedSetInput]);
 
+  const [showOptions, setShowOptions] = useState(true);
+
   return (
       <form onSubmit={handleSubmit} className="pt-2 sm:pt-1 pb-2 sm:pb-2 px-2 sm:px-4 border-t flex flex-col gap-1 relative">
-
-      {/* Category selection toggle group */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-0.5 mb-0.5">
-
-        
-        <TooltipProvider>
+            {showOptions && (
+                  <div className="overflow-x-auto sm:overflow-visible px-1 relative">
+                    <div className="flex items-center gap-2 min-w-max">
+                   {/* Category selection toggle group */}
+            <div className="flex">
+          <TooltipProvider>
           <ToggleGroup
             type="single"
             value={category}
@@ -175,7 +187,44 @@ const ChatInput = memo(function ChatInput({
             </Tooltip>
           </ToggleGroup>
         </TooltipProvider>
-      </div>
+        </div>
+
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setUseWeb(!useWeb);
+                }}
+                className={`px-2 sm:px-3 py-2 h-[40px] rounded-full shadow-md flex items-center gap-1 flex-shrink-0 transition 
+                  ${useWeb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"}
+                `}
+              >
+                <Globe className="h-4 w-4" />
+                <span className="hidden sm:inline">オンライン情報</span>
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setUseDb(!useDb);
+                }}
+                className={`px-2 sm:px-3 py-2 h-[40px] rounded-full shadow-md flex items-center gap-1 flex-shrink-0 transition 
+                  ${useDb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"}
+                `}
+              >
+                <Database className="h-4 w-4" />
+                <span className="hidden sm:inline">内部データ</span> 
+                  </button>
+                        </div>
+                      <div className="relative flex-shrink-0 mr-[32px] z-30">
+                        <PromptPicker onSelect={handlePromptSelect} />
+                      </div>
+
+
+
+                      </div>
+                    </div>
+                  )}
 
       <div className="flex gap-1.5 sm:gap-2">
         <div className="flex-shrink-0">
@@ -201,10 +250,6 @@ const ChatInput = memo(function ChatInput({
             autoCorrect="off" // Disable autocorrect
           />
         </div>
-        
-        <div className="flex-shrink-0 relative z-20">
-          <PromptPicker onSelect={handlePromptSelect} />
-        </div>
 
         <motion.button
           type="submit"
@@ -217,6 +262,19 @@ const ChatInput = memo(function ChatInput({
           <span className="text-xs hidden sm:inline">送信</span>
         </motion.button>
       </div>
+        <button
+          type="button"
+          onClick={() => setShowOptions((prev) => !prev)}
+          className="absolute right-2 bottom-[60px] z-20 bg-white border border-gray-300 p-1.5 rounded-full shadow-md transition-transform duration-200 hover:bg-gray-100"
+          aria-label="Toggle options"
+        >
+          <ChevronDown
+            className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${
+              showOptions ? "rotate-0" : "rotate-180"
+            }`}
+          />
+        </button>
+
     </form>
   );
 });

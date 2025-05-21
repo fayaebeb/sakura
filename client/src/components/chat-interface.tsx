@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import TranscriptionConfirmation from "./transcription-confirmation";
 
 
-
 // Audio player for bot responses
 const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string, isPlaying: boolean, onPlayComplete: () => void }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -144,6 +143,8 @@ const ChatInterface = () => {
   const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
   const [transcribedText, setTranscribedText] = useState<string | null>(null);
   const [showTranscriptionConfirmation, setShowTranscriptionConfirmation] = useState(false);
+  const [useWeb, setUseWeb] = useState(false);
+  const [useDb, setUseDb] = useState(false);
 
 
   // Detect mobile devices
@@ -195,7 +196,7 @@ const ChatInterface = () => {
     // Use persistent session ID derived from username for server requests
     // This ensures consistent data even if local storage is cleared
     const persistentSessionId = user.username.split('@')[0];
-    
+
     // If sessionId doesn't match username-based ID,
     // log it (but still respect the local storage session for now)
     if (savedSessionId !== persistentSessionId) {
@@ -216,7 +217,7 @@ const ChatInterface = () => {
         }
       }
     }, 30000); // Check every 30 seconds
-    
+
     return () => clearInterval(interval);
   }, [user]);
 
@@ -240,27 +241,39 @@ const ChatInterface = () => {
   }, [messages]);
 
   const sendMessage = useMutation({
-    mutationFn: async ({ content, category }: { content: string, category: MessageCategory }) => {
+    mutationFn: async ({
+      content,
+      category,
+      useWeb,
+      useDb,
+    }: {
+      content: string;
+      category: MessageCategory;
+      useWeb: boolean;
+      useDb: boolean;
+    }) => {
       if (!user?.id) {
         throw new Error("ユーザー情報が見つかりません。再ログインしてください。");
       }
-      
+
       if (!sessionId) {
         throw new Error("セッションIDが見つかりません。再ログインしてください。");
       }
-      
-      const res = await apiRequest("POST", "/api/chat", {
-        content,
-        sessionId,
-        isBot: false,
-        category,
-      });
-      
+
+          const res = await apiRequest("POST", "/api/chat", {
+            content,
+            sessionId,
+            isBot: false,
+            category,
+            useWeb,
+            useDb,
+          });
+
       if (!res.ok) {
         const errorText = await res.text().catch(() => "Unknown error");
         throw new Error(`Failed to send message: ${res.status} ${errorText}`);
       }
-      
+
       return res.json();
     },
     onMutate: async ({ content, category }: { content: string, category: MessageCategory }) => {
@@ -295,14 +308,14 @@ const ChatInterface = () => {
       // Create a user message with the same data as the optimistic one, but with real ID
       // First, extract the content and category from variables
       const { content, category } = variables;
-      
+
       // We need to ensure both the user message and bot message are in the cache
       queryClient.setQueryData<Message[]>(["/api/messages", sessionId], (old = []) => {
         // Filter out our optimistic message if it exists
         const filteredMessages = context?.optimisticUserMessage 
           ? old.filter(msg => msg.id !== context.optimisticUserMessage.id) 
           : old;
-        
+
         // Create a proper user message (the optimistic one gets replaced with this)
         const userMessage: Message = {
           id: newBotMessage.id - 1, // User message would have been created right before the bot message
@@ -313,7 +326,7 @@ const ChatInterface = () => {
           sessionId,
           category,
         };
-        
+
         // Add both messages to the cache and sort them by ID to ensure correct order
         const allMessages = [...filteredMessages, userMessage, newBotMessage];
         return allMessages.sort((a, b) => {
@@ -324,7 +337,7 @@ const ChatInterface = () => {
           return a.id - b.id;
         });
       });
-      
+
       // Show a success toast
       toast({
         title: "メッセージ送信したよ！",
@@ -341,7 +354,7 @@ const ChatInterface = () => {
       if (context?.previousMessages) {
         queryClient.setQueryData(["/api/messages", sessionId], context.previousMessages);
       }
-      
+
       // Show an error toast with more detailed message
       toast({
         title: "送信エラー",
@@ -354,7 +367,7 @@ const ChatInterface = () => {
   });
   const handleVoiceRecording = async (audioBlob: Blob) => {
     setIsProcessingVoice(true);
-    
+
     try {
       // Show a toast to indicate processing
       toast({
@@ -362,17 +375,17 @@ const ChatInterface = () => {
         description: "あなたの声を認識しています。少々お待ちください。",
         duration: 2500,
       });
-      
+
       // Validate audio blob
       if (!audioBlob || audioBlob.size === 0) {
         throw new Error("音声データが空です。もう一度録音してください。");
       }
-      
+
       // Check audio blob type 
       if (!audioBlob.type.includes('audio') && !audioBlob.type.includes('webm')) {
         console.warn(`Unexpected audio blob type: ${audioBlob.type}, size: ${audioBlob.size}`);
       }
-      
+
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
 
@@ -390,7 +403,7 @@ const ChatInterface = () => {
       const data = await res.json().catch(() => {
         throw new Error("Invalid JSON response from transcription service");
       });
-      
+
       if (!data || !data.transcribedText) {
         throw new Error("音声認識結果が取得できませんでした。");
       }
@@ -421,13 +434,16 @@ const ChatInterface = () => {
 
   // Handle confirming the transcribed text
   const handleConfirmTranscription = (confirmedText: string) => {
-    // Instead of setting the input text, send the message directly
     setTranscribedText(null);
     setShowTranscriptionConfirmation(false);
 
-    // Send the message directly if it has content
     if (confirmedText.trim()) {
-      sendMessage.mutate({ content: confirmedText, category: "SELF" });
+      sendMessage.mutate({
+        content: confirmedText,
+        category: "SELF",
+        useWeb: useWeb,
+        useDb: useDb,
+      });
     }
   };
 
@@ -476,7 +492,7 @@ const ChatInterface = () => {
         const errorText = await res.text().catch(() => "Unknown error");
         throw new Error(`Failed to fetch TTS stream: ${res.status} ${errorText}`);
       }
-      
+
       if (!res.body) {
         throw new Error("Response body is null");
       }
@@ -523,7 +539,7 @@ const ChatInterface = () => {
 
       const audioUrl = URL.createObjectURL(audioBlob);
       setCurrentAudioUrl(audioUrl);
-      
+
       toast({
         title: "音声準備完了",
         description: "音声の再生を開始します。",
@@ -559,13 +575,19 @@ const ChatInterface = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent, category: MessageCategory = "SELF") => {
-    e.preventDefault();
-    if (!input.trim() || sendMessage.isPending) return;
+    const handleSubmit = (
+      e: React.FormEvent,
+      category: MessageCategory = "SELF",
+      web: boolean = true,
+      db: boolean = true
+    ) => {
+      e.preventDefault();
+      if (!input.trim() || sendMessage.isPending) return;
 
-    const message = input;
-    setInput("");
-    sendMessage.mutate({ content: message, category });
+      const message = input;
+      setInput("");
+
+      sendMessage.mutate({ content: message, category, useWeb: useWeb, useDb: useDb });
   };
 
   // Optimized emotion selection handler with direct DOM manipulation for better performance
@@ -715,6 +737,10 @@ const ChatInterface = () => {
           handlePromptSelect={handleEmotionSelect}
           isMobile={isMobile}
           textareaRef={textareaRef}
+          useWeb={useWeb}
+          setUseWeb={setUseWeb}
+          useDb={useDb}
+          setUseDb={setUseDb}
         />
       </div>
 

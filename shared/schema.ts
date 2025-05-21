@@ -64,6 +64,11 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   category: true,
 });
 
+export const chatRequestSchema = insertMessageSchema.extend({
+  useWeb: z.boolean().optional(),
+  useDb: z.boolean().optional(),
+});
+
 export const insertFeedbackSchema = createInsertSchema(feedback).pick({
   comment: true,
   rating: true,
@@ -78,3 +83,4 @@ export type Message = typeof messages.$inferSelect;
 export type Feedback = typeof feedback.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type ChatRequest = z.infer<typeof chatRequestSchema>;

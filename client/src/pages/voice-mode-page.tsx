@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, AudioLines, Play, Pause, Square } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, AudioLines, Play, Pause, Square, Database, Globe } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,7 +23,10 @@ export default function VoiceModePage() {
   const [autoListenTimeout, setAutoListenTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isAudioPaused, setIsAudioPaused] = useState(false);
-  
+
+  const [useWeb, setUseWeb] = useState(false);
+  const [useDb, setUseDb] = useState(false);
+
   const wsRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -42,20 +45,20 @@ export default function VoiceModePage() {
   // Setup WebSocket connection
   useEffect(() => {
     if (!user) return;
-    
+
     // Create WebSocket URL
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
+
     // Create new WebSocket
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
-    
+
     // Setup event listeners
     ws.addEventListener("open", () => {
       console.log("WebSocket connection established");
       setIsConnected(true);
-      
+
       // Send auth data to register client
       const sessionId = getSessionId() || user.username.split('@')[0];
       ws.send(JSON.stringify({
@@ -65,17 +68,17 @@ export default function VoiceModePage() {
         sessionId
       }));
     });
-    
+
     ws.addEventListener("message", (event) => {
       try {
         const data = JSON.parse(event.data);
-        
-        
+
+
         switch (data.type) {
           case "connected":
             console.log("Initial connection acknowledged");
             break;
-            
+
           case "auth_success":
             console.log("Authentication successful");
             toast({
@@ -84,12 +87,12 @@ export default function VoiceModePage() {
               duration: 1000,
             });
             break;
-            
+
           case "transcription":
             console.log("Transcription received:", data.text);
             setCurrentTranscript(data.text);
             break;
-            
+
             case "ai_response":
             console.log("AI response received:", data.message);
 
@@ -106,19 +109,19 @@ export default function VoiceModePage() {
             }
             break;
 
-            
+
           case "speech_response":
             console.log("Speech response received");
             if (data.audioData && isListening) {
               // Stop any currently playing audio
               stopCurrentAudio();
-              
+
               // Play audio if listening is enabled
               const audio = new Audio(`data:audio/mp3;base64,${data.audioData}`);
-              
+
               // Store reference to the current audio element
               currentAudioRef.current = audio;
-              
+
               // Play the audio
               audio.play()
                 .then(() => {
@@ -132,18 +135,18 @@ export default function VoiceModePage() {
                   setIsAudioPlaying(false);
                   setIsAudioPaused(false);
                 });
-              
+
               // Setup auto-listen after speech ends
               if (autoListenTimeout) {
                 clearTimeout(autoListenTimeout as NodeJS.Timeout);
               }
-              
+
               audio.addEventListener("ended", () => {
                 // Clear reference and states when audio ends
                 currentAudioRef.current = null;
                 setIsAudioPlaying(false);
                 setIsAudioPaused(false);
-                
+
                 if (isListening) {
                   // Auto start listening again after a delay
                   const timeout = setTimeout(() => {
@@ -151,16 +154,16 @@ export default function VoiceModePage() {
                       startRecording();
                     }
                   }, 1000);
-                  
+
                   setAutoListenTimeout(timeout);
                 }
               });
             }
-            
+
             // Complete processing
             setIsProcessing(false);
             break;
-            
+
           case "error":
             console.error("WebSocket error:", data.message);
             toast({
@@ -176,7 +179,7 @@ export default function VoiceModePage() {
         console.error("Error parsing WebSocket message:", error);
       }
     });
-    
+
     ws.addEventListener("close", () => {
       console.log("WebSocket connection closed");
       setIsConnected(false);
@@ -186,26 +189,26 @@ export default function VoiceModePage() {
         variant: "destructive",
       });
     });
-    
+
     ws.addEventListener("error", (error) => {
       console.error("WebSocket error:", error);
       setIsConnected(false);
     });
-    
+
     // Cleanup on unmount
     return () => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.close();
       }
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-      
+
       if (autoListenTimeout) {
         clearTimeout(autoListenTimeout);
       }
-      
+
       // Stop any playing audio when component unmounts
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
@@ -213,7 +216,7 @@ export default function VoiceModePage() {
       }
     };
   }, [user, toast]);
-  
+
   // Initialize timer for recording duration
   useEffect(() => {
     if (isRecording) {
@@ -226,7 +229,7 @@ export default function VoiceModePage() {
         timerRef.current = null;
       }
     }
-    
+
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -293,44 +296,44 @@ export default function VoiceModePage() {
       microphone.disconnect();
     };
   };
-  
+
   const startRecording = async () => {
     if (!isConnected || isProcessing) return;
-    
+
     // Stop any currently playing audio before starting to record
     stopCurrentAudio();
-    
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Reset recording time and audio chunks
       setRecordingTime(0);
       audioChunksRef.current = [];
-      
+
       // Create media recorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      
+
       // Setup voice activity detection
       const cleanupVAD = setupVoiceActivityDetection(stream);
-      
+
       // Event handler for data available
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data);
         }
       };
-      
+
       // Event handler for recording stop
       mediaRecorder.onstop = async () => {
         cleanupVAD();
-        
+
         if (audioChunksRef.current.length > 0) {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          
+
           // Set processing state
           setIsProcessing(true);
-          
+
           try {
             // Convert Blob to base64
             const reader = new FileReader();
@@ -338,12 +341,14 @@ export default function VoiceModePage() {
             reader.onloadend = () => {
               // Extract base64 data from result
               const base64data = reader.result?.toString().split(',')[1];
-              
+
               if (base64data && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 // Send audio data to server
                 wsRef.current.send(JSON.stringify({
                   type: 'speech',
-                  audioData: base64data
+                  audioData: base64data,
+                  useweb: useWeb,
+                  usedb: useDb
                 }));
               } else {
                 setIsProcessing(false);
@@ -371,16 +376,16 @@ export default function VoiceModePage() {
             variant: "destructive",
           });
         }
-        
+
         // Stop all audio tracks
         stream.getTracks().forEach(track => track.stop());
         setIsRecording(false);
       };
-      
+
       // Start recording with timeslices to collect data
       mediaRecorder.start(1000);
       setIsRecording(true);
-      
+
     } catch (error) {
       console.error("Error starting recording:", error);
       toast({
@@ -395,7 +400,7 @@ export default function VoiceModePage() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       // The onstop handler will handle the rest
-      
+
       toast({
         title: "✅ 録音完了",
         description: "音声を処理しています...",
@@ -414,7 +419,7 @@ export default function VoiceModePage() {
       setIsAudioPaused(false);
     }
   };
-  
+
   // Function to pause current audio playback
   const pauseCurrentAudio = () => {
     if (currentAudioRef.current) {
@@ -423,7 +428,7 @@ export default function VoiceModePage() {
       setIsAudioPaused(true);
     }
   };
-  
+
   // Function to resume audio playback
   const resumeCurrentAudio = () => {
     if (currentAudioRef.current && isAudioPaused) {
@@ -432,8 +437,8 @@ export default function VoiceModePage() {
       setIsAudioPaused(false);
     }
   };
-  
-  
+
+
 
 
   // Format time as MM:SS
@@ -462,7 +467,7 @@ export default function VoiceModePage() {
             </div>
 
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {/* Connection status */}
             <div className={`flex items-center text-xs leading-none ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
@@ -470,7 +475,7 @@ export default function VoiceModePage() {
               <span className="whitespace-nowrap">{isConnected ? 'オンライン' : 'オフライン'}</span>
             </div>
 
-            
+
 
             {/* Text mode link */}
             <Link href="/">
@@ -532,7 +537,7 @@ export default function VoiceModePage() {
                       onPlayAudio={() => {}}
                     />
                   ))}
-                  
+
                   {/* Current transcript display */}
                   {currentTranscript && (
                     <div className="flex flex-col ml-auto max-w-[80%] bg-pink-100 p-3 rounded-lg opacity-70">
@@ -541,14 +546,14 @@ export default function VoiceModePage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Processing indicator */}
                   {isProcessing && (
                     <div className="flex justify-center my-4">
                       <ChatLoadingIndicator variant="minimal" message="返信を生成中..." />
                     </div>
                   )}
-                  
+
                   {/* Invisible element for auto-scrolling */}
                   <div ref={messageEndRef} />
                 </>
@@ -567,7 +572,7 @@ export default function VoiceModePage() {
                 <span>{formatTime(recordingTime)}</span>
               </div>
             )}
-            
+
             {/* Audio playback controls */}
             {isAudioPlaying || isAudioPaused ? (
               <div className="flex items-center gap-3">
@@ -587,7 +592,7 @@ export default function VoiceModePage() {
                     )}
                   </Button>
                 </motion.div>
-                
+
                 {/* Stop button */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -600,7 +605,7 @@ export default function VoiceModePage() {
                     <Square className="h-5 w-5" />
                   </Button>
                 </motion.div>
-                
+
                 {/* Microphone button */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -642,7 +647,7 @@ export default function VoiceModePage() {
                 </Button>
               </motion.div>
             )}
-            
+
             <p className="text-sm text-pink-600 mt-2">
               {isRecording 
                 ? "録音中... 話し終わると自動的に停止します" 
@@ -652,6 +657,27 @@ export default function VoiceModePage() {
                     ? "音声再生中です。録音するには停止してください"
                     : "録音ボタンを押して話しかけてください"}
             </p>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Button
+              onClick={() => setUseWeb(!useWeb)}
+              className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition ${
+                useWeb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <Globe className="h-4 w-4" />
+              オンライン情報
+            </Button>
+
+            <Button
+              onClick={() => setUseDb(!useDb)}
+              className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition ${
+                useDb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <Database className="h-4 w-4" />
+              内部データ
+            </Button>
           </div>
         </div>
       </main>

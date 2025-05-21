@@ -2,13 +2,11 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertMessageSchema, insertFeedbackSchema } from "@shared/schema";
+import { insertMessageSchema, insertFeedbackSchema, chatRequestSchema } from "@shared/schema";
 import { transcribeAudio } from "./apis/openai";
 import { textToSpeechStream } from "./apis/openaitts";
 import multer from "multer";
 import { WebSocketServer, WebSocket } from "ws";
-
-const LANGFLOW_API = process.env.LANGFLOW_API || '';
 
 // Setup multer for handling file uploads (in-memory storage)
 const upload = multer({ 
@@ -16,69 +14,43 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-// Helper function to format the bot's response
-// Updated, minimal formatting function
-function formatBotResponse(text: string): string {
-  return text.replace(/\\n/g, '\n').trim();
-}
+// Helper function to send message to Langchain API
+  async function sendMessageToLangchain(
+    message: string,
+    useWeb: boolean,
+    useDb: boolean
+  ): Promise<string> {
 
-// Helper function to send message to Langflow API
-async function sendMessageToLangflow(content: string, persistentSessionId: string) {
-  console.log(`Sending request to Langflow API: ${content}`);
-  const response = await fetch(LANGFLOW_API, {
+  console.log(`Sending request to LangChain FastAPI: ${message}`);
+
+  const response = await fetch("https://skapi-qkrap.ondigitalocean.app/chat", {
     method: "POST",
     headers: {
-      Authorization: process.env.AUTHORIZATION_TOKEN || "",
       "Content-Type": "application/json",
-      "x-api-key": process.env.X_API_KEY || "",
     },
     body: JSON.stringify({
-      input_value: content,
-      output_type: "chat",
-      input_type: "chat",
-      tweaks: {
-        "ChatOutput-U51HT": {
-    "should_store_message": false
-  },
-      },
+      message,
+      useweb: useWeb,
+      usedb: useDb,
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error("Langflow API Error:", errorText);
-    throw new Error(
-      `Langflow API responded with status ${response.status}`,
-    );
+    console.error("LangChain FastAPI Error:", errorText);
+    throw new Error(`LangChain API responded with status ${response.status}`);
   }
 
-  const aiResponse = await response.json();
-  console.log(
-    "Langflow API Response:",
-    JSON.stringify(aiResponse, null, 2),
-  );
+  const data = await response.json();
+  console.log("LangChain API Response:", JSON.stringify(data, null, 2));
 
-  let aiOutputText = null;
-
-  if (aiResponse.outputs && Array.isArray(aiResponse.outputs)) {
-    const firstOutput = aiResponse.outputs[0];
-    if (firstOutput?.outputs?.[0]?.results?.message?.data?.text) {
-      aiOutputText = firstOutput.outputs[0].results.message.data.text;
-    } else if (firstOutput?.outputs?.[0]?.messages?.[0]?.message) {
-      aiOutputText = firstOutput.outputs[0].messages[0].message;
-    }
+  if (!data.reply) {
+    throw new Error("No reply field in LangChain API response");
   }
 
-  if (!aiOutputText) {
-    console.error(
-      "Unexpected AI Response Format:",
-      JSON.stringify(aiResponse, null, 2),
-    );
-    throw new Error("Could not extract message from AI response");
-  }
-
-  return formatBotResponse(aiOutputText);
+  return data.reply.trim();
 }
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -89,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const persistentSessionId = req.user!.username.split("@")[0];
 
-    const result = insertMessageSchema.safeParse(req.body);
+    const result = chatRequestSchema.safeParse(req.body);
     if (!result.success) {
       console.error("Invalid request body:", result.error);
       return res.status(400).json({ error: "Invalid request data" });
@@ -111,8 +83,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId: persistentSessionId,
       });
 
-      // Get response from Langflow
-      const formattedResponse = await sendMessageToLangflow(body.content, persistentSessionId);
+      // Get response from langchain
+      const formattedResponse = await sendMessageToLangchain(
+        body.content,
+        body.useWeb ?? false,
+        body.useDb ?? false
+      );
 
       // Bot message should inherit the same category as the user message
       const botMessage = await storage.createMessage(req.user!.id, {
@@ -195,14 +171,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Use the persistent sessionId from user's email
       const persistentSessionId = req.user!.username.split('@')[0];
-      
+
       // Check if the session exists, if not, create it
       const existingSession = await storage.getUserLastSession(req.user!.id);
       if (!existingSession || existingSession.sessionId !== persistentSessionId) {
         console.log(`Creating new session for user ${req.user!.id} with sessionId ${persistentSessionId}`);
         await storage.createUserSession(req.user!.id, persistentSessionId);
       }
-      
+
       const messages = await storage.getMessagesByUserAndSession(
         req.user!.id,
         persistentSessionId
@@ -224,12 +200,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Use the persistent sessionId from user's email
       const persistentSessionId = req.user!.username.split('@')[0];
-      
+
       await storage.deleteMessagesByUserAndSession(
         req.user!.id,
         persistentSessionId
       );
-      
+
       console.log(`Deleted all messages for user ${req.user!.id} with sessionId ${persistentSessionId}`);
       res.status(200).json({ message: "Chat history deleted successfully" });
     } catch (error) {
@@ -254,13 +230,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get the user's persistent session ID
       const persistentSessionId = req.user!.username.split('@')[0];
-      
+
       // Create feedback entry
       const feedback = await storage.createFeedback(req.user!.id, {
         ...result.data,
         sessionId: persistentSessionId, // Use the persistent session ID
       });
-      
+
       console.log(`Feedback submitted for user ${req.user!.id}`);
       res.status(201).json(feedback);
     } catch (error) {
@@ -273,35 +249,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-  
+
   // Set up WebSocket server on a separate path
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  
+
   interface VoiceModeClient {
     userId: number;
     username: string;
     ws: WebSocket;
     sessionId: string;
   }
-  
+
   const voiceModeClients: VoiceModeClient[] = [];
-  
+
   wss.on('connection', (ws) => {
     console.log('WebSocket client connected');
-    
+
     // Handle client connection
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
         console.log('WebSocket message received:', data);
-        
+
         if (data.type === 'auth') {
           // Authenticate user and store connection info
           if (data.userId && data.username && data.sessionId) {
             const existingClientIndex = voiceModeClients.findIndex(
               client => client.userId === data.userId
             );
-            
+
             if (existingClientIndex !== -1) {
               // Update existing client
               voiceModeClients[existingClientIndex].ws = ws;
@@ -316,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
               console.log(`Registered WebSocket connection for user ${data.username}`);
             }
-            
+
             // Send confirmation
             ws.send(JSON.stringify({ type: 'auth_success' }));
           }
@@ -325,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const clientIndex = voiceModeClients.findIndex(
             client => client.ws === ws
           );
-          
+
           if (clientIndex === -1) {
             ws.send(JSON.stringify({ 
               type: 'error', 
@@ -333,29 +309,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }));
             return;
           }
-          
+
           const client = voiceModeClients[clientIndex];
-          
+
           // Handle transcription
           if (data.audioData) {
             try {
               // Decode base64 audio data
               const buffer = Buffer.from(data.audioData, 'base64');
-              
+
               // Transcribe audio
               console.log("Transcribing voice mode audio...");
               const transcribedText = await transcribeAudio(buffer);
               console.log("Voice mode transcribed text:", transcribedText);
-              
+
               // Send transcription back to client
               ws.send(JSON.stringify({ 
                 type: 'transcription', 
                 text: transcribedText 
               }));
-              
-              // Process message with Langflow
+
+              // Process message with langchain
               const persistentSessionId = client.username.split('@')[0];
-              
+
               // Create user message in database and keep a reference
               const userMessage = await storage.createMessage(client.userId, {
                 content: transcribedText,
@@ -364,11 +340,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 category: "SELF", // Default to SELF for voice messages
               });
 
-              
+
               // Send to AI and get response
               console.log("Processing voice mode message with AI...");
-              const formattedResponse = await sendMessageToLangflow(transcribedText, persistentSessionId);
-              
+              const formattedResponse = await sendMessageToLangchain(
+                transcribedText,
+                data.useweb ?? false,
+                data.usedb ?? false
+              );
+
               // Create bot message in database - inherit category from user message
               const botMessage = await storage.createMessage(client.userId, {
                 content: formattedResponse,
@@ -376,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 sessionId: persistentSessionId,
                 category: userMessage.category, // Bot message inherits the same category
               });
-              
+
               // Send AI response to client
               ws.send(JSON.stringify({ 
                 type: 'ai_response', 
@@ -384,29 +364,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 message: botMessage 
               }));
 
-              
+
               // Generate speech from AI response
               console.log("Generating speech for voice mode response...");
               try {
                 const openaiResponse = await textToSpeechStream(formattedResponse);
-                
+
                 // Convert stream to buffer
                 const chunks: Buffer[] = [];
                 openaiResponse.data.on('data', (chunk: Buffer) => {
                   chunks.push(chunk);
                 });
-                
+
                 openaiResponse.data.on('end', () => {
                   const audioBuffer = Buffer.concat(chunks);
                   const base64Audio = audioBuffer.toString('base64');
-                  
+
                   // Send audio to client
                   ws.send(JSON.stringify({ 
                     type: 'speech_response', 
                     audioData: base64Audio 
                   }));
                 });
-                
+
                 openaiResponse.data.on('error', (err: Error) => {
                   console.error("Error streaming TTS:", err);
                   ws.send(JSON.stringify({ 
@@ -438,11 +418,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       }
     });
-    
+
     // Handle client disconnection
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
-      
+
       // Remove client from active connections
       const clientIndex = voiceModeClients.findIndex(client => client.ws === ws);
       if (clientIndex !== -1) {
@@ -451,10 +431,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         voiceModeClients.splice(clientIndex, 1);
       }
     });
-    
+
     // Send initial connection acknowledgment
     ws.send(JSON.stringify({ type: 'connected' }));
   });
-  
+
   return httpServer;
 }

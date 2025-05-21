@@ -75,11 +75,6 @@ export default function PromptPicker({ onSelect }: PromptPickerProps) {
           description: "より良い指示の出し方をアドバイスします",
         },
         {
-          text: "「外部情報なし」🚫",
-          message: "インターネットからの情報を利用しないで",
-          description: "外部情報を使わずに回答します",
-        },
-        {
           text: "初心者向け📘",
           message:
             "説明に出てくる専門用語には、それぞれ説明を加え、初心者でも理解しやすいように。具体的な例を挙げながら丁寧に解説して",

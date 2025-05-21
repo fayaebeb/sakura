@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, FileText, Globe, Volume2, Tag } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Globe, Volume2, Tag, Eye } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 
@@ -93,14 +93,65 @@ const MessageSection = ({
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                a: ({ href, children }) => (
-                  <a
-                    href={href}
-                    className="text-[#C04C75] hover:text-[#F28CA8] underline"
-                  >
-                    {children}
-                  </a>
-                ),
+                a: ({ href, children }) => {
+                  const fileIdMatch = href?.match(/\/file\/d\/([^/?]+)/);
+                  const fileId = fileIdMatch?.[1];
+                  const rawText = children?.toString() || "";
+                  const startsWithIcon = rawText.startsWith("📄");
+                  const filename = rawText.replace(/^📄\s*/, "");
+                  const isPreviewable = fileId && /\.(pdf|txt|docx)$/i.test(filename);
+
+                  const [showPreview, setShowPreview] = useState(false);
+
+                  if (!isPreviewable) {
+                    return (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#C04C75] hover:text-[#F28CA8] underline"
+                      >
+                        {children}
+                      </a>
+                    );
+                  }
+
+                  return (
+                    <>
+                      <div className="inline-flex items-center gap-1">
+                        {startsWithIcon && <span>📄</span>}
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#C04C75] hover:text-[#F28CA8] underline"
+                        >
+                          {filename}
+                        </a>
+                        <button
+                          onClick={() => setShowPreview(!showPreview)}
+                          className="text-pink-500 hover:text-pink-700"
+                          title={showPreview ? "Hide preview" : "Show preview"}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {showPreview && (
+                        <div className="mt-2 w-full">
+                          <iframe
+                            src={`https://drive.google.com/file/d/${fileId}/preview`}
+                            width="100%"
+                            height="200"
+                            className="rounded-md border border-pink-200 shadow"
+                            allow="autoplay"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                    </>
+                  );
+                }
               }}
             >
               {content}
