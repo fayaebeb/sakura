@@ -167,7 +167,7 @@ export default function HomePage() {
             transition={{ type: "spring", duration: 0.8 }}
           >
             <motion.img 
-              src="/images/slogo.png" 
+              src="/images/sakura-logo.png" 
               alt="桜AI ロゴ" 
               className="h-16 sm:h-24 w-auto"
               whileHover={{ scale: 1.05, rotate: [-1, 1, -1, 0] }}

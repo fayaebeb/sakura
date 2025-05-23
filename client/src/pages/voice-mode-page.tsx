@@ -510,7 +510,7 @@ export default function VoiceModePage() {
                               transition={{ type: "spring", duration: 0.8 }}
                             >
                               <motion.img 
-                                src="/images/slogo.png" 
+                                src="/images/sakura-logo.png" 
                                 alt="桜AI ロゴ" 
                                 className="h-48 sm:h-48 w-auto"
                                 whileHover={{ scale: 1.05, rotate: [-1, 1, -1, 0] }}

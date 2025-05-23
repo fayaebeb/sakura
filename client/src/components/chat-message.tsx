@@ -266,7 +266,7 @@ export default function ChatMessage({
             transition={{ rotate: { duration: 0.5 } }}
           >
             <img
-              src="/images/sava.jpg"
+              src="/images/sakura-dp.png"
               alt="Sakura AI"
               className="w-full h-full object-cover rounded-full border-2 border-pink-400 shadow-md"
             />
