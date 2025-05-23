@@ -71,6 +71,17 @@ const ChatInput = memo(function ChatInput({
   // Category selection state
   const [category, setCategory] = useState<MessageCategory>("SELF");
 
+  const [localInput, setLocalInput] = useState(input);
+
+  useEffect(() => {
+    setLocalInput(input);
+  }, [input]);
+
+  const debouncedSetInput = useDebounce((value: string) => {
+    setInput(value);
+  }, 100); // 50-150ms is smooth and responsive
+
+
   // Local input state for smoother typing experience
   const localInputRef = useRef<string>(input);
 
@@ -82,11 +93,7 @@ const ChatInput = memo(function ChatInput({
     localInputRef.current = ""; // Reset local input ref
   };
 
-  // Update the parent state in a debounced way to avoid lag
-  const debouncedSetInput = useDebounce((value: string) => {
-    setInput(value);
-  }, 5); // Very small delay - just enough to batch updates
-
+  
   // Update local ref when parent input changes
   useEffect(() => {
     localInputRef.current = input;
@@ -110,7 +117,7 @@ const ChatInput = memo(function ChatInput({
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     localInputRef.current = newValue; // Update local ref immediately
-    debouncedSetInput(newValue); // Update parent state in a debounced way
+    setInput(newValue); // Update parent state in a debounced way
   }, [debouncedSetInput]);
 
   const [showOptions, setShowOptions] = useState(true);
@@ -247,8 +254,12 @@ const ChatInput = memo(function ChatInput({
           <TextareaAutosize
             ref={textareaRef}
             autoFocus
-            value={localInputRef.current}
-            onChange={handleInputChange}
+            value={localInput}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setLocalInput(newValue);         // Immediate UI feedback
+              debouncedSetInput(newValue);     // Debounced sync to parent
+            }}
             placeholder="メッセージを書いてね！"
             className="px-3 py-2 focus:ring-2 focus:ring-pink-100 text-xs sm:text-sm min-h-[40px] max-h-[200px] resize-none w-full border rounded-lg"
             minRows={1}
