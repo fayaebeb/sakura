@@ -133,7 +133,7 @@ export default function VoiceRecorder({ onRecordingComplete, isProcessing }: Voi
         type="button"
         variant={isRecording ? "destructive" : "outline"}
         size="icon"
-        className="h-10 w-10 rounded-full"
+        className="w-[36px] h-[36px] sm:w-10 sm:h-10 rounded-full"
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isProcessing}
       >

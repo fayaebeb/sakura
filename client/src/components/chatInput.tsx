@@ -43,6 +43,7 @@ const ChatInput = memo(function ChatInput({
   handleSubmit: originalHandleSubmit,
   handleVoiceRecording,
   isProcessing,
+  isProcessingVoice,
   sendDisabled,
   handlePromptSelect,
   isMobile,
@@ -57,6 +58,7 @@ const ChatInput = memo(function ChatInput({
   handleSubmit: (e: React.FormEvent, category: MessageCategory, useWeb: boolean, useDb: boolean) => void;
   handleVoiceRecording: (audio: Blob) => void;
   isProcessing: boolean;
+  isProcessingVoice: boolean; 
   sendDisabled: boolean;
   handlePromptSelect: (text: string) => void;
   isMobile: boolean;
@@ -74,7 +76,10 @@ const ChatInput = memo(function ChatInput({
 
   // Wrap the original submit handler to include the category
   const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Ensure default behavior is prevented
     originalHandleSubmit(e, category, useWeb, useDb);
+    setInput(""); // Reset parent input
+    localInputRef.current = ""; // Reset local input ref
   };
 
   // Update the parent state in a debounced way to avoid lag
@@ -195,26 +200,30 @@ const ChatInput = memo(function ChatInput({
                   e.preventDefault();
                   setUseWeb(!useWeb);
                 }}
-                className={`px-2 sm:px-3 py-2 h-[40px] rounded-full shadow-md flex items-center gap-1 flex-shrink-0 transition 
+                className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
+                  ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
                   ${useWeb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"}
                 `}
               >
                 <Globe className="h-4 w-4" />
-                <span className="hidden sm:inline">オンライン情報</span>
+                {!isMobile && <span className="hidden sm:inline">オンライン情報</span>}
               </button>
+
 
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   setUseDb(!useDb);
                 }}
-                className={`px-2 sm:px-3 py-2 h-[40px] rounded-full shadow-md flex items-center gap-1 flex-shrink-0 transition 
+                className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
+                  ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
                   ${useDb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"}
                 `}
               >
                 <Database className="h-4 w-4" />
-                <span className="hidden sm:inline">内部データ</span> 
-                  </button>
+                {!isMobile && <span className="hidden sm:inline">内部データ</span>}
+              </button>
+
                         </div>
                       <div className="relative flex-shrink-0 mr-[32px] z-30">
                         <PromptPicker onSelect={handlePromptSelect} />
@@ -230,7 +239,7 @@ const ChatInput = memo(function ChatInput({
         <div className="flex-shrink-0">
           <VoiceRecorder 
             onRecordingComplete={handleVoiceRecording} 
-            isProcessing={isProcessing}
+            isProcessing={isProcessingVoice}
           />
         </div>
 
@@ -238,10 +247,10 @@ const ChatInput = memo(function ChatInput({
           <TextareaAutosize
             ref={textareaRef}
             autoFocus
-            defaultValue={input} // Use defaultValue instead of value for smoother typing
+            value={localInputRef.current}
             onChange={handleInputChange}
             placeholder="メッセージを書いてね！"
-            className="px-3 py-2 focus:ring-2 focus:ring-pink-100 text-xs sm:text-sm min-h-[40px] max-h-[200px] resize-none w-full border rounded-md"
+            className="px-3 py-2 focus:ring-2 focus:ring-pink-100 text-xs sm:text-sm min-h-[40px] max-h-[200px] resize-none w-full border rounded-lg"
             minRows={1}
             maxRows={6}
             onKeyDown={handleKeyDown}
@@ -254,13 +263,20 @@ const ChatInput = memo(function ChatInput({
         <motion.button
           type="submit"
           disabled={sendDisabled}
-          className="px-2 sm:px-3 py-2 h-[40px] rounded-full bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md flex items-center gap-1 disabled:opacity-70 flex-shrink-0"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
+            ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
+            ${sendDisabled 
+              ? "bg-muted text-muted-foreground cursor-not-allowed" 
+              : "bg-gradient-to-r from-pink-400 to-pink-500 text-white"
+            }`}
+          whileHover={!sendDisabled ? { scale: 1.05 } : {}}
+          whileTap={!sendDisabled ? { scale: 0.95 } : {}}
         >
           <Send className="h-4 w-4" />
-          <span className="text-xs hidden sm:inline">送信</span>
+          {!isMobile && <span className="text-xs hidden sm:inline">送信</span>}
         </motion.button>
+
+
       </div>
         <button
           type="button"

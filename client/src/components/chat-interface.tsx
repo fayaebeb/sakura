@@ -733,7 +733,8 @@ const ChatInterface = () => {
           handleSubmit={handleSubmit}
           handleVoiceRecording={handleVoiceRecording}
           isProcessing={isProcessingVoice || sendMessage.isPending}
-          sendDisabled={sendMessage.isPending}
+          isProcessingVoice={isProcessingVoice}
+          sendDisabled={!input.trim() || sendMessage.isPending}
           handlePromptSelect={handleEmotionSelect}
           isMobile={isMobile}
           textareaRef={textareaRef}

@@ -114,7 +114,7 @@ export default function AuthPage() {
           transition={{ duration: 0.6 }}
         >
           <motion.img 
-            src="/images/sakura-logo.png" 
+            src="/images/full-sakura.png" 
             alt="桜AI ロゴ" 
             className="w-24 mb-4 cursor-pointer"
             whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
@@ -313,7 +313,7 @@ export default function AuthPage() {
           ))}
 
           <motion.img 
-            src="/images/sakura-logo.png" 
+            src="/images/full-sakura.png" 
             alt="桜AI ロゴ" 
             className="w-48 mb-8 cursor-pointer z-10"
             whileHover={{ scale: 1.05, rotate: [0, -3, 3, 0] }}
