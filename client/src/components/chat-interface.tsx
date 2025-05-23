@@ -144,8 +144,7 @@ const ChatInterface = () => {
   const [transcribedText, setTranscribedText] = useState<string | null>(null);
   const [showTranscriptionConfirmation, setShowTranscriptionConfirmation] = useState(false);
   const [useWeb, setUseWeb] = useState(false);
-  const [useDb, setUseDb] = useState(false);
-
+  const [useDb, setUseDb] = useState(true);
 
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);

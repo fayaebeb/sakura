@@ -661,9 +661,12 @@ export default function VoiceModePage() {
           <div className="flex gap-2 mt-4">
             <Button
               onClick={() => setUseWeb(!useWeb)}
-              className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition ${
-                useWeb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
+              className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition
+                ${useWeb 
+                  ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500 hover:brightness-105" 
+                  : "bg-muted text-muted-foreground border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}
+                hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
+              `}
             >
               <Globe className="h-4 w-4" />
               オンライン情報
@@ -671,9 +674,12 @@ export default function VoiceModePage() {
 
             <Button
               onClick={() => setUseDb(!useDb)}
-              className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition ${
-                useDb ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
+              className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition
+                ${useDb 
+                  ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500 hover:brightness-105" 
+                  : "bg-muted text-muted-foreground border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}
+                hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
+              `}
             >
               <Database className="h-4 w-4" />
               内部データ
