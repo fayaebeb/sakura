@@ -15,11 +15,12 @@ const upload = multer({
 });
 
 // Helper function to send message to Langchain API
-  async function sendMessageToLangchain(
-    message: string,
-    useWeb: boolean,
-    useDb: boolean
-  ): Promise<string> {
+    async function sendMessageToLangchain(
+      message: string,
+      useWeb: boolean,
+      useDb: boolean,
+      selectedDb: string 
+    ): Promise<string> {
 
   console.log(`Sending request to LangChain FastAPI: ${message}`);
 
@@ -32,6 +33,7 @@ const upload = multer({
       message,
       useweb: useWeb,
       usedb: useDb,
+      db: selectedDb,
     }),
   });
 
@@ -87,7 +89,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const formattedResponse = await sendMessageToLangchain(
         body.content,
         body.useWeb ?? false,
-        body.useDb ?? false
+        body.useDb ?? false,
+        body.db ?? "files" 
       );
 
       // Bot message should inherit the same category as the user message
@@ -346,7 +349,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const formattedResponse = await sendMessageToLangchain(
                 transcribedText,
                 data.useweb ?? false,
-                data.usedb ?? false
+                data.usedb ?? false,
+                data.db ?? "files" 
               );
 
               // Create bot message in database - inherit category from user message

@@ -9,6 +9,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message } from "@shared/schema";
 import ChatMessage from "@/components/chat-message";
 import { ChatLoadingIndicator } from "@/components/chat-loading-indicator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function VoiceModePage() {
   const { user } = useAuth();
@@ -33,6 +40,8 @@ export default function VoiceModePage() {
   const timerRef = useRef<number | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [selectedDb, setSelectedDb] = useState("files");
+
 
 
   // Get session ID from local storage
@@ -348,7 +357,8 @@ export default function VoiceModePage() {
                   type: 'speech',
                   audioData: base64data,
                   useweb: useWeb,
-                  usedb: useDb
+                  usedb: useDb,
+                  db: selectedDb,
                 }));
               } else {
                 setIsProcessing(false);
@@ -669,21 +679,58 @@ export default function VoiceModePage() {
               `}
             >
               <Globe className="h-4 w-4" />
-              オンライン情報
+              <span className="hidden sm:inline">オンライン情報</span>
             </Button>
 
-            <Button
-              onClick={() => setUseDb(!useDb)}
-              className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition
-                ${useDb 
-                  ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500 hover:brightness-105" 
-                  : "bg-muted text-muted-foreground border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}
-                hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
-              `}
-            >
-              <Database className="h-4 w-4" />
-              内部データ
-            </Button>
+            <div className="relative flex items-start"> 
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setUseDb(!useDb);
+                }}
+                className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition
+                  ${useDb 
+                    ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500 hover:brightness-105" 
+                    : "bg-muted text-muted-foreground border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}
+                  hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
+                `}
+              >
+                <Database className="h-4 w-4" />
+                <span className="hidden sm:inline">内部データ</span>
+              </Button>
+
+              {useDb && (
+                <div className="absolute left-full ml-2 top-0 z-10">
+                  <Select value={selectedDb} onValueChange={setSelectedDb}>
+                    <SelectTrigger className="w-[120px] bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-md text-sm text-gray-800">
+                      <SelectValue placeholder="Select DB" />
+                    </SelectTrigger>
+
+                    <SelectContent className="w-[150px] bg-white border border-gray-200 shadow-lg rounded-xl p-1">
+                      <SelectItem
+                        value="files"
+                        className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
+                      >
+                        うごき統計
+                      </SelectItem>
+                      <SelectItem
+                        value="ktdb"
+                        className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
+                      >
+                        来た来ぬ
+                      </SelectItem>
+                      <SelectItem
+                        value="ibt"
+                        className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
+                      >
+                        インバウンド
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </main>

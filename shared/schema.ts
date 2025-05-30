@@ -67,6 +67,7 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
 export const chatRequestSchema = insertMessageSchema.extend({
   useWeb: z.boolean().optional(),
   useDb: z.boolean().optional(),
+  db: z.string().optional(),
 });
 
 export const insertFeedbackSchema = createInsertSchema(feedback).pick({

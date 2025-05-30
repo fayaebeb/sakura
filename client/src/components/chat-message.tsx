@@ -16,16 +16,6 @@ const botDecorations = [
   "🌸", "✨", "💮", "💕", "🎀", "🌟", "⭐", "🌷", "🌹", "🌈"
 ];
 
-// Helper function to add decorations to bot messages
-const addRandomDecoration = (original: string) => {
-  if (Math.random() > 0.3) return original;
-  const decoration = botDecorations[Math.floor(Math.random() * botDecorations.length)];
-  const position = Math.floor(Math.random() * 3);
-  if (position === 0) return `${decoration} ${original}`;
-  if (position === 1) return `${original} ${decoration}`;
-  return `${decoration} ${original} ${decoration}`;
-};
-
 // Helper function to parse message content into sections
 const parseMessageContent = (content: string) => {
   const sections = { mainText: "", companyDocs: "", onlineInfo: "" };
@@ -128,12 +118,12 @@ const MessageSection = ({
                     <>
                       <div className="inline-flex items-center gap-1">
                         {startsWithIcon && <span>📄</span>}
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
                           className="text-[#C04C75] hover:text-[#F28CA8] underline"
-                        >
+                          >
                           {filename}
                         </a>
                         <button
@@ -326,10 +316,12 @@ export default function ChatMessage({
                   remarkPlugins={[remarkGfm]}
                   components={{
                       a: ({ href, children }) => (
-                        <a
-                          href={href}
-                          className="text-[#CC3366] hover:text-[#FF98A5] underline"
-                        >
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#CC3366] hover:text-[#FF98A5] underline"
+                          >
                           {children}
                         </a>
                     ),
@@ -373,10 +365,12 @@ export default function ChatMessage({
                 remarkPlugins={[remarkGfm]}
                 components={{
                   a: ({ href, children }) => (
-                      <a
-                        href={href}
-                        className="text-[#CC3366] hover:text-[#FF98A5] underline"
-                      >
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#CC3366] hover:text-[#FF98A5] underline"
+                        >
                         {children}
                       </a>
                   ),

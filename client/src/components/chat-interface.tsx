@@ -145,6 +145,7 @@ const ChatInterface = () => {
   const [showTranscriptionConfirmation, setShowTranscriptionConfirmation] = useState(false);
   const [useWeb, setUseWeb] = useState(false);
   const [useDb, setUseDb] = useState(true);
+  const [selectedDb, setSelectedDb] = useState("files");
 
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
@@ -245,11 +246,13 @@ const ChatInterface = () => {
       category,
       useWeb,
       useDb,
+      db,
     }: {
       content: string;
       category: MessageCategory;
       useWeb: boolean;
       useDb: boolean;
+      db: string;
     }) => {
       if (!user?.id) {
         throw new Error("ユーザー情報が見つかりません。再ログインしてください。");
@@ -266,6 +269,7 @@ const ChatInterface = () => {
             category,
             useWeb,
             useDb,
+            db,
           });
 
       if (!res.ok) {
@@ -442,6 +446,7 @@ const ChatInterface = () => {
         category: "SELF",
         useWeb: useWeb,
         useDb: useDb,
+        db: selectedDb,
       });
     }
   };
@@ -586,7 +591,14 @@ const ChatInterface = () => {
       const message = input;
       setInput("");
 
-      sendMessage.mutate({ content: message, category, useWeb: useWeb, useDb: useDb });
+      sendMessage.mutate({
+        content: message,
+        category,
+        useWeb: useWeb,
+        useDb: useDb,
+        db: selectedDb,
+      });
+
   };
 
   // Optimized emotion selection handler with direct DOM manipulation for better performance
@@ -741,6 +753,8 @@ const ChatInterface = () => {
           setUseWeb={setUseWeb}
           useDb={useDb}
           setUseDb={setUseDb}
+          selectedDb={selectedDb}
+          setSelectedDb={setSelectedDb}
         />
       </div>
 

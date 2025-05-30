@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef, useEffect, useState } from "react";
-import { Send, User, Building, Landmark, Globe, Database, ChevronDown } from "lucide-react";
+import { Send, User, Building, Landmark, Globe, Database, ChevronDown, Check } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import { motion } from "framer-motion";
 import VoiceRecorder from "./voice-recorder";
@@ -7,6 +7,13 @@ import PromptPicker from "./prompt-picker";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 
 // Debounce function to improve input performance
@@ -37,37 +44,48 @@ function useDebounce(callback: Function, delay: number) {
 // Message category type
 export type MessageCategory = "SELF" | "PRIVATE" | "ADMINISTRATIVE";
 
-const ChatInput = memo(function ChatInput({
-  input,
-  setInput,
-  handleSubmit: originalHandleSubmit,
-  handleVoiceRecording,
-  isProcessing,
-  isProcessingVoice,
-  sendDisabled,
-  handlePromptSelect,
-  isMobile,
-  textareaRef,
-  useWeb,
-  setUseWeb,
-  useDb,
-  setUseDb,
-}: {
-  input: string;
-  setInput: React.Dispatch<React.SetStateAction<string>>;
-  handleSubmit: (e: React.FormEvent, category: MessageCategory, useWeb: boolean, useDb: boolean) => void;
-  handleVoiceRecording: (audio: Blob) => void;
-  isProcessing: boolean;
-  isProcessingVoice: boolean; 
-  sendDisabled: boolean;
-  handlePromptSelect: (text: string) => void;
-  isMobile: boolean;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
-  useWeb: boolean;
-  setUseWeb: React.Dispatch<React.SetStateAction<boolean>>;
-  useDb: boolean;
-  setUseDb: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
+  const ChatInput = memo(function ChatInput({
+    input,
+    setInput,
+    handleSubmit: originalHandleSubmit,
+    handleVoiceRecording,
+    isProcessing,
+    isProcessingVoice,
+    sendDisabled,
+    handlePromptSelect,
+    isMobile,
+    textareaRef,
+    useWeb,
+    setUseWeb,
+    useDb,
+    setUseDb,
+    selectedDb,
+    setSelectedDb,
+  }: {
+    input: string;
+    setInput: React.Dispatch<React.SetStateAction<string>>;
+    handleSubmit: (
+      e: React.FormEvent,
+      category: MessageCategory,
+      useWeb: boolean,
+      useDb: boolean,
+      selectedDb: string
+    ) => void;
+    handleVoiceRecording: (audio: Blob) => void;
+    isProcessing: boolean;
+    isProcessingVoice: boolean; 
+    sendDisabled: boolean;
+    handlePromptSelect: (text: string) => void;
+    isMobile: boolean;
+    textareaRef: React.RefObject<HTMLTextAreaElement>;
+    useWeb: boolean;
+    setUseWeb: React.Dispatch<React.SetStateAction<boolean>>;
+    useDb: boolean;
+    setUseDb: React.Dispatch<React.SetStateAction<boolean>>;
+    selectedDb: string;
+    setSelectedDb: React.Dispatch<React.SetStateAction<string>>;
+  }) {
+
   // Category selection state
   const [category, setCategory] = useState<MessageCategory>("SELF");
 
@@ -88,12 +106,12 @@ const ChatInput = memo(function ChatInput({
   // Wrap the original submit handler to include the category
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); // Ensure default behavior is prevented
-    originalHandleSubmit(e, category, useWeb, useDb);
+    originalHandleSubmit(e, category, useWeb, useDb, selectedDb);
     setInput(""); // Reset parent input
     localInputRef.current = ""; // Reset local input ref
   };
 
-  
+
   // Update local ref when parent input changes
   useEffect(() => {
     localInputRef.current = input;
@@ -219,22 +237,57 @@ const ChatInput = memo(function ChatInput({
                           {!isMobile && <span className="hidden sm:inline">オンライン情報</span>}
                         </button>
 
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setUseDb(!useDb);
-                          }}
-                          className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
-                            ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
-                            ${useDb 
-                              ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500" 
-                              : "bg-muted text-muted-foreground border border-gray-300"}
-                            hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
-                          `}
-                        >
-                          <Database className="h-4 w-4" />
-                          {!isMobile && <span className="hidden sm:inline">内部データ</span>}
-                        </button>
+                        <div className="relative"> 
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setUseDb(!useDb);
+                            }}
+                            className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
+                              ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
+                              ${useDb 
+                                ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500" 
+                                : "bg-muted text-muted-foreground border border-gray-300"}
+                              hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
+                            `}
+                          >
+                            <Database className="h-4 w-4" />
+                            {!isMobile && <span className="hidden sm:inline">内部データ</span>}
+                          </button>
+
+                          {useDb && (
+                        <Select value={selectedDb} onValueChange={setSelectedDb}>
+                        <SelectTrigger className="w-[120px] bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-md text-sm text-gray-800">
+                        <SelectValue placeholder="Select DB" />
+                        </SelectTrigger>
+
+                          <SelectContent className="w-[150px] bg-white border border-gray-200 shadow-lg rounded-xl p-1">
+                            <SelectItem
+                              value="files"
+                              className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
+                            >
+                              うごき統計
+                            </SelectItem>
+                            <SelectItem
+                              value="ktdb"
+                              className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
+                            >
+                              来た来ぬ
+                            </SelectItem>
+                            <SelectItem
+                              value="ibt"
+                              className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
+                            >
+                              インバウンド
+                            </SelectItem>
+                          </SelectContent>
+
+
+                        </Select>
+
+                          )}
+                        </div>
+
                       </div>
 
                       <div className="relative flex-shrink-0 mr-[32px] z-30">
