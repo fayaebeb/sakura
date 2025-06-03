@@ -345,14 +345,24 @@ const ChatInput = memo(function ChatInput({
                             hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300`}
                 >
                   <Database className="h-4 w-4" />
-
+                
                   {!isMobile && (
-                    <>
-                      {!isMobile && (
-                        <span className="hidden sm:inline">内部データ</span>
+                    <span className="hidden sm:inline flex items-center gap-1">
+                      内部データ
+                      {useDb && selectedDb && (
+                        <span className="text-xs text-white/80">
+                          (
+                          {{
+                            files: "うごき統計",
+                            ktdb: "来た来ぬ",
+                            ibt: "インバウンド",
+                          }[selectedDb] ?? selectedDb}
+                          )
+                        </span>
                       )}
-                    </>
+                    </span>
                   )}
+                  
                   <ChevronDown
                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${
                       useDb ? "rotate-180" : "rotate-0"
