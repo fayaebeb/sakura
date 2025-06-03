@@ -666,8 +666,7 @@ const ChatInterface = () => {
   }
 
   return (
-    <Card className="flex flex-col h-[calc(100vh-12rem)] relative overflow-hidden">
-
+      <Card className="flex flex-col h-[calc(100vh-12rem)] relative overflow-visible">
 
       <AnimatePresence>
         {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
