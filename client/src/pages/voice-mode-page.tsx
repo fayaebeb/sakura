@@ -741,20 +741,23 @@ export default function VoiceModePage() {
               >
                 <Database className="h-4 w-4" />
 
-                {useDb && selectedDb && (
-                  <span className="text-xs sm:text-sm flex items-center gap-1">
-                    <span className="hidden sm:inline">内部データ</span>
+                <span className="text-xs sm:text-sm flex items-center gap-1">
+                  {/* Show "内部データ" only when useDb is false */}
+                  {!useDb && <span className="hidden sm:inline">内部データ</span>}
+
+                  {/* Show selected DB only if in use */}
+                  {useDb && selectedDb && (
                     <span className="text-white/80 sm:ml-1">
-                      ({
-                        {
-                          files: "うごき統計",
-                          ktdb: "来た来ぬ",
-                          ibt: "インバウンド",
-                        }[selectedDb] ?? selectedDb}
+                      (
+                      {{
+                        files: "うごき統計",
+                        ktdb: "来た来ぬ",
+                        ibt: "インバウンド",
+                      }[selectedDb] ?? selectedDb}
                       )
                     </span>
-                  </span>
-                )}
+                  )}
+                </span>
 
                 <ChevronDown
                   className={`w-4 h-4 ml-1 transition-transform duration-200 ${
