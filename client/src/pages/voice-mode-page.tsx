@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, AudioLines, Play, Pause, Square, Database, Globe } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, MessageSquare, AudioLines, Play, Pause, Square, Database, Globe,ChevronDown, Check } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createPortal } from "react-dom";
 
 export default function VoiceModePage() {
   const { user } = useAuth();
@@ -41,6 +42,33 @@ export default function VoiceModePage() {
   const messageEndRef = useRef<HTMLDivElement>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const [selectedDb, setSelectedDb] = useState("files");
+  const [isDbDropdownOpen, setIsDbDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dbButtonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownCoords, setDropdownCoords] = useState<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDbDropdownOpen(false);
+      }
+    }
+
+    if (isDbDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDbDropdownOpen]);
+
 
 
 
@@ -682,54 +710,112 @@ export default function VoiceModePage() {
               <span className="hidden sm:inline">オンライン情報</span>
             </Button>
 
-            <div className="relative flex items-start"> 
-              <Button
+            <div className="relative overflow-visible sm:overflow-visible">
+              <button
+                ref={dbButtonRef}
                 onClick={(e) => {
                   e.preventDefault();
-                  setUseDb(!useDb);
+                  if (!useDb) {
+                    setUseDb(true);
+                  }
+                  setIsDbDropdownOpen((prev) => {
+                    if (!prev && dbButtonRef.current) {
+                      const rect = dbButtonRef.current.getBoundingClientRect();
+                      const dropdownHeightEstimate = 160;
+                      setDropdownCoords({
+                        top: rect.top - 20 - dropdownHeightEstimate,
+                        left: rect.left,
+                      });
+                    }
+                    return !prev;
+                  });
                 }}
-                className={`px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition
-                  ${useDb 
-                    ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500 hover:brightness-105" 
-                    : "bg-muted text-muted-foreground border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}
-                  hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
-                `}
+                className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition-all rounded-full
+                            px-3 py-2 gap-1
+                            ${
+                              useDb
+                                ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
+                                : "bg-muted text-muted-foreground border border-gray-300"
+                            }
+                            hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300`}
               >
                 <Database className="h-4 w-4" />
-                <span className="hidden sm:inline">内部データ</span>
-              </Button>
 
-              {useDb && (
-                <div className="absolute left-full ml-2 top-0 z-10">
-                  <Select value={selectedDb} onValueChange={setSelectedDb}>
-                    <SelectTrigger className="w-[120px] bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-md text-sm text-gray-800">
-                      <SelectValue placeholder="Select DB" />
-                    </SelectTrigger>
+                {useDb && selectedDb && (
+                  <span className="text-xs sm:text-sm flex items-center gap-1">
+                    <span className="hidden sm:inline">内部データ</span>
+                    <span className="text-white/80 sm:ml-1">
+                      ({
+                        {
+                          files: "うごき統計",
+                          ktdb: "来た来ぬ",
+                          ibt: "インバウンド",
+                        }[selectedDb] ?? selectedDb}
+                      )
+                    </span>
+                  </span>
+                )}
 
-                    <SelectContent className="w-[150px] bg-white border border-gray-200 shadow-lg rounded-xl p-1">
-                      <SelectItem
-                        value="files"
-                        className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
+                <ChevronDown
+                  className={`w-4 h-4 ml-1 transition-transform duration-200 ${
+                    useDb ? "rotate-180" : "rotate-0"
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown */}
+              {isDbDropdownOpen &&
+                createPortal(
+                  <motion.div
+                    ref={dropdownRef}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed z-[100] w-40 bg-white border border-gray-200 rounded-xl shadow-lg p-1 max-h-[40vh] overflow-y-auto overscroll-contain"
+                    style={{
+                      top: dropdownCoords.top,
+                      left: dropdownCoords.left,
+                    }}
+                  >
+                    {[
+                      { value: "files", label: "うごき統計" },
+                      { value: "ktdb", label: "来た来ぬ" },
+                      { value: "ibt", label: "インバウンド" },
+                    ].map((item) => (
+                      <button
+                        key={item.value}
+                        onClick={() => {
+                          setSelectedDb(item.value);
+                          setIsDbDropdownOpen(false);
+                        }}
+                        className={`flex items-center justify-between w-full px-3 py-2 text-sm rounded-md transition
+                                  ${
+                                    selectedDb === item.value
+                                      ? "bg-pink-200 text-pink-800"
+                                      : "hover:bg-pink-100"
+                                  }`}
                       >
-                        うごき統計
-                      </SelectItem>
-                      <SelectItem
-                        value="ktdb"
-                        className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
-                      >
-                        来た来ぬ
-                      </SelectItem>
-                      <SelectItem
-                        value="ibt"
-                        className="relative flex items-center justify-between px-3 py-2 rounded-md text-sm pr-8 hover:bg-pink-100 focus:bg-pink-200 focus:text-pink-800 cursor-pointer transition"
-                      >
-                        インバウンド
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+                        {item.label}
+                        {selectedDb === item.value && <Check className="w-4 h-4" />}
+                      </button>
+                    ))}
+
+                    <hr className="my-1 border-gray-200" />
+                    <button
+                      onClick={() => {
+                        setUseDb(false);
+                        setIsDbDropdownOpen(false);
+                      }}
+                      className="flex items-center justify-between w-full px-3 py-2 text-sm rounded-md text-red-600 hover:bg-red-50 transition"
+                    >
+                      DBオフ
+                    </button>
+                  </motion.div>,
+                  document.body
+                )}
             </div>
+
 
           </div>
         </div>

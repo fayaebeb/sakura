@@ -324,8 +324,7 @@ const ChatInput = memo(function ChatInput({
                     }
                     setIsDbDropdownOpen((prev) => {
                       if (!prev && dbButtonRef.current) {
-                        const rect =
-                          dbButtonRef.current.getBoundingClientRect();
+                        const rect = dbButtonRef.current.getBoundingClientRect();
                         const dropdownHeightEstimate = 160;
                         setDropdownCoords({
                           top: rect.top - 20 - dropdownHeightEstimate,
@@ -336,33 +335,31 @@ const ChatInput = memo(function ChatInput({
                     });
                   }}
                   className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition-all rounded-full
-                            px-3 py-2 gap-1
-                            ${
-                              useDb
-                                ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
-                                : "bg-muted text-muted-foreground border border-gray-300"
-                            }
-                            hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300`}
+                              px-3 py-2 gap-1
+                              ${
+                                useDb
+                                  ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
+                                  : "bg-muted text-muted-foreground border border-gray-300"
+                              }
+                              hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300`}
                 >
                   <Database className="h-4 w-4" />
-                
-                  {!isMobile && (
-                    <span className="hidden sm:inline flex items-center gap-1">
-                      内部データ
-                      {useDb && selectedDb && (
-                        <span className="text-xs text-white/80">
-                          (
-                          {{
+
+                  {useDb && selectedDb && (
+                    <span className="text-xs sm:text-sm flex items-center gap-1">
+                      <span className="hidden sm:inline">内部データ</span>
+                      <span className="text-white/80 sm:ml-1">
+                        ({
+                          {
                             files: "うごき統計",
                             ktdb: "来た来ぬ",
                             ibt: "インバウンド",
                           }[selectedDb] ?? selectedDb}
-                          )
-                        </span>
-                      )}
+                        )
+                      </span>
                     </span>
                   )}
-                  
+
                   <ChevronDown
                     className={`w-4 h-4 ml-1 transition-transform duration-200 ${
                       useDb ? "rotate-180" : "rotate-0"
@@ -397,16 +394,14 @@ const ChatInput = memo(function ChatInput({
                             setIsDbDropdownOpen(false);
                           }}
                           className={`flex items-center justify-between w-full px-3 py-2 text-sm rounded-md transition
-                                        ${
-                                          selectedDb === item.value
-                                            ? "bg-pink-200 text-pink-800"
-                                            : "hover:bg-pink-100"
-                                        }`}
+                                    ${
+                                      selectedDb === item.value
+                                        ? "bg-pink-200 text-pink-800"
+                                        : "hover:bg-pink-100"
+                                    }`}
                         >
                           {item.label}
-                          {selectedDb === item.value && (
-                            <Check className="w-4 h-4" />
-                          )}
+                          {selectedDb === item.value && <Check className="w-4 h-4" />}
                         </button>
                       ))}
 
@@ -421,9 +416,10 @@ const ChatInput = memo(function ChatInput({
                         DBオフ
                       </button>
                     </motion.div>,
-                    document.body,
+                    document.body
                   )}
               </div>
+
             </div>
             <div className="relative flex-shrink-0 mr-[32px] z-30">
               <PromptPicker onSelect={handlePromptSelect} />
