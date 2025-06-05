@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createPortal } from "react-dom";
+import DbButton from "@/components/dbbutton";
+
 
 export default function VoiceModePage() {
   const { user } = useAuth();
@@ -710,114 +712,12 @@ export default function VoiceModePage() {
               <span className="hidden sm:inline">オンライン情報</span>
             </Button>
 
-            <div className="relative overflow-visible sm:overflow-visible">
-              <button
-                ref={dbButtonRef}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!useDb) {
-                    setUseDb(true);
-                  }
-                  setIsDbDropdownOpen((prev) => {
-                    if (!prev && dbButtonRef.current) {
-                      const rect = dbButtonRef.current.getBoundingClientRect();
-                      const dropdownHeightEstimate = 160;
-                      setDropdownCoords({
-                        top: rect.top - 20 - dropdownHeightEstimate,
-                        left: rect.left,
-                      });
-                    }
-                    return !prev;
-                  });
-                }}
-                className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition-all rounded-full
-                            px-3 py-2 gap-1
-                            ${
-                              useDb
-                                ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
-                                : "bg-muted text-muted-foreground border border-gray-300"
-                            }
-                            hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300`}
-              >
-                <Database className="h-4 w-4" />
-
-                <span className="text-xs sm:text-sm flex items-center gap-1">
-                  {/* Show "内部データ" only when useDb is false */}
-                  {!useDb && <span className="hidden sm:inline">内部データ</span>}
-
-                  {/* Show selected DB only if in use */}
-                  {useDb && selectedDb && (
-                    <span className="text-white/80 sm:ml-1">
-                      (
-                      {{
-                        files: "うごき統計",
-                        ktdb: "来た来ぬ",
-                        ibt: "インバウンド",
-                      }[selectedDb] ?? selectedDb}
-                      )
-                    </span>
-                  )}
-                </span>
-
-                <ChevronDown
-                  className={`w-4 h-4 ml-1 transition-transform duration-200 ${
-                    useDb ? "rotate-180" : "rotate-0"
-                  }`}
-                />
-              </button>
-
-              {/* Dropdown */}
-              {isDbDropdownOpen &&
-                createPortal(
-                  <motion.div
-                    ref={dropdownRef}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    transition={{ duration: 0.2 }}
-                    className="fixed z-[100] w-40 bg-white border border-gray-200 rounded-xl shadow-lg p-1 max-h-[40vh] overflow-y-auto overscroll-contain"
-                    style={{
-                      top: dropdownCoords.top,
-                      left: dropdownCoords.left,
-                    }}
-                  >
-                    {[
-                      { value: "files", label: "うごき統計" },
-                      { value: "ktdb", label: "来た来ぬ" },
-                      { value: "ibt", label: "インバウンド" },
-                    ].map((item) => (
-                      <button
-                        key={item.value}
-                        onClick={() => {
-                          setSelectedDb(item.value);
-                          setIsDbDropdownOpen(false);
-                        }}
-                        className={`flex items-center justify-between w-full px-3 py-2 text-sm rounded-md transition
-                                  ${
-                                    selectedDb === item.value
-                                      ? "bg-pink-200 text-pink-800"
-                                      : "hover:bg-pink-100"
-                                  }`}
-                      >
-                        {item.label}
-                        {selectedDb === item.value && <Check className="w-4 h-4" />}
-                      </button>
-                    ))}
-
-                    <hr className="my-1 border-gray-200" />
-                    <button
-                      onClick={() => {
-                        setUseDb(false);
-                        setIsDbDropdownOpen(false);
-                      }}
-                      className="flex items-center justify-between w-full px-3 py-2 text-sm rounded-md text-red-600 hover:bg-red-50 transition"
-                    >
-                      DBオフ
-                    </button>
-                  </motion.div>,
-                  document.body
-                )}
-            </div>
+            <DbButton
+                            useDb={useDb}
+                            setUseDb={setUseDb}
+                            selectedDb={selectedDb}
+                            setSelectedDb={setSelectedDb}
+                          />
 
 
           </div>
