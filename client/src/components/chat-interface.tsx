@@ -15,6 +15,7 @@ import FloatingMascot from "./floating-mascot";
 import ChatLoadingIndicator, { SakuraPetalLoading } from "./chat-loading-indicator";
 import { motion, AnimatePresence } from "framer-motion";
 import TranscriptionConfirmation from "./transcription-confirmation";
+import SuggestionPanel from "@/components/suggestion-panel";
 
 
 // Audio player for bot responses
@@ -41,7 +42,6 @@ const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string
     />
   );
 };
-
 
 
 const Tutorial = ({ onClose }: { onClose: () => void }) => {
@@ -146,6 +146,9 @@ const ChatInterface = () => {
   const [useWeb, setUseWeb] = useState(false);
   const [useDb, setUseDb] = useState(true);
   const [selectedDb, setSelectedDb] = useState("files");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+
 
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
@@ -307,7 +310,7 @@ const ChatInterface = () => {
       // Return previous messages for potential rollback
       return { previousMessages, optimisticUserMessage };
     },
-    onSuccess: (newBotMessage: Message, variables, context) => {
+      onSuccess: async (newBotMessage: Message, variables, context) => {
       // Create a user message with the same data as the optimistic one, but with real ID
       // First, extract the content and category from variables
       const { content, category } = variables;
@@ -351,6 +354,20 @@ const ChatInterface = () => {
         ),
         duration: 2000,
       });
+      try {
+          const suggestionRes = await fetch("/api/suggest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ message: content }),
+          });
+        const suggestionData = await suggestionRes.json();
+        setSuggestions(suggestionData?.suggestions || []);
+        setShowSuggestions(true); 
+        } catch (error) {
+          console.error("Failed to fetch suggestions:", error);
+          setSuggestions([]); // fallback
+        }
     },
     onError: (error, _, context) => {
       // On error, revert to the previous state
@@ -736,6 +753,19 @@ const ChatInterface = () => {
             </div>
           )}
         </AnimatePresence>
+
+        {showSuggestions && (
+          <SuggestionPanel
+            suggestions={suggestions}
+            onSelect={(sugg) => {
+              setInput(sugg);
+              textareaRef.current?.focus();
+            }}
+            onClose={() => setShowSuggestions(false)}
+          />
+        )}
+
+
 
         <ChatInput
           input={input}

@@ -7,6 +7,7 @@ import { transcribeAudio } from "./apis/openai";
 import { textToSpeechStream } from "./apis/openaitts";
 import multer from "multer";
 import { WebSocketServer, WebSocket } from "ws";
+import { suggestHandler } from "./apis/suggest";
 
 // Setup multer for handling file uploads (in-memory storage)
 const upload = multer({ 
@@ -110,6 +111,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  app.post("/api/suggest", suggestHandler);
 
   // Voice input endpoint - transcribes audio and processes as text
   // Voice input endpoint - transcribes audio only
