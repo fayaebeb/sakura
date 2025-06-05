@@ -22,7 +22,7 @@ Example: ["What is the difference?", "Can you show an example?", "How do I use i
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4.1-mini",
       messages: [
         {
           role: "user",
