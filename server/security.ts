@@ -136,7 +136,12 @@ export function setupSecurity(app: Express) {
           connectSrc: ["'self'", "wss:", "https://skapi-qkrap.ondigitalocean.app"],
           mediaSrc: ["'self'", "blob:"],
           objectSrc: ["'none'"],
-          frameSrc: ["'none'"],
+          frameSrc: [
+            "'self'",
+            "https://drive.google.com",
+            "https://docs.google.com",
+            "https://drive-thirdparty.googleusercontent.com"
+           ],
         },
       },
       crossOriginEmbedderPolicy: false,
