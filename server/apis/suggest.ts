@@ -13,11 +13,11 @@ export const suggestHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid or empty message." });
     }
 
-    const prompt = `You generate suggestions for possible next messages based on a single user input.
+    const prompt = `You generate suggestions for possible next messages the user might want to send next based on a single user input.
 The user's message is: "${message}"
 
 Respond ONLY with a JSON array of 3 short, self-contained suggestions that the user might want to send next.
-These suggestions should not assume any prior conversation or context, and they should be simple statements or questions that the user could directly ask in response to the original message.`;
+These suggestions should not assume any prior conversation or context, and they should be simple statements or questions that the user would send next.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
