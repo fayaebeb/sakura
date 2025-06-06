@@ -7,7 +7,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message } from "@shared/schema";
-import ChatMessage from "@/components/chat-message";
+import ChatMessage from "@/components/msgforvoice";
 import { ChatLoadingIndicator } from "@/components/chat-loading-indicator";
 import {
   Select,
