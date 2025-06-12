@@ -21,6 +21,7 @@ function Router() {
 }
 
 function App() {
+  //testing
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
