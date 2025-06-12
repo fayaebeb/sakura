@@ -148,10 +148,35 @@ export function setupAuth(app: Express) {
           });
         }
 
+        const { username, password, inviteToken } = req.body as {
+          username: string;
+          password: string;
+          inviteToken?: string;
+        };
+
+        if (!inviteToken) {
+          return res.status(400).json({ error: "招待トークンが必要です。" });
+        }
+
+        const tokenRecord = await storage.getInviteToken(inviteToken);
+        if (!tokenRecord || !tokenRecord.isValid || tokenRecord.usedById) {
+          return res.status(400).json({ error: "無効なまたは使用済みの招待トークンです。" });
+        }
+
+
         const user = await storage.createUser({
-          ...req.body,
-          password: await hashPassword(req.body.password),
+          username,
+          password: await hashPassword(password),
         });
+
+        // After successful user creation, mark token as used
+        if (inviteToken && user?.id) {
+          const tokenRecord = await storage.getInviteToken(inviteToken);
+          if (tokenRecord) {
+            await storage.useInviteToken(tokenRecord.id, user.id);
+          }
+        }
+
 
         console.log(`Auth - User registered: ${user.username}`);
         req.login(user, (err: any) => {

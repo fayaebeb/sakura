@@ -15,8 +15,9 @@ import { insertUserSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Loader2, Heart, Sparkles, Star } from "lucide-react";
+import { Loader2, Heart, Sparkles, Star, Ticket, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import zxcvbn from "zxcvbn";
 
 // Cute character expressions for the login page
 const loginCharacters = [
@@ -30,6 +31,9 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const [currentCharacter, setCurrentCharacter] = useState(loginCharacters[0]);
   const [sakuraCount, setSakuraCount] = useState(0);
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Periodically change the character expression
   useEffect(() => {
@@ -46,8 +50,15 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
+      confirmPassword: "",
+      inviteToken: "", 
     },
   });
+
+  const passwordStrength = zxcvbn(form.watch("password"));
+  const strengthLabel = ["弱い", "弱い", "普通", "強い", "とても強い"][passwordStrength.score];
+  const strengthPercent = (passwordStrength.score / 4) * 100;
+
 
   useEffect(() => {
     if (user) {
@@ -67,9 +78,10 @@ export default function AuthPage() {
   if (!user) {
     const onSubmit = form.handleSubmit((data) => {
       if (isLogin) {
-        loginMutation.mutate(data);
+        const { username, password } = data;
+        loginMutation.mutate({ username, password });
       } else {
-        registerMutation.mutate(data);
+        registerMutation.mutate(data); // contains confirmPassword and inviteToken too
       }
     });
 
@@ -211,18 +223,88 @@ export default function AuthPage() {
                           <FormLabel className="text-pink-700 flex items-center gap-1">
                             <Star className="h-3 w-3" /> パスワード
                           </FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              {...field} 
-                              className="border-pink-200 focus:border-pink-400 bg-white/80 backdrop-blur-sm"
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              {...field}
+                              className="border-pink-200 focus:border-pink-400 bg-white/80 backdrop-blur-sm pr-10"
                             />
-                          </FormControl>
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              className="absolute inset-y-0 right-2 flex items-center text-pink-600"
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
                           <FormMessage className="text-red-400" />
                         </FormItem>
                       )}
                     />
+
                   </motion.div>
+
+                  {!isLogin && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-pink-700">パスワード（確認）</FormLabel>
+                            <div className="relative">
+                              <Input
+                                type={showConfirmPassword ? "text" : "password"}
+                                {...field}
+                                className="border-pink-200 focus:border-pink-400 bg-white/80 backdrop-blur-sm pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                className="absolute inset-y-0 right-2 flex items-center text-pink-600"
+                              >
+                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
+                            <FormMessage className="text-red-400" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="inviteToken"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-pink-700 flex items-center gap-1">
+                              <Ticket className="h-3 w-3" /> 招待トークン（任意）
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                {...field}
+                                className="border-pink-200 focus:border-pink-400 bg-white/80 backdrop-blur-sm"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-400" />
+                          </FormItem>
+                        )}
+                      />
+
+                      
+                      <div className="mt-2">
+                        <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full transition-all bg-pink-400"
+                            style={{ width: `${strengthPercent}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-pink-700 mt-1">{strengthLabel}</p>
+                      </div>
+
+                    </>
+                  )}
+
 
                   <motion.div
                     initial={{ y: 20, opacity: 0 }}
