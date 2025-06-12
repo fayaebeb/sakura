@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, loginUserSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -46,7 +46,7 @@ export default function AuthPage() {
   }, []);
 
   const form = useForm({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(isLogin ? loginUserSchema : insertUserSchema),
     defaultValues: {
       username: "",
       password: "",

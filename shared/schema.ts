@@ -103,6 +103,15 @@ export const inviteTokens = pgTable("invite_tokens", {
   isValid: boolean("is_valid").default(true).notNull(),
 });
 
+// ✅ Lightweight schema for login only (no strength checks)
+export const loginUserSchema = z.object({
+  username: z.string().email("有効なメールアドレスを入力してください"),
+  password: z.string().min(1, "パスワードは必須です"),
+});
+
+export type LoginUser = z.infer<typeof loginUserSchema>;
+
+
 export type InviteToken = typeof inviteTokens.$inferSelect;
 export type InsertInviteToken = {
   token: string;
