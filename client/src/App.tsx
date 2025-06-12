@@ -8,6 +8,8 @@ import AuthPage from "@/pages/auth-page";
 import VoiceModePage from "@/pages/voice-mode-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
+import { RecoilRoot } from "recoil";
+import { OnboardingProvider } from "./components/Onboarding";
 
 function Router() {
   return (
@@ -24,10 +26,13 @@ function App() {
   //testing again
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router />
-        <Toaster />
-      </AuthProvider>
+      <RecoilRoot>
+        <AuthProvider>
+          <OnboardingProvider />
+          <Router />
+          <Toaster />
+        </AuthProvider>
+      </RecoilRoot>
     </QueryClientProvider>
   );
 }

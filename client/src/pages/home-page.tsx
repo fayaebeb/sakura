@@ -28,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { onboardingRunState, onboardingStepsState } from "@/state/onBoardingState";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -36,7 +38,43 @@ export default function HomePage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
-  
+
+  const setRun = useSetRecoilState(onboardingRunState);
+  const setSteps = useSetRecoilState(onboardingStepsState);
+
+ const startOnboarding = () => {
+  // Reset the tour completely
+  setRun(false); // Ensure Joyride resets
+
+
+  // Delay reactivation slightly
+  setTimeout(() => {
+    setSteps([
+      {
+        target: "body",
+        content: "👋 Welcome to the app! Let's walk you through it.",
+        placement: "center",
+        disableBeacon: true,
+        disableOverlayClose: true,
+        spotlightClicks: false,
+      },
+      {
+        target: "#welcome-text",
+        content: "This is your homepage!",
+        placement: "bottom",
+        disableBeacon: true,
+      },
+      {
+        target: "#start-button",
+        content: "Click here to get started.",
+        placement: "bottom",
+        disableBeacon: true,
+      },
+    ]);
+    setRun(true);
+  }, 50); // Allow time for internal reset
+};
+
   // Get session ID from local storage
   const getSessionId = () => {
     if (!user?.id) return "";
@@ -149,7 +187,7 @@ export default function HomePage() {
       </div>
 
       {/* ヘッダーセクション (Header section) */}
-      <header className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20">
+      <header id="welcome-text" className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20">
         <div className="container mx-auto px-4 py-2 flex justify-between items-center">
           {/* Company Logo */}
           <motion.div 
@@ -241,6 +279,16 @@ export default function HomePage() {
                 >
                   <MessageSquare className="h-4 w-4 text-pink-500" />
                   フィードバック
+                </DropdownMenuItem>
+
+                {/* Onboarding Option */}
+
+                <DropdownMenuItem 
+                  onClick={() => startOnboarding()}
+                  className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
+                >
+                  <MessageSquare className="h-4 w-4 text-pink-500" />
+                  Onboarding 2
                 </DropdownMenuItem>
                 
                 <DropdownMenuSeparator className="bg-pink-100/70" />

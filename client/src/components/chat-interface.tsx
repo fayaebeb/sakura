@@ -6,7 +6,7 @@ import { Check, Sparkles, Heart} from "lucide-react";
 import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import ChatMessage from "./chat-message";
+import ChatMessage from "./chatMessage";
 import ChatInput, { MessageCategory } from "./chatInput";
 import { ScrollArea } from "./ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
