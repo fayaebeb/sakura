@@ -200,7 +200,7 @@ const ChatInput = memo(function ChatInput({
         <div className="overflow-x-auto sm:overflow-visible px-1 relative">
           <div className="flex items-center gap-2 min-w-max">
             {/* Category selection toggle group */}
-            <div className="flex">
+            <div id="user-type-select" className="flex">
               <TooltipProvider>
                 <ToggleGroup
                   type="single"
