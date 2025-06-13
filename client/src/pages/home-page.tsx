@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import ChatInterface from "@/components/chat-interface";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -18,7 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog"; 
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { tourState } from "@/state/tourState";
+import { useSetRecoilState } from "recoil";
+
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -36,14 +39,25 @@ export default function HomePage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
-  
+
+const setTour = useSetRecoilState(tourState);
+
+  const startTour = () => {
+    setTour((prev) => ({
+      ...prev,
+      run: true,
+      stepIndex: 0,
+      key: new Date().getTime(), // force Joyride to restart
+    }));
+  };
+
   // Get session ID from local storage
   const getSessionId = () => {
     if (!user?.id) return "";
     const storageKey = `chat_session_id_user_${user.id}`;
     return localStorage.getItem(storageKey) || "";
   };
-  
+
   // Delete chat history mutation
   const deleteChatMutation = useMutation({
     mutationFn: async () => {
@@ -51,19 +65,19 @@ export default function HomePage() {
       if (!sessionId) {
         throw new Error("セッションIDが見つかりません。");
       }
-      
+
       const res = await apiRequest("DELETE", `/api/messages/${sessionId}`);
       if (!res.ok) {
         const errorText = await res.text().catch(() => "Unknown error");
         throw new Error(`Failed to delete chat history: ${res.status} ${errorText}`);
       }
-      
+
       return res.json();
     },
     onSuccess: () => {
       // Clear current messages in the cache
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
-      
+
       toast({
         title: "履歴削除完了",
         description: "チャット履歴が削除されました。",
@@ -120,11 +134,11 @@ export default function HomePage() {
       {/* Floating decorative elements */}
       <div className="absolute top-20 right-10 opacity-30 hidden md:block">
         <motion.div
-          animate={{ 
+          animate={{
             y: [0, -10, 0],
             rotate: 360
           }}
-          transition={{ 
+          transition={{
             y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
             rotate: { duration: 20, repeat: Infinity, ease: "linear" }
           }}
@@ -135,11 +149,11 @@ export default function HomePage() {
 
       <div className="absolute bottom-20 left-10 opacity-20 hidden md:block">
         <motion.div
-          animate={{ 
+          animate={{
             y: [0, 10, 0],
             rotate: -360
           }}
-          transition={{ 
+          transition={{
             y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
             rotate: { duration: 25, repeat: Infinity, ease: "linear" }
           }}
@@ -149,10 +163,10 @@ export default function HomePage() {
       </div>
 
       {/* ヘッダーセクション (Header section) */}
-      <header className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20">
+      <header id="welcome-text" className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20">
         <div className="container mx-auto px-4 py-2 flex justify-between items-center">
           {/* Company Logo */}
-          <motion.div 
+          <motion.div
             className="flex items-center"
             whileHover={{ scale: 1.05 }}
           >
@@ -160,15 +174,15 @@ export default function HomePage() {
           </motion.div>
 
           {/* AI Brand Logo with animation */}
-          <motion.div 
+          <motion.div
             className="flex items-center"
             initial={{ scale: 0.9, y: -10, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             transition={{ type: "spring", duration: 0.8 }}
           >
-            <motion.img 
-              src="/images/sakura-logo.png" 
-              alt="桜AI ロゴ" 
+            <motion.img
+              src="/images/sakura-logo.png"
+              alt="桜AI ロゴ"
               className="h-16 sm:h-24 w-auto"
               whileHover={{ scale: 1.05, rotate: [-1, 1, -1, 0] }}
               transition={{ rotate: { duration: 0.5 } }}
@@ -176,16 +190,16 @@ export default function HomePage() {
           </motion.div>
 
           {/* User Dropdown Menu */}
-          <motion.div 
-            whileHover={{ scale: 1.05 }} 
+          <motion.div
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="relative"
           >
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 flex items-center gap-2 rounded-full pl-2 pr-3"
                 >
                   <Avatar className="h-7 w-7 border border-pink-200 bg-pink-100/70">
@@ -193,7 +207,7 @@ export default function HomePage() {
                       {displayName ? displayName[0].toUpperCase() : ""}
                     </AvatarFallback>
                   </Avatar>
-                  <motion.span 
+                  <motion.span
                     className="text-sm font-medium hidden sm:flex items-center"
                     animate={{ scale: [1, 1.05, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -210,7 +224,7 @@ export default function HomePage() {
                   <span>{displayName}さん</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-pink-100/70" />
-                
+
                 {/* Voice Mode Option */}
                 <Link href="/voice">
                   <DropdownMenuItem className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800">
@@ -218,9 +232,9 @@ export default function HomePage() {
                     音声モード
                   </DropdownMenuItem>
                 </Link>
-                
+
                 {/* Delete Chat History Option */}
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => setShowDeleteConfirm(true)}
                   disabled={deleteChatMutation.isPending}
                   className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
@@ -233,20 +247,30 @@ export default function HomePage() {
                     履歴削除
                   </motion.span>
                 </DropdownMenuItem>
-                
+
                 {/* Feedback Option */}
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => setShowFeedbackDialog(true)}
                   className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
                 >
                   <MessageSquare className="h-4 w-4 text-pink-500" />
                   フィードバック
                 </DropdownMenuItem>
-                
+
+                {/* Onboarding Option */}
+
+                <DropdownMenuItem
+                  onClick={startTour}
+                  className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
+                >
+                  <MessageSquare className="h-4 w-4 text-pink-500" />
+                  Onboarding 2
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator className="bg-pink-100/70" />
-                
+
                 {/* Logout Option */}
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => setShowLogoutConfirm(true)}
                   disabled={logoutMutation.isPending}
                   className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
@@ -313,13 +337,13 @@ export default function HomePage() {
 
 
       {/* Greeting message */}
-      <motion.div 
+      <motion.div
         className="container mx-auto px-4 py-2 text-center"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <motion.h2 
+        <motion.h2
           className="text-lg text-pink-700 font-medium italic"
           animate={{ y: [0, -2, 0] }}
           transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
@@ -330,7 +354,7 @@ export default function HomePage() {
 
       {/* チャットインターフェースセクション (Chat interface section) */}
       <main className="flex-1 container mx-auto px-4 py-6">
-        <motion.div 
+        <motion.div
           className="bg-white rounded-2xl shadow-lg p-4 max-w-3xl mx-auto border border-pink-100 overflow-hidden relative"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -349,7 +373,7 @@ export default function HomePage() {
       {/* Footer with subtle branding */}
       <footer className="border-t border-pink-100 py-2 bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 text-center">
-          <motion.p 
+          <motion.p
             className="text-xs text-pink-400"
             animate={{ opacity: [0.6, 1, 0.6] }}
             transition={{ duration: 3, repeat: Infinity }}

@@ -114,7 +114,7 @@ export default function PromptPicker({ onSelect }: PromptPickerProps) {
   };
 
   return (
-    <div className="relative prompt-picker">
+    <div id="suggestions-button" className="relative prompt-picker">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

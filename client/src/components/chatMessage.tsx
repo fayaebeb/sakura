@@ -392,7 +392,7 @@ export default function ChatMessage({
             )}
           </div>
 
-          <div className="mt-2 flex items-center justify-between">
+          <div id="highlighted-component-1" className="mt-2 flex items-center justify-between">
             <div className="text-[9px] sm:text-[10px] text-gray-400">
               {message.timestamp && new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </div>
