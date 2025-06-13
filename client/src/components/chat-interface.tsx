@@ -196,12 +196,8 @@ const ChatInterface = () => {
     console.log(`Using session ID: ${savedSessionId}`);
     setSessionId(savedSessionId);
 
-    // Use persistent session ID derived from username for server requests
-    // This ensures consistent data even if local storage is cleared
-    const persistentSessionId = user.username.split('@')[0];
+    const persistentSessionId = user.email.split('@')[0];
 
-    // If sessionId doesn't match username-based ID,
-    // log it (but still respect the local storage session for now)
     if (savedSessionId !== persistentSessionId) {
       console.log(
         `Note: localStorage session ID (${savedSessionId}) differs from persistent ID (${persistentSessionId})`

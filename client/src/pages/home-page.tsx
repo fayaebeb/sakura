@@ -80,8 +80,7 @@ export default function HomePage() {
     }
   });
 
-  // Extract username before '@' from email
-  const displayName = user?.username?.split("@")[0];
+  const displayName = user?.email?.split("@")[0];
 
   // Cute Japanese greetings for different times of day
   const greetings = [
