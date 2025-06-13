@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles, Heart} from "lucide-react";
+import { Check, Sparkles, Heart } from "lucide-react";
 import { Message } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -34,9 +34,9 @@ const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string
   }, [isPlaying]);
 
   return (
-    <audio 
-      ref={audioRef} 
-      src={audioUrl} 
+    <audio
+      ref={audioRef}
+      src={audioUrl}
       onEnded={onPlayComplete}
       className="hidden"
     />
@@ -95,14 +95,13 @@ const Tutorial = ({ onClose }: { onClose: () => void }) => {
               {steps.map((_, idx) => (
                 <motion.div
                   key={idx}
-                  className={`w-2 h-2 rounded-full ${
-                    idx + 1 === step ? "bg-primary" : "bg-muted"
-                  }`}
+                  className={`w-2 h-2 rounded-full ${idx + 1 === step ? "bg-primary" : "bg-muted"
+                    }`}
                   animate={
                     idx + 1 === step
                       ? {
-                          scale: [1, 1.3, 1],
-                        }
+                        scale: [1, 1.3, 1],
+                      }
                       : {}
                   }
                   transition={{ duration: 1.5, repeat: Infinity }}
@@ -153,10 +152,10 @@ const ChatInterface = () => {
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
 
-  useEffect(() => { 
-    if (!showTutorial) { 
-      textareaRef.current?.focus(); 
-    } 
+  useEffect(() => {
+    if (!showTutorial) {
+      textareaRef.current?.focus();
+    }
   }, [showTutorial]);
 
   // Handle tutorial display
@@ -265,15 +264,15 @@ const ChatInterface = () => {
         throw new Error("セッションIDが見つかりません。再ログインしてください。");
       }
 
-          const res = await apiRequest("POST", "/api/chat", {
-            content,
-            sessionId,
-            isBot: false,
-            category,
-            useWeb,
-            useDb,
-            db,
-          });
+      const res = await apiRequest("POST", "/api/chat", {
+        content,
+        sessionId,
+        isBot: false,
+        category,
+        useWeb,
+        useDb,
+        db,
+      });
 
       if (!res.ok) {
         const errorText = await res.text().catch(() => "Unknown error");
@@ -310,7 +309,7 @@ const ChatInterface = () => {
       // Return previous messages for potential rollback
       return { previousMessages, optimisticUserMessage };
     },
-      onSuccess: async (newBotMessage: Message, variables, context) => {
+    onSuccess: async (newBotMessage: Message, variables, context) => {
       // Create a user message with the same data as the optimistic one, but with real ID
       // First, extract the content and category from variables
       const { content, category } = variables;
@@ -318,8 +317,8 @@ const ChatInterface = () => {
       // We need to ensure both the user message and bot message are in the cache
       queryClient.setQueryData<Message[]>(["/api/messages", sessionId], (old = []) => {
         // Filter out our optimistic message if it exists
-        const filteredMessages = context?.optimisticUserMessage 
-          ? old.filter(msg => msg.id !== context.optimisticUserMessage.id) 
+        const filteredMessages = context?.optimisticUserMessage
+          ? old.filter(msg => msg.id !== context.optimisticUserMessage.id)
           : old;
 
         // Create a proper user message (the optimistic one gets replaced with this)
@@ -355,19 +354,19 @@ const ChatInterface = () => {
         duration: 2000,
       });
       try {
-          const suggestionRes = await fetch("/api/suggest", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ message: content }),
-          });
+        const suggestionRes = await fetch("/api/suggest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ message: content }),
+        });
         const suggestionData = await suggestionRes.json();
         setSuggestions(suggestionData?.suggestions || []);
-        setShowSuggestions(true); 
-        } catch (error) {
-          console.error("Failed to fetch suggestions:", error);
-          setSuggestions([]); // fallback
-        }
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error("Failed to fetch suggestions:", error);
+        setSuggestions([]); // fallback
+      }
     },
     onError: (error, _, context) => {
       // On error, revert to the previous state
@@ -378,8 +377,8 @@ const ChatInterface = () => {
       // Show an error toast with more detailed message
       toast({
         title: "送信エラー",
-        description: error instanceof Error 
-          ? `メッセージが送れませんでした: ${error.message}` 
+        description: error instanceof Error
+          ? `メッセージが送れませんでした: ${error.message}`
           : "メッセージが送れなかったよ...もう一度試してみてね！",
         variant: "destructive",
       });
@@ -441,7 +440,7 @@ const ChatInterface = () => {
       console.error("Voice transcription error:", error);
       toast({
         title: "音声処理エラー",
-        description: error instanceof Error 
+        description: error instanceof Error
           ? `認識できませんでした: ${error.message}`
           : "認識できませんでした。もう一度試してね！",
         variant: "destructive",
@@ -570,8 +569,8 @@ const ChatInterface = () => {
       console.error("TTS Error:", error);
       toast({
         title: "音声生成エラー",
-        description: error instanceof Error ? 
-          `音声を生成できませんでした: ${error.message}` : 
+        description: error instanceof Error ?
+          `音声を生成できませんでした: ${error.message}` :
           "音声を生成できませんでした。",
         variant: "destructive",
       });
@@ -596,25 +595,25 @@ const ChatInterface = () => {
     }
   };
 
-    const handleSubmit = (
-      e: React.FormEvent,
-      category: MessageCategory = "SELF",
-      web: boolean = true,
-      db: boolean = true
-    ) => {
-      e.preventDefault();
-      if (!input.trim() || sendMessage.isPending) return;
+  const handleSubmit = (
+    e: React.FormEvent,
+    category: MessageCategory = "SELF",
+    web: boolean = true,
+    db: boolean = true
+  ) => {
+    e.preventDefault();
+    if (!input.trim() || sendMessage.isPending) return;
 
-      const message = input;
-      setInput("");
+    const message = input;
+    setInput("");
 
-      sendMessage.mutate({
-        content: message,
-        category,
-        useWeb: useWeb,
-        useDb: useDb,
-        db: selectedDb,
-      });
+    sendMessage.mutate({
+      content: message,
+      category,
+      useWeb: useWeb,
+      useDb: useDb,
+      db: selectedDb,
+    });
 
   };
 
@@ -683,7 +682,7 @@ const ChatInterface = () => {
   }
 
   return (
-      <Card className="flex flex-col h-[calc(100vh-12rem)] relative overflow-visible">
+    <Card id="chat-interface" className="flex flex-col h-[calc(100vh-12rem)] relative overflow-visible">
 
       <AnimatePresence>
         {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
@@ -691,10 +690,10 @@ const ChatInterface = () => {
 
 
       {currentAudioUrl && (
-        <AudioPlayer 
-          audioUrl={currentAudioUrl} 
-          isPlaying={isPlayingAudio} 
-          onPlayComplete={handlePlaybackComplete} 
+        <AudioPlayer
+          audioUrl={currentAudioUrl}
+          isPlaying={isPlayingAudio}
+          onPlayComplete={handlePlaybackComplete}
         />
       )}
 
@@ -718,7 +717,7 @@ const ChatInterface = () => {
           ) : (
             messages.map((message) => (
               <div className="w-full max-w-full group" key={message.id}>
-                <ChatMessage 
+                <ChatMessage
                   message={message}
                   isPlayingAudio={isPlayingAudio}
                   playingMessageId={playingMessageId}

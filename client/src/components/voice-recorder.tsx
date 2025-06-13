@@ -36,12 +36,12 @@ export default function VoiceRecorder({ onRecordingComplete, isProcessing }: Voi
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      
+
       // Clean up MediaRecorder when component unmounts
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
         setIsRecording(false);
-        
+
         // Stop all audio tracks if any exist
         if (mediaRecorderRef.current.stream) {
           mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
@@ -53,36 +53,36 @@ export default function VoiceRecorder({ onRecordingComplete, isProcessing }: Voi
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Reset recording time and audio chunks
       setRecordingTime(0);
       audioChunksRef.current = [];
-      
+
       // Create media recorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      
+
       // Event handler for data available
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data);
         }
       };
-      
+
       // Event handler for recording stop
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         setAudioBlob(audioBlob);
         onRecordingComplete(audioBlob);
-        
+
         // Stop all audio tracks
         stream.getTracks().forEach(track => track.stop());
       };
-      
+
       // Start recording
       mediaRecorder.start();
       setIsRecording(true);
-      
+
       toast({
         title: "🎤 録音開始",
         description: "マイクに向かって話してください",
@@ -102,7 +102,7 @@ export default function VoiceRecorder({ onRecordingComplete, isProcessing }: Voi
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       toast({
         title: "✅ 録音完了",
         description: "音声を処理しています...",
@@ -127,9 +127,10 @@ export default function VoiceRecorder({ onRecordingComplete, isProcessing }: Voi
           <span>{formatTime(recordingTime)}</span>
         </div>
       )}
-      
+
       {/* Recording button */}
       <Button
+        id="voice-mode-button"
         type="button"
         variant={isRecording ? "destructive" : "outline"}
         size="icon"

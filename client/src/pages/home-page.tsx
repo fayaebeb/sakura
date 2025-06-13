@@ -355,7 +355,6 @@ const setTour = useSetRecoilState(tourState);
       {/* チャットインターフェースセクション (Chat interface section) */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <motion.div
-          id="chat-interface"
           className="bg-white rounded-2xl shadow-lg p-4 max-w-3xl mx-auto border border-pink-100 overflow-hidden relative"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

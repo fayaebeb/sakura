@@ -215,11 +215,10 @@ const ChatInput = memo(function ChatInput({
                       <ToggleGroupItem
                         value="SELF"
                         aria-label="個人"
-                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
-                          category === "SELF"
-                            ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 shadow-sm"
-                            : "hover:bg-blue-50"
-                        }`}
+                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${category === "SELF"
+                          ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 shadow-sm"
+                          : "hover:bg-blue-50"
+                          }`}
                       >
                         <User
                           size={12}
@@ -242,11 +241,10 @@ const ChatInput = memo(function ChatInput({
                       <ToggleGroupItem
                         value="PRIVATE"
                         aria-label="民間"
-                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
-                          category === "PRIVATE"
-                            ? "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 shadow-sm"
-                            : "hover:bg-gray-100"
-                        }`}
+                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${category === "PRIVATE"
+                          ? "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 shadow-sm"
+                          : "hover:bg-gray-100"
+                          }`}
                       >
                         <Building
                           size={12}
@@ -269,11 +267,10 @@ const ChatInput = memo(function ChatInput({
                       <ToggleGroupItem
                         value="ADMINISTRATIVE"
                         aria-label="行政"
-                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
-                          category === "ADMINISTRATIVE"
-                            ? "bg-gradient-to-r from-red-100 to-red-200 text-red-700 shadow-sm"
-                            : "hover:bg-red-50"
-                        }`}
+                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${category === "ADMINISTRATIVE"
+                          ? "bg-gradient-to-r from-red-100 to-red-200 text-red-700 shadow-sm"
+                          : "hover:bg-red-50"
+                          }`}
                       >
                         <Landmark
                           size={12}
@@ -295,17 +292,17 @@ const ChatInput = memo(function ChatInput({
             </div>
             <div className="ml-auto flex items-center gap-2">
               <button
+                id="search-internet-button"
                 onClick={(e) => {
                   e.preventDefault();
                   setUseWeb(!useWeb);
                 }}
                 className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
                             ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
-                            ${
-                              useWeb
-                                ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
-                                : "bg-muted text-muted-foreground border border-gray-300"
-                            }
+                            ${useWeb
+                    ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
+                    : "bg-muted text-muted-foreground border border-gray-300"
+                  }
                             hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
                           `}
               >
@@ -330,7 +327,7 @@ const ChatInput = memo(function ChatInput({
       )}
 
       <div className="flex gap-1.5 sm:gap-2">
-        <div className="flex-shrink-0">
+        <div  className="flex-shrink-0 ">
           <VoiceRecorder
             onRecordingComplete={handleVoiceRecording}
             isProcessing={isProcessingVoice}
@@ -339,6 +336,7 @@ const ChatInput = memo(function ChatInput({
 
         <div className="relative flex-1 min-w-0">
           <TextareaAutosize
+            id="chat-input"
             ref={textareaRef}
             autoFocus
             value={localInput}
@@ -359,14 +357,14 @@ const ChatInput = memo(function ChatInput({
         </div>
 
         <motion.button
+          id="send-button"
           type="submit"
           disabled={sendDisabled}
           className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
             ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
-            ${
-              sendDisabled
-                ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-gradient-to-r from-pink-400 to-pink-500 text-white"
+            ${sendDisabled
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
+              : "bg-gradient-to-r from-pink-400 to-pink-500 text-white"
             }`}
           whileHover={!sendDisabled ? { scale: 1.05 } : {}}
           whileTap={!sendDisabled ? { scale: 0.95 } : {}}
@@ -382,9 +380,8 @@ const ChatInput = memo(function ChatInput({
         aria-label="Toggle options"
       >
         <ChevronDown
-          className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${
-            showOptions ? "rotate-0" : "rotate-180"
-          }`}
+          className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${showOptions ? "rotate-0" : "rotate-180"
+            }`}
         />
       </button>
     </form>
