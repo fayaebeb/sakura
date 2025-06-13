@@ -43,14 +43,30 @@ export const feedback = pgTable("feedback", {
 });
 
 // Add password validation to the insert schema
-export const insertUserSchema = createInsertSchema(users)
-  .pick({
-    username: true,
-    password: true
+export const insertUserSchema = z
+  .object({
+    username: z.string().email("有効なメールアドレスを入力してください"),
+    password: z
+      .string()
+      .min(8, "パスワードは8文字以上でなければなりません")
+      .max(128, "パスワードは128文字以下でなければなりません")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/,
+        "英大文字・小文字・数字・記号を含めてください"
+      ),
+    confirmPassword: z.string(),
+    inviteToken: z.string().optional(),
   })
-  .extend({
-    password: z.string().min(6, "パスワードは6文字以上でなければなりません")
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "パスワードが一致しません",
+    path: ["confirmPassword"],
   });
+
+// ✅ Backend-safe insert schema (used in Drizzle + DB)
+export const insertUserSafeSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
 
 export const insertSessionSchema = createInsertSchema(sessions).pick({
   userId: true,
@@ -77,7 +93,33 @@ export const insertFeedbackSchema = createInsertSchema(feedback).pick({
   sessionId: true,
 });
 
+export const inviteTokens = pgTable("invite_tokens", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  createdById: integer("created_by_id").references(() => users.id),
+  usedById: integer("used_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  usedAt: timestamp("used_at"),
+  isValid: boolean("is_valid").default(true).notNull(),
+});
+
+// ✅ Lightweight schema for login only (no strength checks)
+export const loginUserSchema = z.object({
+  username: z.string().email("有効なメールアドレスを入力してください"),
+  password: z.string().min(1, "パスワードは必須です"),
+});
+
+export type LoginUser = z.infer<typeof loginUserSchema>;
+
+
+export type InviteToken = typeof inviteTokens.$inferSelect;
+export type InsertInviteToken = {
+  token: string;
+  createdById: number;
+};
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUserSafe = z.infer<typeof insertUserSafeSchema>;
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Message = typeof messages.$inferSelect;
