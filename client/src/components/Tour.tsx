@@ -1,5 +1,6 @@
+import { CustomJoyrideStep } from "@/lib/tourSteps";
 import { dropdownOpenState } from "@/state/databaseDropdownState";
-import { CustomJoyrideStep, tourState } from "@/state/tourState";
+import {  tourState } from "@/state/tourState";
 import React, { useEffect, useRef } from "react";
 import Joyride, { ACTIONS, CallBackProps, EVENTS, STATUS } from "react-joyride";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
@@ -72,7 +73,7 @@ const Tour = () => {
         },
 
       }}
-      disableOverlayClose={true}
+      disableOverlayClose={true} 
 
     />
   );

@@ -16,6 +16,9 @@ import ChatLoadingIndicator, { SakuraPetalLoading } from "./chat-loading-indicat
 import { motion, AnimatePresence } from "framer-motion";
 import TranscriptionConfirmation from "./transcription-confirmation";
 import SuggestionPanel from "@/components/suggestion-panel";
+import { useRecoilValue } from "recoil";
+import { tourState } from "@/state/tourState";
+import { sampleMessageData } from "@/lib/sampleData";
 
 
 // Audio player for bot responses
@@ -148,6 +151,9 @@ const ChatInterface = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(true);
 
+  //tour state
+  const tour = useRecoilValue(tourState);
+  const isTourRunning = tour.run;
 
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
@@ -681,6 +687,8 @@ const ChatInterface = () => {
     );
   }
 
+  const displayMessages = isTourRunning ? sampleMessageData : messages;
+
   return (
     <Card id="chat-interface" className="flex flex-col h-[calc(100vh-12rem)] relative overflow-visible">
 
@@ -700,7 +708,8 @@ const ChatInterface = () => {
 
       <ScrollArea className="flex-1 px-1 sm:px-4 py-3 w-full" ref={scrollAreaRef}>
         <div className="space-y-4 w-full max-w-full">
-          {messages.length === 0 ? (
+
+          {displayMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-60 text-center">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -715,7 +724,7 @@ const ChatInterface = () => {
               </motion.div>
             </div>
           ) : (
-            messages.map((message) => (
+            displayMessages.map((message) => (
               <div className="w-full max-w-full group" key={message.id}>
                 <ChatMessage
                   message={message}

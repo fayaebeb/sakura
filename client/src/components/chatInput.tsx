@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/select";
 import { createPortal } from "react-dom";
 import DbButton from "@/components/dbbutton";
+import { useRecoilState } from "recoil";
+import { chatInputState } from "@/state/chatInputState";
 
 // Debounce function to improve input performance
 function useDebounce(callback: Function, delay: number) {
@@ -134,7 +136,7 @@ const ChatInput = memo(function ChatInput({
     };
   }, [isDbDropdownOpen]);
 
-  const [localInput, setLocalInput] = useState(input);
+  const [localInput, setLocalInput] = useRecoilState(chatInputState);
 
   useEffect(() => {
     setLocalInput(input);
