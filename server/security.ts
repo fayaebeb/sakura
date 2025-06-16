@@ -104,6 +104,7 @@ export const validateFeedback = [
     .isInt({ min: 1, max: 5 })
     .withMessage("Rating must be between 1 and 5"),
   body("messageId")
+    .optional()
     .isInt()
     .withMessage("Invalid message ID"),
 ];
