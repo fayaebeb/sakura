@@ -40,7 +40,7 @@ export default function HomePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
 
-const setTour = useSetRecoilState(tourState);
+  const setTour = useSetRecoilState(tourState);
 
   const startTour = () => {
     setTour((prev) => ({
@@ -198,6 +198,7 @@ const setTour = useSetRecoilState(tourState);
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
+                  id="settings-dropdown"
                   variant="outline"
                   size="sm"
                   className="border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 flex items-center gap-2 rounded-full pl-2 pr-3"

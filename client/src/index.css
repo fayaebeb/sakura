@@ -11,3 +11,26 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@keyframes fall {
+  0% {
+    transform: translateY(-10%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-sakura-petals::before {
+  content: "🌸🌸🌸🌸🌸🌸";
+  position: absolute;
+  left: 50%;
+  top: -20px;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  animation: fall 12s linear infinite;
+  white-space: nowrap;
+}

@@ -1,12 +1,15 @@
 import { CustomJoyrideStep } from "@/lib/tourSteps";
 import { dropdownOpenState } from "@/state/databaseDropdownState";
-import {  tourState } from "@/state/tourState";
+import { tourState } from "@/state/tourState";
 import React, { useEffect, useRef } from "react";
 import Joyride, { ACTIONS, CallBackProps, EVENTS, STATUS } from "react-joyride";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import ToolTipSwitcher from "@/components/TourSteps/toolTipSwitcher";
+import { isMobileState } from "@/state/isMobileState";
 
 const OPEN_DROPDOWN_INDEX = 5;
 const DROPDOWN_CONTENT_INDEX = 6;
+const CHAT_MESSAGE_STEP_INDEX = 1;
 
 const Tour = () => {
   const [state, setState] = useRecoilState(tourState);
@@ -44,6 +47,7 @@ const Tour = () => {
     ) {
       setState((prev) => ({ ...prev, run: false }));
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+
       setState((prev) => ({
         ...prev,
         stepIndex: index + (action === ACTIONS.PREV ? -1 : 1),
@@ -73,7 +77,8 @@ const Tour = () => {
         },
 
       }}
-      disableOverlayClose={true} 
+      disableOverlayClose={true}
+      tooltipComponent={ToolTipSwitcher}
 
     />
   );

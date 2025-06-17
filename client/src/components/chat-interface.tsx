@@ -137,6 +137,7 @@ const ChatInterface = () => {
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const messageTopRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
@@ -242,11 +243,23 @@ const ChatInterface = () => {
   });
 
   // Auto-scroll to bottom of messages
+  // useEffect(() => {
+  //   if (messageEndRef.current) {
+  //     messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+  //   }
+  // }, [messages]);
+
   useEffect(() => {
-    if (messageEndRef.current) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+  if (!messageEndRef.current || !messageTopRef.current) return;
+
+  if (isTourRunning) {
+    // Scroll to top when tour is running
+    messageTopRef.current.scrollIntoView({ behavior: "smooth" });
+  } else {
+    // Scroll to bottom as usual
+    messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }
+}, [messages, isTourRunning]);
 
   const sendMessage = useMutation({
     mutationFn: async ({
@@ -708,6 +721,7 @@ const ChatInterface = () => {
 
       <ScrollArea className="flex-1 px-1 sm:px-4 py-3 w-full" ref={scrollAreaRef}>
         <div className="space-y-4 w-full max-w-full">
+          <div ref={messageTopRef} />
 
           {displayMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-60 text-center">

@@ -10,6 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronRight, FileText, Globe, Volume2, Tag, Eye } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { useRecoilValue } from "recoil";
+import { tourState } from "@/state/tourState";
 
 // Cute decorative elements to randomly add to bot messages
 const botDecorations = [
@@ -54,6 +56,15 @@ const MessageSection = ({
   icon: React.ComponentType<any>;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const tour = useRecoilValue(tourState);
+  const isTourRunning = tour.run;
+
+  useEffect(() => {
+    if (isTourRunning) {
+      setIsOpen(false);
+    }
+  }, [isTourRunning]);
+
 
   if (!content) return null;
 
