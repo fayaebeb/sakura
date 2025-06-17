@@ -75,7 +75,7 @@ const SelectDatabaseDialog: React.FC<TooltipRenderProps> = ({ primaryProps,
                     {/* Buttons */}
                     <div className="flex gap-2 self-end">
                         <Button
-                            {...skipProps}
+                            {...closeProps}
                             variant="outline"
                             className="rounded-full bg-pink-50 px-3 py-1 text-xs"
                         >

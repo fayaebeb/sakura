@@ -62,7 +62,7 @@ export default function DbButton({
             hover:border-pink-400 focus:outline-none`}
         >
           <Database className="h-4 w-4" />
-          <span className="text-xs sm:text-sm flex items-center gap-1">
+          <span className="hidden text-xs sm:text-sm md:flex items-center gap-1">
             {useDb && selectedDb && (
               <span className="text-white/80 sm:ml-1">
                 ({searchModes.find((m) => m.value === selectedDb)?.label ?? selectedDb})

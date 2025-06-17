@@ -99,11 +99,11 @@ export default function VoiceModePage() {
       setIsConnected(true);
 
       // Send auth data to register client
-      const sessionId = getSessionId() || user.username.split('@')[0];
+      const sessionId = getSessionId() || user.email.split('@')[0];
       ws.send(JSON.stringify({
         type: "auth",
         userId: user.id,
-        username: user.username,
+        email: user.email,
         sessionId
       }));
     });
@@ -488,8 +488,7 @@ export default function VoiceModePage() {
     return `${mins}:${secs}`;
   };
 
-  // Display name (username without domain)
-  const displayName = user?.username?.split("@")[0];
+  const displayName = user?.email?.split("@")[0];
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-b from-[#ffefd5] to-[#fff0f5]">

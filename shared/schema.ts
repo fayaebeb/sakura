@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
 });
 
@@ -45,7 +45,7 @@ export const feedback = pgTable("feedback", {
 // Add password validation to the insert schema
 export const insertUserSchema = z
   .object({
-    username: z.string().email("有効なメールアドレスを入力してください"),
+    email: z.string().email("有効なメールアドレスを入力してください"),
     password: z
       .string()
       .min(8, "パスワードは8文字以上でなければなりません")
@@ -64,7 +64,7 @@ export const insertUserSchema = z
 
 // ✅ Backend-safe insert schema (used in Drizzle + DB)
 export const insertUserSafeSchema = createInsertSchema(users).pick({
-  username: true,
+  email: true,
   password: true,
 });
 
@@ -105,7 +105,7 @@ export const inviteTokens = pgTable("invite_tokens", {
 
 // ✅ Lightweight schema for login only (no strength checks)
 export const loginUserSchema = z.object({
-  username: z.string().email("有効なメールアドレスを入力してください"),
+  email: z.string().email("有効なメールアドレスを入力してください"),
   password: z.string().min(1, "パスワードは必須です"),
 });
 

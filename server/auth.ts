@@ -87,26 +87,26 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
       try {
-        console.log(`Auth - Login attempt for user: ${username}`);
-        const user = await storage.getUserByUsername(username);
+        console.log(`Auth - Login attempt for user: ${email}`);
+        const user = await storage.getUserByEmail(email);
         
         if (!user) {
-          console.log(`Auth - User not found: ${username}`);
+          console.log(`Auth - User not found: ${email}`);
           return done(null, false);
         }
         
         const passwordValid = await comparePasswords(password, user.password);
         if (!passwordValid) {
-          console.log(`Auth - Invalid password for user: ${username}`);
+          console.log(`Auth - Invalid password for user: ${email}`);
           return done(null, false);
         }
         
-        console.log(`Auth - Login successful for user: ${username}`);
+        console.log(`Auth - Login successful for user: ${email}`);
         return done(null, user);
       } catch (error) {
-        console.error(`Auth - Login error for ${username}:`, error);
+        console.error(`Auth - Login error for ${email}:`, error);
         return done(error);
       }
     }),
@@ -138,18 +138,18 @@ export function setupAuth(app: Express) {
     handleValidationErrors,
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        console.log(`Auth - Register attempt: ${req.body.username}`);
+        console.log(`Auth - Register attempt: ${req.body.email}`);
         
-        const existingUser = await storage.getUserByUsername(req.body.username);
+        const existingUser = await storage.getUserByEmail(req.body.email);
         if (existingUser) {
-          console.log(`Auth - Registration failed: ${req.body.username} already exists`);
+          console.log(`Auth - Registration failed: ${req.body.email} already exists`);
           return res.status(409).json({
             error: "このユーザー名は既に使用されています。"
           });
         }
 
-        const { username, password, inviteToken } = req.body as {
-          username: string;
+        const { email, password, inviteToken } = req.body as {
+          email: string;
           password: string;
           inviteToken?: string;
         };
@@ -165,7 +165,7 @@ export function setupAuth(app: Express) {
 
 
         const user = await storage.createUser({
-          username,
+          email,
           password: await hashPassword(password),
         });
 
@@ -178,13 +178,13 @@ export function setupAuth(app: Express) {
         }
 
 
-        console.log(`Auth - User registered: ${user.username}`);
+        console.log(`Auth - User registered: ${user.email}`);
         req.login(user, (err: any) => {
           if (err) {
-            console.error(`Auth - Login after registration failed for ${user.username}:`, err);
+            console.error(`Auth - Login after registration failed for ${user.email}:`, err);
             return next(err);
           }
-          console.log(`Auth - User logged in after registration: ${user.username}`);
+          console.log(`Auth - User logged in after registration: ${user.email}`);
           // Don't send password in response
           const { password, ...userResponse } = user;
           res.status(201).json(userResponse);
@@ -214,7 +214,7 @@ export function setupAuth(app: Express) {
 
         if (!user) {
           // Generic error message to prevent user enumeration
-          console.log("Auth - Login failed for:", req.body.username);
+          console.log("Auth - Login failed for:", req.body.email);
           return res.status(401).json({
             error: "ユーザー名またはパスワードが正しくありません。"
           });
@@ -235,14 +235,13 @@ export function setupAuth(app: Express) {
           // Now login with the new session
           req.login(userData, (loginErr: any) => {
             if (loginErr) {
-              console.error(`Auth - Session creation error for ${userData.username}:`, loginErr);
+              console.error(`Auth - Session creation error for ${userData.email}:`, loginErr);
               return res.status(500).json({
                 error: "セッションの作成に失敗しました。"
               });
             }
 
-            console.log(`Auth - Login successful: ${userData.username}`);
-            // Don't send password in response
+            console.log(`Auth - Login successful: ${userData.email}`);
             const { password, ...userResponse } = userData;
             res.status(200).json(userResponse);
           });
@@ -252,12 +251,12 @@ export function setupAuth(app: Express) {
   );
 
   app.post("/api/logout", (req, res, next) => {
-    const username = req.user?.username;
-    console.log(`Auth - Logout attempt: ${username || 'Unknown user'}`);
+    const email = req.user?.email;
+    console.log(`Auth - Logout attempt: ${email || 'Unknown user'}`);
     
     req.logout((err) => {
       if (err) {
-        console.error(`Auth - Logout error for ${username}:`, err);
+        console.error(`Auth - Logout error for ${email}:`, err);
         return next(err);
       }
       
@@ -270,7 +269,7 @@ export function setupAuth(app: Express) {
           });
         }
         
-        console.log(`Auth - Logout successful: ${username}`);
+        console.log(`Auth - Logout successful: ${email}`);
         res.clearCookie('sakura.sid');
         res.sendStatus(200);
       });
@@ -283,7 +282,7 @@ export function setupAuth(app: Express) {
       return res.sendStatus(401);
     }
     
-    console.log(`Auth - Authorized /api/user access: ${req.user?.username}`);
+    console.log(`Auth - Authorized /api/user access: ${req.user?.email}`);
     // Don't send password in response
     const { password, ...userResponse } = req.user!;
     res.json(userResponse);

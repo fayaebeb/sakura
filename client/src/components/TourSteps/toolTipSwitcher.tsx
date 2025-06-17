@@ -4,12 +4,17 @@ import { TooltipRenderProps } from "react-joyride";
 
 import { CustomJoyrideStep } from "@/lib/tourSteps";
 import WelcomeDialog from "./TooltipWelcome";
+import EndDialog from "./TooltipEnd";
 import ChatInterfaceDialog from "./ChatInterfaceDialog";
 import { User } from "lucide-react";
 import UserTypeSelectDialog from "./UserTypeSelectDialog";
 import ChatInputStepContent from "./chatInputStepContent";
 import SearchInternetButtonDialog from "./SearchInternetButtonDialog";
 import SelectDatabaseDialog from "./SelectDatabaseDialog";
+import SuggestionsDialog from "./SuggestionsDialog";
+import VoiceModeDialog from "./VoiceModeDialog";
+import ChatInputDialog from "./ChatInputDialog";
+import SendButtonDialog from "./SendButtonDialog";
 
 
 const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
@@ -28,15 +33,17 @@ const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
         case "select-database-button":
             return <SelectDatabaseDialog {...props} />;
         case "suggestions-button":
-            return <ChatInterfaceDialog {...props} />;
+            return <SuggestionsDialog {...props} />;
         case "user-type-select":
             return <ChatInterfaceDialog {...props} />;
         case "voice-mode-button":
-            return <ChatInterfaceDialog {...props} />;
+            return <VoiceModeDialog {...props} />;
+            case "chat-input":
+                return <ChatInputDialog {...props} />;
         case "send-button":
-            return <ChatInterfaceDialog {...props} />;
+            return <SendButtonDialog {...props} />;
         case "main-message-text":
-            return <ChatInterfaceDialog {...props} />;
+            return <ChatInputDialog {...props} />;
         case "社内文書情報":
             return <ChatInterfaceDialog {...props} />;
         case "オンラインWeb情報":
@@ -44,9 +51,7 @@ const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
         case "settings-dropdown":
             return <ChatInterfaceDialog {...props} />;
         case "end-tour":
-            return <WelcomeDialog {...props} />;
-        case "chat-input":
-            return <ChatInterfaceDialog {...props} />;
+            return <EndDialog {...props} />;
 
         default: return (
             <div className="p-4 bg-red-100 text-red-800 rounded">

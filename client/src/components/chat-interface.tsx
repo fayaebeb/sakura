@@ -18,7 +18,7 @@ import TranscriptionConfirmation from "./transcription-confirmation";
 import SuggestionPanel from "@/components/suggestion-panel";
 import { useRecoilValue } from "recoil";
 import { tourState } from "@/state/tourState";
-import { sampleMessageData } from "@/lib/sampleData";
+import { sampleMessageData, sampleMessageDataPc } from "@/lib/sampleData";
 
 
 // Audio player for bot responses
@@ -202,12 +202,8 @@ const ChatInterface = () => {
     console.log(`Using session ID: ${savedSessionId}`);
     setSessionId(savedSessionId);
 
-    // Use persistent session ID derived from username for server requests
-    // This ensures consistent data even if local storage is cleared
-    const persistentSessionId = user.username.split('@')[0];
+    const persistentSessionId = user.email.split('@')[0];
 
-    // If sessionId doesn't match username-based ID,
-    // log it (but still respect the local storage session for now)
     if (savedSessionId !== persistentSessionId) {
       console.log(
         `Note: localStorage session ID (${savedSessionId}) differs from persistent ID (${persistentSessionId})`
@@ -250,16 +246,16 @@ const ChatInterface = () => {
   // }, [messages]);
 
   useEffect(() => {
-  if (!messageEndRef.current || !messageTopRef.current) return;
+    if (!messageEndRef.current || !messageTopRef.current) return;
 
-  if (isTourRunning) {
-    // Scroll to top when tour is running
-    messageTopRef.current.scrollIntoView({ behavior: "smooth" });
-  } else {
-    // Scroll to bottom as usual
-    messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }
-}, [messages, isTourRunning]);
+    if (isTourRunning) {
+      // Scroll to top when tour is running
+      messageTopRef.current.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Scroll to bottom as usual
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isTourRunning]);
 
   const sendMessage = useMutation({
     mutationFn: async ({
@@ -700,7 +696,9 @@ const ChatInterface = () => {
     );
   }
 
-  const displayMessages = isTourRunning ? sampleMessageData : messages;
+  const displayMessages = isTourRunning
+    ? (isMobile ? sampleMessageDataPc : sampleMessageData)
+    : messages;
 
   return (
     <Card id="chat-interface" className="flex flex-col h-[calc(100vh-12rem)] relative overflow-visible">

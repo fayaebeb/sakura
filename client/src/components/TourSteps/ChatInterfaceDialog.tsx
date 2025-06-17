@@ -32,7 +32,7 @@ const ChatInterfaceDialog: React.FC<TooltipRenderProps> = ({
 
                     {/* Buttons */}
                     <div className="flex gap-1 ml-3 mb-3">
-                        <Button {...skipProps} variant="outline" className="bg-pink-100 rounded-full text-xs px-3 py-1">
+                        <Button {...closeProps} variant="outline" className="bg-pink-100 rounded-full text-xs px-3 py-1">
                             スキップ
                         </Button>
                         <Button {...backProps} className="bg-pink-300 hover:bg-pink-300 text-pink-800 rounded-full text-xs px-4 py-1">
@@ -69,7 +69,7 @@ const ChatInterfaceDialog: React.FC<TooltipRenderProps> = ({
 
                     {/* Buttons */}
                     <div className="flex gap-1 ml-4 mb-4 ">
-                        <Button {...skipProps} variant="outline" className="bg-pink-100 rounded-full text-sm">
+                        <Button {...closeProps} variant="outline" className="bg-pink-100 rounded-full text-sm">
                             スキップ
                         </Button>
                         <Button {...backProps} className="bg-pink-300 hover:bg-pink-300 text-pink-800 rounded-full px-6">

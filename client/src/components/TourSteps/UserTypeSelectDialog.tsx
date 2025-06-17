@@ -28,7 +28,7 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
       id: 0,
       title: "チャット画面だよ！✨",
       description: "ここで桜ちゃんと自由におしゃべりできるよ〜💬以前の会話も一覧で見れるんだ！便利でしょ？",
-      icon: <User className="w-1/6 h-full text-pink-600 bg-pink-200 rounded-xl p-2 shadow-2xl" />,
+      icon: <User className="w-full h-full text-pink-600 bg-pink-200 rounded-xl p-2 shadow-2xl" />,
 
       style: "bg-pink-100 border border-pink-500 text-pink-800"
 
@@ -38,13 +38,13 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
       title: "履歴をさっと確認👀",
       description: "過去のメッセージをタイムライン形式で確認！キーワード検索ですぐに探せるよ。",
       style: "bg-green-100 border border-green-500  text-green-800",
-      icon: <Building className="w-1/6 h-full text-green-600 bg-green-200 rounded-xl p-2 shadow-2xl " />,
+      icon: <Building className="w-full h-full text-green-600 bg-green-200 rounded-xl p-2 shadow-2xl " />,
 
     },
     {
       id: 2,
       title: "設定をカスタマイズ⚙️",
-      icon: <Landmark className="w-1/5 h-full text-blue-600 bg-blue-200 rounded-xl p-2 shadow-2xl" />,
+      icon: <Landmark className="w-full h-full text-blue-600 bg-blue-200 rounded-xl p-2 shadow-2xl" />,
       description: "テーマカラーや通知設定を自由に変更！自分好みの環境に仕上げよう。",
       style: "bg-blue-100 border border-blue-500  text-blue-800"
 
@@ -101,7 +101,7 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
                   {slides.map((slide) => (
                     <CarouselItem key={slide.id} >
                       <div className={`flex  p-2 rounded-lg shadow-lg items-center h-full ${slide.style} space-x-2 `}>
-                        <div className="w-full p-2 h-full">
+                        <div className=" p-2 h-full">
                           {slide.icon}
                         </div>
                         <div className="w-fit space-y-1">
@@ -131,7 +131,7 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
 
           {/* Buttons */}
           <div className="flex gap-1 ml-3 mb-3">
-            <Button variant="outline" {...skipProps} className="bg-pink-100 rounded-full text-xs px-3 py-1">
+            <Button variant="outline" {...closeProps} className="bg-pink-100 rounded-full text-xs px-3 py-1">
               スキップ
             </Button>
             <Button {...backProps} className="bg-pink-300 hover:bg-pink-300 text-pink-800 rounded-full text-xs px-4 py-1">
@@ -173,7 +173,7 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
                   {slides.map((slide) => (
                     <CarouselItem key={slide.id} >
                       <div className={`flex  p-2 rounded-lg shadow-lg items-center h-full ${slide.style} space-x-2 `}>
-                        <div className="w-full p-2 h-full">
+                        <div className="w-1/4 p-2 h-full">
                           {slide.icon}
                         </div>
                         <div className="w-fit space-y-1">
@@ -203,7 +203,7 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
 
           {/* Buttons */}
           <div className="flex gap-1 ml-3 mb-3">
-            <Button variant="outline" {...skipProps} className="bg-pink-100 rounded-full text-xs px-3 py-1">
+            <Button variant="outline" {...closeProps} className="bg-pink-100 rounded-full text-xs px-3 py-1">
               スキップ
             </Button>
             <Button {...backProps} className="bg-pink-300 hover:bg-pink-300 text-pink-800 rounded-full text-xs px-4 py-1">

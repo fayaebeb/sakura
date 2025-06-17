@@ -96,7 +96,7 @@ export const tourSteps: CustomJoyrideStep[] = [
         id: "main-message-text",
         target: "#main-message-text",
         content: "Click here to get started!",
-        placement: "top",
+        placement: "bottom",
         spotlightPadding: 5,
         floaterProps: {
             disableFlip: true,       // <-- only this step won't flip  

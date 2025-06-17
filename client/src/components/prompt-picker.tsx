@@ -120,7 +120,7 @@ export default function PromptPicker({ onSelect }: PromptPickerProps) {
           <TooltipTrigger asChild>
             <motion.button
               type="button"
-              className="flex items-center justify-center h-[40px] w-[40px] rounded-full bg-white text-pink-500 border border-pink-200 hover:bg-pink-50 transition-colors shadow-sm prompt-picker-button"
+              className="flex items-center justify-center h-[40px] w-[40px] rounded-full bg-white text-pink-500 border border-pink-200 hover:bg-pink-50 transition-colors shadow-md prompt-picker-button"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowPrompts(!showPrompts)}

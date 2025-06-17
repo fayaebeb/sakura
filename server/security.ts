@@ -40,11 +40,11 @@ const createBruteForce = () => {
 
 // Input validation middleware
 export const validateRegistration = [
-  body("username")
-    .isLength({ min: 3, max: 50 })
-    .withMessage("Username must be between 3 and 50 characters")
-    .matches(/^[a-zA-Z0-9@._-]+$/)
-    .withMessage("Username contains invalid characters")
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format")
     .normalizeEmail()
     .escape(),
   body("password")
@@ -55,9 +55,11 @@ export const validateRegistration = [
 ];
 
 export const validateLogin = [
-  body("username")
+  body("email")
     .notEmpty()
-    .withMessage("Username is required")
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format")
     .normalizeEmail()
     .escape(),
   body("password")
@@ -102,6 +104,7 @@ export const validateFeedback = [
     .isInt({ min: 1, max: 5 })
     .withMessage("Rating must be between 1 and 5"),
   body("messageId")
+    .optional()
     .isInt()
     .withMessage("Invalid message ID"),
 ];

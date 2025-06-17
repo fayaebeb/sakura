@@ -32,7 +32,7 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
 
                     {/* Buttons */}
                     <div className="flex gap-1 ml-3 mb-3">
-                        <Button {...skipProps} variant="outline" className="bg-pink-100 rounded-full text-xs px-3 py-1">
+                        <Button {...closeProps} variant="outline" className="bg-pink-100 rounded-full text-xs px-3 py-1">
                             スキップ
                         </Button>
                         <Button {...backProps} className="bg-pink-300 hover:bg-pink-300 text-pink-800 rounded-full text-xs px-4 py-1">
@@ -43,6 +43,9 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
                         </Button>
                     </div>
                 </div>
+
+                <img className="absolute bottom-0 -right-2 w-20 h-20" src="/images/sakura-thinking.png" alt="" />
+
 
                 {/* Right: Mascot Image */}
                 {/* <div className="relative w-[100px] flex items-end justify-center overflow-visible -mr-2">
@@ -69,7 +72,7 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
 
                     {/* Buttons */}
                     <div className="flex gap-1 ml-4 mb-4 ">
-                        <Button {...skipProps} variant="outline" className="bg-pink-100 rounded-full text-sm">
+                        <Button {...closeProps} variant="outline" className="bg-pink-100 rounded-full text-sm">
                             スキップ
                         </Button>
                         <Button {...backProps} className="bg-pink-300 hover:bg-pink-300 text-pink-800 rounded-full px-6">
@@ -84,7 +87,7 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
                 {/* Right: Mascot Image */}
                 <div className="relative w-[200px] flex items-end justify-center overflow-visible -mr-3">
                     <img
-                        src="/images/sakura-explain-3.png"
+                        src="/images/sakura-thinking.png"
                         alt="Sakura-chan"
                         className="absolute bottom-0 pointer-events-none h-[250px] w-[250px] select-none"
                         style={{ zIndex: 1 }}

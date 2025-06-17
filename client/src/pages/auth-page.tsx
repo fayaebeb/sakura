@@ -44,7 +44,7 @@ export default function AuthPage() {
   const form = useForm({
     resolver: zodResolver(isLogin ? loginUserSchema : insertUserSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
       confirmPassword: "",
       inviteToken: "",
@@ -80,8 +80,8 @@ export default function AuthPage() {
   if (!user) {
   const onSubmit = form.handleSubmit((data) => {
     if (isLogin) {
-      const { username, password } = data;
-      loginMutation.mutate({ username, password });
+      const { email, password } = data;
+      loginMutation.mutate({ email, password });
     } else {
       registerMutation.mutate(data);
     }
@@ -193,7 +193,7 @@ export default function AuthPage() {
                   >
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-pink-700 flex items-center gap-1">

@@ -13,10 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Sparkle } from "lucide-react";
 
 
-const TooltipWelcome: React.FC<TooltipRenderProps> = ({
+const TooltipEnd: React.FC<TooltipRenderProps> = ({
     primaryProps,
-    skipProps,
-    closeProps
+    closeProps,
+    backProps
 
 }) => {
     return (
@@ -52,25 +52,26 @@ const TooltipWelcome: React.FC<TooltipRenderProps> = ({
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <Sparkle className="w-5 h-5 text-pink-500 animate-bounce " />
-                        <h1 className="text-xl font-bold text-sakura-600">ようこそ！</h1>
+                        <h1 className="text-xl font-bold text-sakura-600">ありがとう！</h1>
                     </div>
 
                     {/* 💬 Speech Bubble */}
                     <div className="relative bg-white p-4 rounded-2xl border border-pink-300 shadow-md before:content-[''] before:absolute before:-bottom-3 md:before:bottom-10 md:before:-right-10 before:left-5  before:border-t-white before:border-x-transparent before:border-b-0 before:border-solid  z-10">
                         <p className="text-sm md:text-base text-gray-700 leading-relaxed space-y-2 font-[Noto Sans JP]">
-                            <span className="block">こんにちは、はじめまして〜🌸</span>
+                            <span className="block">ありがとうございますっ🌸</span>
                             <span className="block">
-                                私はこのサイトの案内役、<span className="font-semibold text-pink-600">サクラちゃん</span> ですっ！(๑˃̵ᴗ˂̵)و✨
+                                チャットボットでサクラちゃん待機中<span className="font-semibold text-pink-600">(๑˃̵ᴗ˂̵)</span> و✨
                             </span>
-                            <span className="block">やさしくご案内しますので、ご安心くださいね📖</span>
+                            <span className="block">💬 「チャットをはじめる！」ボタンをポチッ！</span>
                             <span className="block">
-                                準備ができたら <strong className="text-rose-500">「はじめる！」</strong> を押してね💞
+                                <strong className="text-rose-500">一緒に楽しくおしゃべりしようね💞</strong>
                             </span>
                         </p>
                         {/* 🔘 Buttons */}
                         <div className="flex justify-center md:justify-start  gap-3 mt-4">
-                            <Button {...closeProps} className="bg-pink-200 hover:bg-pink-300 text-pink-800 rounded-full px-6">スキップする</Button>
-                            <Button {...primaryProps} className="bg-rose-400 hover:bg-rose-500 text-white rounded-full px-6">はじめる！✨</Button>
+                            <Button {...backProps} className="bg-pink-200 hover:bg-pink-300 text-pink-800 rounded-full px-6">戻る</Button>
+
+                            <Button {...primaryProps} className="bg-rose-400 hover:bg-rose-500 text-white rounded-full px-6 ">完了！✨</Button>
                         </div>
                     </div>
                 </div>
@@ -82,7 +83,7 @@ const TooltipWelcome: React.FC<TooltipRenderProps> = ({
                 <div className=' -top-10  z-0 md:block absolute md:top-10 md:-left-4 rounded-full border w-8 h-8 bg-white border-pink-300 shadow-md' />
                 <div className='-top-1 md:block absolute md:top-[4.1rem] md:left-3 rounded-full border w-4 h-4 bg-white border-pink-300 shadow-md' />
                 <img
-                    src="/images/sakura_welcome_transparent.png"
+                    src="/images/sakura-end.png"
                     alt="Sakura AI"
                     className="w-3/4 md:w-full object-contain"
                 />
@@ -107,4 +108,4 @@ const TooltipWelcome: React.FC<TooltipRenderProps> = ({
     );
 };
 
-export default TooltipWelcome;
+export default TooltipEnd;

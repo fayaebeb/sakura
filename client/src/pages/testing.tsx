@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay"
 
 import React, { useEffect, useRef, useState } from "react";
-import { Book, FileText, Mic } from "lucide-react";
+import { Book, FileText, Mic, Sparkle } from "lucide-react";
 
 interface Slide {
     id: number;
@@ -39,82 +39,102 @@ const databases = [
 
 const MotionCard = motion(Card);
 const Testing = () => {
+    //  const setLocalInput = useSetRecoilState(chatInputState);
+    //     const setPromptInChatInput = (prompt: string) => {
 
+    //         setLocalInput(prompt);
+    //     }
 
     return (
 
 
         <div className="bg-black/10 h-screen w-full flex  items-center justify-center">
 
-            <Card
-                className="relative mx-auto flex w-[90%] max-w-lg overflow-visible rounded-2xl border-0 border-b-4 border-rose-600 bg-gradient-to-br from-pink-200 via-white to-pink-200 bg-white/90 p-4 md:p-6 shadow-xl"
-            >
+            <Card className="relative overflow-hidden px-5 pb-2 pt-10 md:px-10 md:pt-10 md:pb-8 w-[350px] flex flex-col md:flex-row md:w-[700px] gap-6 rounded-2xl bg-gradient-to-b from-pink-200 via-pink-100 to-white border-0 border-b-4 border-rose-600 shadow-2xl">
 
-
-                {/* Layout wrapper */}
-                <div className=" flex w-full flex-col gap-6 md:flex-row md:items-start">
-                    {/* Mascot */}
-                    {/* <motion.img
-                        src="/images/sakura-flower.png"
-                        alt="Sakura mascot waving"
-                        initial={{ rotate: -5, scale: 0.9, opacity: 0 }}
-                        animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.15, type: "spring", stiffness: 200 }}
-                        className="pointer-events-none mx-auto w-24 select-none md:mx-0 md:w-32"
-                    /> */}
-                        <img className="hidden md:absolute md:block bottom-0 h-[20rem] w-[15rem] -left-4" src="/images/sakura-flower.png" alt="sakura-flower" />
-                        <img className="md:hidden absolute bottom-0 h-[5rem] w-[5rem] -left-1" src="/images/sakura-explain-5.png" alt="sakura-flower" />
-                    <div className="w-40 relative h-full">
-                    </div>
-                    {/* Content area */}
-                    <div className="flex flex-1 flex-col space-y-4">
-                        <h2 className="text-base text-center md:text-left font-bold text-rose-600">データベースのご紹介！✨</h2>
-
-                        {/* Database cards in a grid */}
-                        <div className="grid grid-cols-1 gap-3">
-                            {databases.map(({ Icon, title, description }) => (
-                                <div
-                                    key={title}
-                                    className="group flex items-start gap-3 rounded-lg bg-white/80 p-3 shadow-lg transition hover:bg-pink-100/70"
-                                >
-                                    <div className="mt-1 shrink-0 rounded-full bg-pink-200/70 p-2 shadow">
-                                        <Icon className="h-5 w-5 text-pink-700" />
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-semibold text-pink-900">{title}</p>
-                                        <p className="text-xs leading-snug text-pink-800/90">
-                                            {description}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
+                {/* 🌸 Sakura Petals */}
+                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+                    {[
+                        { left: "10%", size: "text-xl", delay: "0s", duration: "12s" },
+                        { left: "30%", size: "text-2xl", delay: "1s", duration: "10s" },
+                        { left: "50%", size: "text-3xl", delay: "2s", duration: "14s" },
+                        { left: "70%", size: "text-xl", delay: "0.5s", duration: "13s" },
+                        { left: "85%", size: "text-2xl", delay: "1.5s", duration: "11s" },
+                        { left: "25%", size: "text-xl", delay: "3s", duration: "15s" },
+                        { left: "60%", size: "text-2xl", delay: "2.5s", duration: "9s" },
+                    ].map((petal, idx) => (
+                        <div
+                            key={idx}
+                            className={`absolute top-[-10%] ${petal.size}`}
+                            style={{
+                                left: petal.left,
+                                animation: `fall ${petal.duration} linear infinite`,
+                                animationDelay: petal.delay,
+                            }}
+                        >
+                            🌸
                         </div>
-
-                        {/* Buttons */}
-                        <div className="flex gap-2 self-end">
-                            <Button
-
-                                variant="outline"
-                                className="rounded-full bg-pink-50 px-3 py-1 text-xs"
-                            >
-                                スキップ
-                            </Button>
-                            <Button
-
-                                className="rounded-full bg-pink-300 px-4 py-1 text-xs text-pink-800 hover:bg-pink-300"
-                            >
-                                戻る
-                            </Button>
-                            <Button
-
-                                className="rounded-full bg-pink-500 px-4 py-1 text-xs text-white hover:bg-pink-600"
-                            >
-                                次へ
-                            </Button>
-                        </div>
-                    </div>
+                    ))}
                 </div>
+
+                {/* 💬 Left: Dialog */}
+                <div className="flex flex-col justify-between gap-2 md:gap-4 w-full z-10">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Sparkle className="w-5 h-5 text-pink-500 animate-bounce " />
+                            <h1 className="text-xl font-bold text-sakura-600">ありがとう！</h1>
+                        </div>
+
+                        {/* 💬 Speech Bubble */}
+                        <div className="relative bg-white p-4 rounded-2xl border border-pink-300 shadow-md before:content-[''] before:absolute before:-bottom-3 md:before:bottom-10 md:before:-right-10 before:left-5  before:border-t-white before:border-x-transparent before:border-b-0 before:border-solid  z-10">
+                            <p className="text-sm md:text-base text-gray-700 leading-relaxed space-y-2 font-[Noto Sans JP]">
+                                <span className="block">ありがとうございますっ🌸</span>
+                                <span className="block">
+                                    チャットボットでサクラちゃん待機中<span className="font-semibold text-pink-600">(๑˃̵ᴗ˂̵)</span> و✨
+                                </span>
+                                <span className="block">💬 「チャットをはじめる！」ボタンをポチッ！</span>
+                                <span className="block">
+                                     <strong className="text-rose-500">一緒に楽しくおしゃべりしようね💞</strong> 
+                                </span>
+                            </p>
+                            {/* 🔘 Buttons */}
+                            <div className="flex justify-center md:justify-start  gap-3 mt-4">
+                                
+                                <Button  className="bg-rose-400 hover:bg-rose-500 text-white rounded-full px-6 w-full">完了！✨</Button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* 🧸 Right: Mascot */}
+                <div className="relative z-0 w-full md:w-[300px] flex items-end justify-center ">
+                    <div className=' -top-10  z-0 md:block absolute md:top-10 md:-left-4 rounded-full border w-8 h-8 bg-white border-pink-300 shadow-md' />
+                    <div className='-top-1 md:block absolute md:top-[4.1rem] md:left-3 rounded-full border w-4 h-4 bg-white border-pink-300 shadow-md' />
+                    <img
+                        src="/images/sakura-end.png"
+                        alt="Sakura AI"
+                        className="w-3/4 md:w-full object-contain"
+                    />
+                </div>
+
+                {/* ✨ Embedded Sakura Falling Animation */}
+                <style>{`
+            @keyframes fall {
+                0% {
+                    transform: translateY(-10%) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(120%) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `}</style>
+
+
             </Card>
+
         </div>
 
     );

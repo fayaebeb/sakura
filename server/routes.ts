@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: Request, res: Response) => {
       if (!req.isAuthenticated()) return res.sendStatus(401);
 
-      const persistentSessionId = req.user!.username.split("@")[0];
+      const persistentSessionId = req.user!.email.split("@")[0];
 
       const result = chatRequestSchema.safeParse(req.body);
       if (!result.success) {
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.file) return res.status(400).json({ error: "No audio file uploaded" });
 
       try {
-        console.log(`Security: Audio file upload from user ${req.user!.username}, size: ${req.file.size} bytes`);
+        console.log(`Security: Audio file upload from user ${req.user!.email}, size: ${req.file.size} bytes`);
         
         // Transcribe audio to text
         const transcribedText = await transcribeAudio(req.file.buffer);
@@ -219,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         // Use the persistent sessionId from user's email
-        const persistentSessionId = req.user!.username.split('@')[0];
+        const persistentSessionId = req.user!.email.split('@')[0];
 
         // Check if the session exists, if not, create it
         const existingSession = await storage.getUserLastSession(req.user!.id);
@@ -251,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         // Use the persistent sessionId from user's email
-        const persistentSessionId = req.user!.username.split('@')[0];
+        const persistentSessionId = req.user!.email.split('@')[0];
 
         await storage.deleteMessagesByUserAndSession(
           req.user!.id,
@@ -286,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         // Get the user's persistent session ID
-        const persistentSessionId = req.user!.username.split('@')[0];
+        const persistentSessionId = req.user!.email.split('@')[0];
 
         // Create feedback entry
         const feedback = await storage.createFeedback(req.user!.id, {
@@ -326,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   interface VoiceModeClient {
     userId: number;
-    username: string;
+    email: string;
     ws: WebSocket;
     sessionId: string;
     lastActivity: number;
@@ -342,7 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     for (let i = voiceModeClients.length - 1; i >= 0; i--) {
       const client = voiceModeClients[i];
       if (now - client.lastActivity > timeout) {
-        console.log(`Removing inactive WebSocket client: ${client.username}`);
+        console.log(`Removing inactive WebSocket client: ${client.email}`);
         client.ws.close();
         voiceModeClients.splice(i, 1);
       }
@@ -366,14 +366,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (data.type === 'auth') {
           // Authenticate user and store connection info
-          if (data.userId && data.username && data.sessionId) {
+          if (data.userId && data.email && data.sessionId) {
             const existingClientIndex = voiceModeClients.findIndex(
               client => client.userId === data.userId
             );
 
             const clientData = {
               userId: data.userId,
-              username: data.username,
+              email: data.email,
               ws,
               sessionId: data.sessionId,
               lastActivity: Date.now()
@@ -382,16 +382,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (existingClientIndex !== -1) {
               // Update existing client
               voiceModeClients[existingClientIndex].ws = ws;
-              console.log(`Updated WebSocket connection for user ${data.username}`);
+              console.log(`Updated WebSocket connection for user ${data.email}`);
             } else {
               // Add new client
               voiceModeClients.push({
                 userId: data.userId,
-                username: data.username,
+                email: data.email,
                 ws,
                 sessionId: data.sessionId
               });
-              console.log(`Registered WebSocket connection for user ${data.username}`);
+              console.log(`Registered WebSocket connection for user ${data.email}`);
             }
 
             // Send confirmation
@@ -431,7 +431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }));
 
               // Process message with langchain
-              const persistentSessionId = client.username.split('@')[0];
+              const persistentSessionId = client.email.split('@')[0];
 
               // Create user message in database and keep a reference
               const userMessage = await storage.createMessage(client.userId, {
@@ -529,7 +529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const clientIndex = voiceModeClients.findIndex(client => client.ws === ws);
       if (clientIndex !== -1) {
         const client = voiceModeClients[clientIndex];
-        console.log(`User ${client.username} disconnected from voice mode`);
+        console.log(`User ${client.email} disconnected from voice mode`);
         voiceModeClients.splice(clientIndex, 1);
       }
     });
