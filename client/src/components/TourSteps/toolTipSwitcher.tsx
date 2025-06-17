@@ -8,6 +8,8 @@ import ChatInterfaceDialog from "./ChatInterfaceDialog";
 import { User } from "lucide-react";
 import UserTypeSelectDialog from "./UserTypeSelectDialog";
 import ChatInputStepContent from "./chatInputStepContent";
+import SearchInternetButtonDialog from "./SearchInternetButtonDialog";
+import SelectDatabaseDialog from "./SelectDatabaseDialog";
 
 
 const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
@@ -20,11 +22,11 @@ const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
         case "chat-interface":
             return <ChatInterfaceDialog {...props} />;
         case "user-type-select":
-            return <ChatInterfaceDialog {...props} />;
+            return <UserTypeSelectDialog {...props} />;
         case "search-internet-button":
-            return <ChatInterfaceDialog {...props} />;
+            return <SearchInternetButtonDialog {...props} />;
         case "select-database-button":
-            return <ChatInterfaceDialog {...props} />;
+            return <SelectDatabaseDialog {...props} />;
         case "suggestions-button":
             return <ChatInterfaceDialog {...props} />;
         case "user-type-select":

@@ -63,7 +63,7 @@ const Tour = () => {
     <Joyride
       {...state}
       callback={callback}
-      scrollToFirstStep
+      scrollToFirstStep={false}
       disableScrolling
       continuous
       showSkipButton

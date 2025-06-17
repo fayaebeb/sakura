@@ -34,7 +34,7 @@ export const tourSteps: CustomJoyrideStep[] = [
         content: "Choose your user type here.",
         placement: "bottom",
         spotlightPadding: 0,
-        customRadius: "calc(var(--radius) - 2px)"
+        customRadius: "9999px"
     },
     {
         id: "search-internet-button",
