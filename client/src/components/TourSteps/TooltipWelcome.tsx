@@ -84,7 +84,7 @@ const TooltipWelcome: React.FC<TooltipRenderProps> = ({
                 <img
                     src="/images/sakura_welcome_transparent.png"
                     alt="Sakura AI"
-                    className="w-3/4 md:w-full object-contain"
+                    className="w-1/2 md:w-full object-contain"
                 />
             </div>
 
