@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import ChatInterface from "@/components/chat-interface";
 import { motion } from "framer-motion";
-import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu, MessageSquare } from "lucide-react";
+import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu, MessageSquare, BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -127,6 +127,19 @@ export default function HomePage() {
 
     setCurrentGreeting(greeting);
   }, []);
+
+  useEffect(() => {
+    if (user === null) {
+      // User is not logged in or still loading
+      return;
+    }
+    if (user.onboardingCompletedAt === null) {
+      startTour();
+    }
+  }, [user]);
+
+
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#ffefd5] to-[#fff0f5] relative">
@@ -263,8 +276,8 @@ export default function HomePage() {
                   onClick={startTour}
                   className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
                 >
-                  <MessageSquare className="h-4 w-4 text-pink-500" />
-                  Onboarding 2
+                  <BookOpen className="h-4 w-4 text-pink-500" />
+                  チュートリアル
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator className="bg-pink-100/70" />

@@ -8,13 +8,19 @@ import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+export type AuthUser = SelectUser & {
+  initialLoginAt: string | null;
+  onboardingCompletedAt: string | null;
+  needsOnboarding: boolean;
+};
+
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
+  loginMutation: UseMutationResult<AuthUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  registerMutation: UseMutationResult<AuthUser, Error, InsertUser>;
 };
 
 type LoginData = Pick<InsertUser, "email" | "password">;
@@ -27,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isLoading,
     refetch
-  } = useQuery<SelectUser | null, Error>({
+  } = useQuery<AuthUser | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -50,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [refetch]);
 
-  const loginMutation = useMutation({
+  const loginMutation = useMutation<AuthUser, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
       console.log("Auth - Login attempt", { email: credentials.email });
       const res = await apiRequest("POST", "/api/login", credentials);
@@ -78,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const registerMutation = useMutation({
+  const registerMutation = useMutation<AuthUser, Error, InsertUser>({
     mutationFn: async (credentials: InsertUser) => {
       console.log("Auth - Register attempt", { email: credentials.email });
       const res = await apiRequest("POST", "/api/register", credentials);

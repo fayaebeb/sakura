@@ -30,14 +30,14 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
       description: "ここで桜ちゃんと自由におしゃべりできるよ〜💬以前の会話も一覧で見れるんだ！便利でしょ？",
       icon: <User className="w-full h-full text-pink-600 bg-pink-200 rounded-xl p-2 shadow-2xl" />,
 
-      style: "bg-pink-100 border border-pink-500 text-pink-800"
+      style: "bg-pink-100 border border-pink-300 text-pink-800"
 
     },
     {
       id: 1,
       title: "履歴をさっと確認👀",
       description: "過去のメッセージをタイムライン形式で確認！キーワード検索ですぐに探せるよ。",
-      style: "bg-green-100 border border-green-500  text-green-800",
+      style: "bg-green-100 border border-green-300  text-green-800",
       icon: <Building className="w-full h-full text-green-600 bg-green-200 rounded-xl p-2 shadow-2xl " />,
 
     },
@@ -46,7 +46,7 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
       title: "設定をカスタマイズ⚙️",
       icon: <Landmark className="w-full h-full text-blue-600 bg-blue-200 rounded-xl p-2 shadow-2xl" />,
       description: "テーマカラーや通知設定を自由に変更！自分好みの環境に仕上げよう。",
-      style: "bg-blue-100 border border-blue-500  text-blue-800"
+      style: "bg-blue-100 border border-blue-300  text-blue-800"
 
 
     },

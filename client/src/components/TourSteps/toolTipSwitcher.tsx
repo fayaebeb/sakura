@@ -4,7 +4,6 @@ import { TooltipRenderProps } from "react-joyride";
 
 import { CustomJoyrideStep } from "@/lib/tourSteps";
 import WelcomeDialog from "./TooltipWelcome";
-import EndDialog from "./TooltipEnd";
 import ChatInterfaceDialog from "./ChatInterfaceDialog";
 import { User } from "lucide-react";
 import UserTypeSelectDialog from "./UserTypeSelectDialog";
@@ -15,6 +14,7 @@ import SuggestionsDialog from "./SuggestionsDialog";
 import VoiceModeDialog from "./VoiceModeDialog";
 import ChatInputDialog from "./ChatInputDialog";
 import SendButtonDialog from "./SendButtonDialog";
+import TooltipEnd from "./TooltipEnd";
 
 
 const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
@@ -34,12 +34,10 @@ const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
             return <SelectDatabaseDialog {...props} />;
         case "suggestions-button":
             return <SuggestionsDialog {...props} />;
-        case "user-type-select":
-            return <ChatInterfaceDialog {...props} />;
         case "voice-mode-button":
             return <VoiceModeDialog {...props} />;
-            case "chat-input":
-                return <ChatInputDialog {...props} />;
+        case "chat-input":
+            return <ChatInputDialog {...props} />;
         case "send-button":
             return <SendButtonDialog {...props} />;
         case "main-message-text":
@@ -51,7 +49,7 @@ const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
         case "settings-dropdown":
             return <ChatInterfaceDialog {...props} />;
         case "end-tour":
-            return <EndDialog {...props} />;
+            return <TooltipEnd {...props} />;
 
         default: return (
             <div className="p-4 bg-red-100 text-red-800 rounded">
