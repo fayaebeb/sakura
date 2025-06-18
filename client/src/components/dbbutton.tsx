@@ -1,14 +1,14 @@
 import { useRef, useState, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ChevronDown, Check, Database } from "lucide-react";
+import { ChevronDown, Check, Database, DatabaseIcon, ArrowLeftRight, DatabaseZap } from "lucide-react";
 import { useRecoilState } from "recoil";
 import { dropdownOpenState } from "@/state/databaseDropdownState";
 
 const searchModes = [
-  { value: "files", label: "うごき統計" },
-  { value: "ktdb", label: "来た来ぬ" },
-  { value: "ibt", label: "インバウンド" },
+  { value: "files", label: "うごき統計", icon: <DatabaseIcon className="w-4 h-4" /> },
+  { value: "ktdb", label: "来た来ぬ", icon: <ArrowLeftRight className="w-4 h-4" /> },
+  { value: "ibt", label: "インバウンド", icon: <DatabaseZap className="w-4 h-4" /> },
 ];
 
 export default function DbButton({
@@ -61,7 +61,9 @@ export default function DbButton({
             }
             hover:border-pink-400 focus:outline-none`}
         >
-          <Database className="h-4 w-4" />
+          {selectedDb === "files" && searchModes[0].icon}
+          {selectedDb === "ktdb" && searchModes[1].icon}
+          {selectedDb === "ibt" && searchModes[2].icon}
           <span className="hidden text-xs sm:text-sm md:flex items-center gap-1">
             {useDb && selectedDb && (
               <span className="text-white/80 sm:ml-1">
@@ -75,8 +77,8 @@ export default function DbButton({
         <button
           onClick={handleChevronClick}
           className={`h-[40px] px-2 py-2 rounded-r-full shadow-md border-l-0 transition-all border ${useDb
-              ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border-pink-500"
-              : "bg-muted text-muted-foreground border-gray-300"
+            ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border-pink-500"
+            : "bg-muted text-muted-foreground border-gray-300"
             } hover:border-pink-400 focus:outline-none`}
         >
           <ChevronDown
@@ -86,44 +88,46 @@ export default function DbButton({
         </button>
       </div>
 
-        {isDropdownOpen &&
-          createPortal(
-            <motion.div
-              id="select-database-options"
-              ref={dropdownRef}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.2 }}
-              className="fixed z-[100] w-auto min-w-[8rem] sm:w-40
+      {isDropdownOpen &&
+        createPortal(
+          <motion.div
+            id="select-database-options"
+            ref={dropdownRef}
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
+            className="fixed z-[100] w-auto min-w-[8rem] sm:w-40
   bg-white border border-gray-200 rounded-xl shadow-lg p-1 max-h-[40vh] overflow-y-auto overscroll-contain"
-              style={{
-                top: coords.top,
-                left: coords.left,
-              }}
-            >
-              {searchModes.map((item) => (
-                <button
-                  key={item.value}
-                  onClick={() => {
-                    setSelectedDb(item.value);
-                    setUseDb(true);
-                    setIsDropdownOpen(false);
-                  }}
-                  className={`flex flex-col items-start w-full px-3 py-2 text-sm rounded-md transition text-left ${selectedDb === item.value
-                      ? "bg-pink-200 text-pink-800"
-                      : "hover:bg-pink-100"
-                    }`}
-                >
-                  <div className="flex w-full justify-between items-center">
+            style={{
+              top: coords.top,
+              left: coords.left,
+            }}
+          >
+            {searchModes.map((item) => (
+              <button
+                key={item.value}
+                onClick={() => {
+                  setSelectedDb(item.value);
+                  setUseDb(true);
+                  setIsDropdownOpen(false);
+                }}
+                className={`flex flex-col items-start w-full px-3 py-2 text-sm rounded-md transition text-left ${selectedDb === item.value
+                  ? "bg-pink-200 text-pink-800"
+                  : "hover:bg-pink-100"
+                  }`}
+              >
+                <div className="flex w-full justify-between items-center">
+                  <div className="flex space-x-2 justify-between items-center">
+                    {item.icon}
                     <span className="font-medium">{item.label}</span>
-                    {selectedDb === item.value && <Check className="w-4 h-4" />}
                   </div>
-                </button>
-              ))}
-            </motion.div>,
-            document.body
-          )}
+                </div>
+              </button>
+            ))}
+          </motion.div>,
+          document.body
+        )}
     </div>
   );
 }
