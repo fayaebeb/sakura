@@ -8,19 +8,50 @@ import { textToSpeechStream } from "./apis/openaitts";
 import multer from "multer";
 import { WebSocketServer, WebSocket } from "ws";
 import { suggestHandler } from "./apis/suggest";
-import { 
-  apiRateLimit, 
-  chatRateLimit, 
-  uploadRateLimit,
+import {
+  apiRateLimit,
   validateMessage,
   validateFeedback,
   handleValidationErrors
 } from "./security";
+import rateLimit from 'express-rate-limit';
+import { sendError, getPersistentSessionId } from "./utils/errorResponse";
+import dotenv from "dotenv";
+dotenv.config();
+
+const createUserAwareRateLimiter = (options: { windowMs: number; max: number; message?: string }) =>
+  rateLimit({
+    windowMs: options.windowMs,
+    max: options.max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: options.message || 'Too many requests' },
+    keyGenerator: (req: Request) => {
+      const userId = req.user?.id ?? 'anonymous';
+      const ip = req.ip;
+      return `${userId}-${ip}`;
+    },
+  });
+
+// Chat: 10 messages per minute per user
+const granularChatLimiter = createUserAwareRateLimiter({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: "Too many chat requests. Please wait a moment.",
+});
+
+// Transcribe: 5 uploads per 5 minutes per user
+const granularTranscribeLimiter = createUserAwareRateLimiter({
+  windowMs: 5 * 60 * 1000,
+  max: 5,
+  message: "Too many transcription requests. Please wait and try again.",
+});
+
 
 // Setup multer for handling file uploads (in-memory storage) with enhanced security
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { 
+  limits: {
     fileSize: 25 * 1024 * 1024, // 25MB limit (OpenAI requirement)
     files: 1 // Only allow one file
   },
@@ -28,9 +59,9 @@ const upload = multer({
     // Only allow audio files for voice transcription
     const allowedMimeTypes = [
       'audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm',
-      'audio/m4a', 'audio/mpga', 'audio/mp3'
+      'audio/m4a', 'audio/mpga', 'audio/mp3', 'audio/webm;codecs=opus'
     ];
-    
+
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
@@ -40,17 +71,18 @@ const upload = multer({
   }
 });
 
-// Helper function to send message to Langchain API
+const SKAPI = process.env.SKAPI!;
+
+// send message to SKAPI
 async function sendMessageToLangchain(
   message: string,
   useWeb: boolean,
   useDb: boolean,
-  selectedDb: string 
+  selectedDb: string
 ): Promise<string> {
+  // console.log(`Sending request to LangChain FastAPI: ${message}`);
 
-  console.log(`Sending request to LangChain FastAPI: ${message}`);
-
-  const response = await fetch("https://skapi-qkrap.ondigitalocean.app/chat", {
+  const response = await fetch(SKAPI, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -87,19 +119,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", apiRateLimit);
 
   // Text-based chat endpoint with security measures
-  app.post("/api/chat", 
-    chatRateLimit,
+  app.post("/api/chat",
+    granularChatLimiter,
     validateMessage,
     handleValidationErrors,
     async (req: Request, res: Response) => {
-      if (!req.isAuthenticated()) return res.sendStatus(401);
+      if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
 
-      const persistentSessionId = req.user!.email.split("@")[0];
+      const persistentSessionId = getPersistentSessionId(req.user!.email);
 
       const result = chatRequestSchema.safeParse(req.body);
       if (!result.success) {
         console.error("Invalid request body:", result.error);
-        return res.status(400).json({ error: "Invalid request data" });
+        return sendError(res, 400, "Invalid request data", result.error);
       }
 
       const body = result.data;
@@ -123,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           body.content,
           body.useWeb ?? false,
           body.useDb ?? false,
-          body.db ?? "files" 
+          body.db ?? "files"
         );
 
         // Bot message should inherit the same category as the user message
@@ -137,10 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(botMessage);
       } catch (error) {
         console.error("Error in chat processing:", error);
-        res.status(500).json({
-          message: "Failed to process message",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+        return sendError(res, 500, "Failed to process message", error instanceof Error ? error.message : "Unknown error");
       }
     }
   );
@@ -150,15 +179,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Voice input endpoint - transcribes audio only with enhanced security
   app.post(
     "/api/voice/transcribe",
-    uploadRateLimit,
+    granularTranscribeLimiter,
     upload.single("audio"),
     async (req: Request, res: Response) => {
-      if (!req.isAuthenticated()) return res.sendStatus(401);
-      if (!req.file) return res.status(400).json({ error: "No audio file uploaded" });
+      if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
+      if (!req.file) return sendError(res, 400, "No audio file uploaded");
 
       try {
         console.log(`Security: Audio file upload from user ${req.user!.email}, size: ${req.file.size} bytes`);
-        
+
         // Transcribe audio to text
         const transcribedText = await transcribeAudio(req.file.buffer);
         console.log("Transcribed text:", transcribedText);
@@ -167,29 +196,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).json({ transcribedText });
       } catch (error) {
         console.error("Error processing voice input:", error);
-        return res.status(500).json({
-          message: "Failed to process voice input",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+        return sendError(
+          res,
+          500,
+          "Failed to process voice input",
+          error instanceof Error ? error.message : "Unknown error"
+        );
+
       }
     }
   );
 
   // Text-to-speech endpoint with validation
-  app.post("/api/voice/speech", 
+  app.post("/api/voice/speech",
     apiRateLimit,
     async (req: Request, res: Response) => {
-      if (!req.isAuthenticated()) return res.sendStatus(401);
+      if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
 
       try {
         const { text, voiceId } = req.body;
 
         if (!text || typeof text !== 'string') {
-          return res.status(400).json({ error: "Valid text is required" });
+          return sendError(res, 400, "Valid text is required");
         }
 
         if (text.length > 10000) {
-          return res.status(400).json({ error: "Text too long (max 10,000 characters)" });
+          return sendError(res, 400, "Text too long (max 10,000 characters)");
         }
 
         console.log("Streaming TTS audio...");
@@ -204,22 +236,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         openaiResponse.data.pipe(res);
       } catch (error) {
         console.error("Streaming error:", error);
-        res.status(500).json({
-          message: "Failed to stream speech",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+        return sendError(
+          res,
+          500,
+          "Failed to stream speech",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     }
   );
 
-  app.get("/api/messages/:sessionId", 
+
+  app.get("/api/messages/:sessionId",
     apiRateLimit,
     async (req: Request, res: Response) => {
-      if (!req.isAuthenticated()) return res.sendStatus(401);
+      if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
 
       try {
         // Use the persistent sessionId from user's email
-        const persistentSessionId = req.user!.email.split('@')[0];
+        const persistentSessionId = getPersistentSessionId(req.user!.email);
 
         // Check if the session exists, if not, create it
         const existingSession = await storage.getUserLastSession(req.user!.id);
@@ -235,23 +270,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(messages);
       } catch (error) {
         console.error("Error retrieving messages:", error);
-        res.status(500).json({
-          message: "Failed to retrieve messages",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+        return sendError(
+          res,
+          500,
+          "Failed to retrieve messages",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     }
   );
 
   // Delete all messages for a user's session
-  app.delete("/api/messages/:sessionId", 
+  app.delete("/api/messages/:sessionId",
     apiRateLimit,
     async (req: Request, res: Response) => {
-      if (!req.isAuthenticated()) return res.sendStatus(401);
+      if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
 
       try {
         // Use the persistent sessionId from user's email
-        const persistentSessionId = req.user!.email.split('@')[0];
+        const persistentSessionId = getPersistentSessionId(req.user!.email);
 
         await storage.deleteMessagesByUserAndSession(
           req.user!.id,
@@ -262,31 +299,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(200).json({ message: "Chat history deleted successfully" });
       } catch (error) {
         console.error("Error deleting messages:", error);
-        res.status(500).json({
-          message: "Failed to delete messages",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+        return sendError(
+          res,
+          500,
+          "Failed to delete messages",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     }
   );
 
   // Submit feedback with validation
-  app.post("/api/feedback", 
+  app.post("/api/feedback",
     apiRateLimit,
     validateFeedback,
     handleValidationErrors,
     async (req: Request, res: Response) => {
-      if (!req.isAuthenticated()) return res.sendStatus(401);
+      if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
 
       const result = insertFeedbackSchema.safeParse(req.body);
       if (!result.success) {
         console.error("Invalid feedback data:", result.error);
-        return res.status(400).json({ error: "Invalid feedback data" });
+        return sendError(res, 400, "Invalid feedback data", result.error);
       }
 
       try {
         // Get the user's persistent session ID
-        const persistentSessionId = req.user!.email.split('@')[0];
+        const persistentSessionId = getPersistentSessionId(req.user!.email);
 
         // Create feedback entry
         const feedback = await storage.createFeedback(req.user!.id, {
@@ -298,10 +337,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(201).json(feedback);
       } catch (error) {
         console.error("Error saving feedback:", error);
-        res.status(500).json({
-          message: "Failed to save feedback",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+        return sendError(
+          res,
+          500,
+          "Failed to save feedback",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     }
   );
@@ -309,16 +350,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // Set up WebSocket server with basic security
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
+  const wss = new WebSocketServer({
+    server: httpServer,
     path: '/ws',
     verifyClient: (info: any) => {
       // Basic rate limiting for WebSocket connections
       const origin = info.origin;
       const userAgent = info.req.headers['user-agent'];
-      
+
       console.log(`WebSocket connection attempt from origin: ${origin}, user-agent: ${userAgent}`);
-      
+
       // Allow all connections in development, add origin checking in production
       return true;
     }
@@ -338,7 +379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setInterval(() => {
     const now = Date.now();
     const timeout = 30 * 60 * 1000; // 30 minutes
-    
+
     for (let i = voiceModeClients.length - 1; i >= 0; i--) {
       const client = voiceModeClients[i];
       if (now - client.lastActivity > timeout) {
@@ -389,7 +430,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 userId: data.userId,
                 email: data.email,
                 ws,
-                sessionId: data.sessionId
+                sessionId: data.sessionId,
+                lastActivity: Date.now()
               });
               console.log(`Registered WebSocket connection for user ${data.email}`);
             }
@@ -397,135 +439,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Send confirmation
             ws.send(JSON.stringify({ type: 'auth_success' }));
           }
-        } else if (data.type === 'speech') {
-          // Verify client is authenticated
-          const clientIndex = voiceModeClients.findIndex(
-            client => client.ws === ws
-          );
+          return;
+        }
 
-          if (clientIndex === -1) {
-            ws.send(JSON.stringify({
-              type: 'error', 
-              message: 'Not authenticated' 
-            }));
+        // Require authentication for all other message types
+        const client = voiceModeClients.find(c => c.ws === ws);
+        if (!client) {
+          console.warn("Unauthenticated WebSocket message blocked:", data.type);
+          ws.send(JSON.stringify({ type: 'error', message: 'Authenticate first' }));
+          ws.close();
+          return;
+        }
+
+        client.lastActivity = Date.now();
+
+        if (data.type === 'speech') {
+          if (!data.audioData) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Missing audio data' }));
             return;
           }
 
-          const client = voiceModeClients[clientIndex];
+          try {
+            const buffer = Buffer.from(data.audioData, 'base64');
+            console.log("Transcribing voice mode audio...");
+            const transcribedText = await transcribeAudio(buffer);
+            console.log("Voice mode transcribed text:", transcribedText);
 
-          // Handle transcription
-          if (data.audioData) {
-            try {
-              // Decode base64 audio data
-              const buffer = Buffer.from(data.audioData, 'base64');
-
-              // Transcribe audio
-              console.log("Transcribing voice mode audio...");
-              const transcribedText = await transcribeAudio(buffer);
-              console.log("Voice mode transcribed text:", transcribedText);
-
-              // Send transcription back to client
             ws.send(JSON.stringify({
-                type: 'transcription', 
-                text: transcribedText 
-              }));
+              type: 'transcription',
+              text: transcribedText
+            }));
 
-              // Process message with langchain
-              const persistentSessionId = client.email.split('@')[0];
+            const persistentSessionId = getPersistentSessionId(client.email);
 
-              // Create user message in database and keep a reference
-              const userMessage = await storage.createMessage(client.userId, {
-                content: transcribedText,
-                isBot: false,
-                sessionId: persistentSessionId,
-                category: "SELF", // Default to SELF for voice messages
+            const userMessage = await storage.createMessage(client.userId, {
+              content: transcribedText,
+              isBot: false,
+              sessionId: persistentSessionId,
+              category: "SELF",
+            });
+
+            console.log("Processing voice mode message with AI...");
+            const formattedResponse = await sendMessageToLangchain(
+              transcribedText,
+              data.useweb ?? false,
+              data.usedb ?? false,
+              data.db ?? "files"
+            );
+
+            const botMessage = await storage.createMessage(client.userId, {
+              content: formattedResponse,
+              isBot: true,
+              sessionId: persistentSessionId,
+              category: userMessage.category,
+            });
+
+            ws.send(JSON.stringify({
+              type: 'ai_response',
+              userMessage,
+              message: botMessage
+            }));
+
+            console.log("Generating speech for voice mode response...");
+            try {
+              const openaiResponse = await textToSpeechStream(formattedResponse);
+
+              const chunks: Buffer[] = [];
+              let totalSize = 0;
+              let streamAborted = false;
+              const MAX_AUDIO_SIZE = 5 * 1024 * 1024;
+
+              openaiResponse.data.on('data', (chunk: Buffer) => {
+                if (streamAborted) return;
+
+                totalSize += chunk.length;
+                if (totalSize > MAX_AUDIO_SIZE) {
+                  streamAborted = true;
+                  console.error(`TTS stream exceeded limit: ${totalSize} bytes`);
+                  openaiResponse.data.destroy();
+
+                  ws.send(JSON.stringify({
+                    type: 'error',
+                    message: 'Audio response too large to handle safely.'
+                  }));
+                  return;
+                }
+
+                chunks.push(chunk);
               });
 
+              openaiResponse.data.on('end', () => {
+                if (streamAborted) return;
 
-              // Send to AI and get response
-              console.log("Processing voice mode message with AI...");
-              const formattedResponse = await sendMessageToLangchain(
-                transcribedText,
-                data.useweb ?? false,
-                data.usedb ?? false,
-                data.db ?? "files" 
-              );
+                const audioBuffer = Buffer.concat(chunks);
+                const base64Audio = audioBuffer.toString('base64');
 
-              // Create bot message in database - inherit category from user message
-              const botMessage = await storage.createMessage(client.userId, {
-                content: formattedResponse,
-                isBot: true,
-                sessionId: persistentSessionId,
-                category: userMessage.category, // Bot message inherits the same category
-              });
-
-              // Send AI response to client
-              ws.send(JSON.stringify({ 
-                type: 'ai_response', 
-                userMessage,
-                message: botMessage 
-              }));
-
-
-              // Generate speech from AI response
-              console.log("Generating speech for voice mode response...");
-              try {
-                const openaiResponse = await textToSpeechStream(formattedResponse);
-
-                // Convert stream to buffer
-                const chunks: Buffer[] = [];
-                openaiResponse.data.on('data', (chunk: Buffer) => {
-                  chunks.push(chunk);
-                });
-
-                openaiResponse.data.on('end', () => {
-                  const audioBuffer = Buffer.concat(chunks);
-                  const base64Audio = audioBuffer.toString('base64');
-
-                  // Send audio to client
-                  ws.send(JSON.stringify({ 
-                    type: 'speech_response', 
-                    audioData: base64Audio 
-                  }));
-                });
-
-                openaiResponse.data.on('error', (err: Error) => {
-                  console.error("Error streaming TTS:", err);
-                  ws.send(JSON.stringify({ 
-                    type: 'error', 
-                    message: 'Failed to generate speech' 
-                  }));
-                });
-              } catch (error) {
-                console.error("Error generating speech:", error);
-                ws.send(JSON.stringify({ 
-                  type: 'error', 
-                  message: 'Failed to generate speech response' 
+                ws.send(JSON.stringify({
+                  type: 'speech_response',
+                  audioData: base64Audio
                 }));
-              }
+              });
+
+              openaiResponse.data.on('error', (err: Error) => {
+                console.error("Error streaming TTS:", err);
+                if (!streamAborted) {
+                  ws.send(JSON.stringify({
+                    type: 'error',
+                    message: 'Failed to generate speech'
+                  }));
+                }
+              });
+
             } catch (error) {
-              console.error("Error processing voice mode message:", error);
-              ws.send(JSON.stringify({ 
-                type: 'error', 
-                message: error instanceof Error ? error.message : 'Unknown error' 
+              console.error("Error generating speech:", error);
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Failed to generate speech response'
+              }));
+            }
+          } catch (error) {
+            console.error("Error processing voice mode message:", error);
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: error instanceof Error ? error.message : 'Unknown error'
             }));
           }
         }
-        }
+
       } catch (error) {
         console.error("WebSocket message error:", error);
         ws.send(JSON.stringify({
           type: 'error',
-          message: 'Invalid message format' 
+          message: 'Invalid message format'
         }));
       }
     });
 
-    // Handle client disconnection
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
-
-      // Remove client from active connections
       const clientIndex = voiceModeClients.findIndex(client => client.ws === ws);
       if (clientIndex !== -1) {
         const client = voiceModeClients[clientIndex];
@@ -534,9 +585,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
-    // Send initial connection acknowledgment
     ws.send(JSON.stringify({ type: 'connected' }));
-    });
+  });
 
   return httpServer;
 }
