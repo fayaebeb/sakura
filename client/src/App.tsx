@@ -8,6 +8,10 @@ import AuthPage from "@/pages/auth-page";
 import VoiceModePage from "@/pages/voice-mode-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
+import { RecoilRoot } from "recoil";
+import Tour from "./components/Tour";
+import Testing from "./pages/testing";
+import { useIsMobile } from "./hooks/use-mobile";
 
 function Router() {
   return (
@@ -15,6 +19,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/voice" component={VoiceModePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/test" component={Testing} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -22,12 +27,16 @@ function Router() {
 
 function App() {
   //testing again
+  useIsMobile();
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router />
-        <Toaster />
-      </AuthProvider>
+      <RecoilRoot>
+        <AuthProvider>
+          <Tour />
+          <Router />
+          <Toaster />
+        </AuthProvider>
+      </RecoilRoot>
     </QueryClientProvider>
   );
 }

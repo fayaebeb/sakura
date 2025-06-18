@@ -7,17 +7,17 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import { 
-  authRateLimit, 
-  bruteForce, 
-  validateRegistration, 
-  validateLogin, 
-  handleValidationErrors 
+import {
+  authRateLimit,
+  bruteForce,
+  validateRegistration,
+  validateLogin,
+  handleValidationErrors
 } from "./security";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends SelectUser { }
   }
 }
 
@@ -34,7 +34,7 @@ async function compareScryptPasswords(supplied: string, stored: string): Promise
   try {
     const [hashed, salt] = stored.split(".");
     if (!hashed || !salt) return false;
-    
+
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
     return timingSafeEqual(hashedBuf, suppliedBuf);
@@ -50,12 +50,12 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
   if (stored.startsWith('$2b$')) {
     return await bcrypt.compare(supplied, stored);
   }
-  
+
   // Check if it's a legacy scrypt hash (contains a dot separator)
   if (stored.includes('.')) {
     return await compareScryptPasswords(supplied, stored);
   }
-  
+
   // Unknown format
   console.error("Unknown password hash format:", stored.substring(0, 10) + "...");
   return false;
@@ -64,7 +64,7 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 export function setupAuth(app: Express) {
   const isProduction = process.env.NODE_ENV === 'production';
   console.log('Auth setup - Environment:', isProduction ? 'Production' : 'Development');
-  
+
   // Enhanced session security
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
@@ -91,18 +91,18 @@ export function setupAuth(app: Express) {
       try {
         console.log(`Auth - Login attempt for user: ${email}`);
         const user = await storage.getUserByEmail(email);
-        
+
         if (!user) {
           console.log(`Auth - User not found: ${email}`);
           return done(null, false);
         }
-        
+
         const passwordValid = await comparePasswords(password, user.password);
         if (!passwordValid) {
           console.log(`Auth - Invalid password for user: ${email}`);
           return done(null, false);
         }
-        
+
         console.log(`Auth - Login successful for user: ${email}`);
         return done(null, user);
       } catch (error) {
@@ -116,7 +116,7 @@ export function setupAuth(app: Express) {
     console.log(`Auth - Serializing user: ${user.id}`);
     done(null, user.id);
   });
-  
+
   passport.deserializeUser(async (id: number, done) => {
     try {
       console.log(`Auth - Deserializing user: ${id}`);
@@ -132,14 +132,14 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", 
+  app.post("/api/register",
     authRateLimit,
     validateRegistration,
     handleValidationErrors,
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         console.log(`Auth - Register attempt: ${req.body.email}`);
-        
+
         const existingUser = await storage.getUserByEmail(req.body.email);
         if (existingUser) {
           console.log(`Auth - Registration failed: ${req.body.email} already exists`);
@@ -147,23 +147,23 @@ export function setupAuth(app: Express) {
             error: "このユーザー名は既に使用されています。"
           });
         }
-
+        
         const { email, password, inviteToken } = req.body as {
           email: string;
           password: string;
           inviteToken?: string;
         };
-
+        
         if (!inviteToken) {
           return res.status(400).json({ error: "招待トークンが必要です。" });
         }
-
+        
         const tokenRecord = await storage.getInviteToken(inviteToken);
         if (!tokenRecord || !tokenRecord.isValid || tokenRecord.usedById) {
           return res.status(400).json({ error: "無効なまたは使用済みの招待トークンです。" });
         }
-
-
+        
+        
         const user = await storage.createUser({
           email,
           password: await hashPassword(password),
@@ -179,14 +179,19 @@ export function setupAuth(app: Express) {
 
 
         console.log(`Auth - User registered: ${user.email}`);
-        req.login(user, (err: any) => {
+        req.login(user, async (err: any) => {
           if (err) {
             console.error(`Auth - Login after registration failed for ${user.email}:`, err);
             return next(err);
           }
           console.log(`Auth - User logged in after registration: ${user.email}`);
+
+          await storage.stampInitialLogin(user.id);
+          user.initialLoginAt = new Date();
+
           // Don't send password in response
           const { password, ...userResponse } = user;
+          (userResponse as any).needsOnboarding = true;
           res.status(201).json(userResponse);
         });
       } catch (error) {
@@ -198,7 +203,7 @@ export function setupAuth(app: Express) {
     }
   );
 
-  app.post("/api/login", 
+  app.post("/api/login",
     authRateLimit,
     bruteForce.prevent,
     validateLogin,
@@ -207,8 +212,8 @@ export function setupAuth(app: Express) {
       passport.authenticate("local", async (err: Error | null, user: Express.User | false | null, info: { message: string } | undefined) => {
         if (err) {
           console.error("Auth - Login error:", err);
-          return res.status(500).json({ 
-            error: "ログイン処理中にエラーが発生しました。" 
+          return res.status(500).json({
+            error: "ログイン処理中にエラーが発生しました。"
           });
         }
 
@@ -222,7 +227,15 @@ export function setupAuth(app: Express) {
 
         // Store user data before regeneration
         const userData = user;
-        
+
+        let needsOnboarding = !userData.onboardingCompletedAt;
+        console.log("needsOnBoarding:", needsOnboarding);
+        if (!userData.initialLoginAt) {
+          await storage.stampInitialLogin(userData.id);
+          userData.initialLoginAt = new Date();
+          needsOnboarding = true;
+        }
+
         // Regenerate session ID for security (before login)
         req.session.regenerate((regenerateErr: any) => {
           if (regenerateErr) {
@@ -243,6 +256,7 @@ export function setupAuth(app: Express) {
 
             console.log(`Auth - Login successful: ${userData.email}`);
             const { password, ...userResponse } = userData;
+            (userResponse as any).needsOnboarding = needsOnboarding;
             res.status(200).json(userResponse);
           });
         });
@@ -253,13 +267,13 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", (req, res, next) => {
     const email = req.user?.email;
     console.log(`Auth - Logout attempt: ${email || 'Unknown user'}`);
-    
+
     req.logout((err) => {
       if (err) {
         console.error(`Auth - Logout error for ${email}:`, err);
         return next(err);
       }
-      
+
       // Destroy session completely
       req.session.destroy((destroyErr) => {
         if (destroyErr) {
@@ -268,7 +282,7 @@ export function setupAuth(app: Express) {
             error: "ログアウト処理中にエラーが発生しました。"
           });
         }
-        
+
         console.log(`Auth - Logout successful: ${email}`);
         res.clearCookie('sakura.sid');
         res.sendStatus(200);
@@ -281,10 +295,16 @@ export function setupAuth(app: Express) {
       console.log("Auth - Unauthorized /api/user access");
       return res.sendStatus(401);
     }
-    
+
     console.log(`Auth - Authorized /api/user access: ${req.user?.email}`);
     // Don't send password in response
     const { password, ...userResponse } = req.user!;
     res.json(userResponse);
+  });
+
+  app.post("/api/onboarding/complete", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await storage.completeOnboarding(req.user!.id);
+    res.sendStatus(204);
   });
 }

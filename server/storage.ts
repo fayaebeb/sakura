@@ -33,6 +33,9 @@ export interface IStorage {
   getInviteToken(tokenString: string): Promise<typeof inviteTokens.$inferSelect | undefined>;
   useInviteToken(tokenId: number, userId: number): Promise<void>;
   sessionStore: session.Store;
+  stampInitialLogin(id: number): Promise<void>;
+  completeOnboarding(id: number): Promise<void>;
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -135,6 +138,20 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(inviteTokens.id, tokenId));
   }
+
+  async stampInitialLogin(id: number) {
+    await db.update(users)
+      .set({ initialLoginAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async completeOnboarding(id: number) {
+    await db.update(users)
+      .set({ onboardingCompletedAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
+
 }
 
 export const storage = new DatabaseStorage();

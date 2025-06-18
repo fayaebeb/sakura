@@ -10,6 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronRight, FileText, Globe, Volume2, Tag, Eye } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { useRecoilValue } from "recoil";
+import { tourState } from "@/state/tourState";
 
 // Cute decorative elements to randomly add to bot messages
 const botDecorations = [
@@ -44,22 +46,32 @@ const parseMessageContent = (content: string) => {
   return sections;
 };
 
-const MessageSection = ({ 
-  title, 
-  content, 
-  icon: Icon 
-}: { 
-  title: string; 
-  content: string; 
-  icon: React.ComponentType<any>; 
+const MessageSection = ({
+  title,
+  content,
+  icon: Icon
+}: {
+  title: string;
+  content: string;
+  icon: React.ComponentType<any>;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const tour = useRecoilValue(tourState);
+  const isTourRunning = tour.run;
+
+  useEffect(() => {
+    if (isTourRunning) {
+      setIsOpen(false);
+    }
+  }, [isTourRunning]);
+
 
   if (!content) return null;
 
   return (
-    <Collapsible 
-      open={isOpen} 
+    <Collapsible
+      id="社内文書情報"
+      open={isOpen}
       onOpenChange={setIsOpen}
       className="mt-3 rounded-lg border border-pink-100 overflow-hidden transition-all duration-200"
     >
@@ -118,12 +130,12 @@ const MessageSection = ({
                     <>
                       <div className="inline-flex items-center gap-1">
                         {startsWithIcon && <span>📄</span>}
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-[#C04C75] hover:text-[#F28CA8] underline"
-                          >
+                        >
                           {filename}
                         </a>
                         <button
@@ -240,14 +252,14 @@ export default function ChatMessage({
       )}
 
       {message.isBot && decoration && (
-        <motion.div 
+        <motion.div
           className="absolute -top-2 sm:-top-3 -left-1 text-xs sm:text-sm"
-          animate={{ 
+          animate={{
             y: [0, -3, 0],
             rotate: [0, 10, 0, -10, 0],
             scale: [1, 1.2, 1],
           }}
-          transition={{ 
+          transition={{
             duration: 3,
             repeat: Infinity,
             repeatType: "reverse",
@@ -258,7 +270,7 @@ export default function ChatMessage({
       )}
 
       {message.isBot && (
-          <Avatar className="hidden sm:flex flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 border border-pink-300 shadow-md">
+        <Avatar className="hidden sm:flex flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 border border-pink-300 shadow-md">
           <motion.div
             whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
             transition={{ rotate: { duration: 0.5 } }}
@@ -307,56 +319,61 @@ export default function ChatMessage({
           )}
 
 
-              <div className="prose prose-xs sm:prose-sm break-words font-medium max-w-none w-full">
-
-
+          <div className="prose prose-xs sm:prose-sm break-words font-medium max-w-none w-full">
             {message.isBot && sections ? (
               <>
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
+                <div id="main-message-text">
+                  <ReactMarkdown
+
+                    remarkPlugins={[remarkGfm]}
+                    components={{
                       a: ({ href, children }) => (
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#CC3366] hover:text-[#FF98A5] underline"
-                          >
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#CC3366] hover:text-[#FF98A5] underline"
+                        >
                           {children}
                         </a>
-                    ),
-                    table: ({ node, ...props }) => (
-                      <div className="overflow-x-auto w-full">
-                        <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
-                      </div>
-                    ),
-                    td: ({ node, ...props }) => (
-                      <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-                    ),
-                    th: ({ node, ...props }) => (
-                      <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
-                    ),
-                  }}
-                >
-                  {sections.mainText}
-                </ReactMarkdown>
+                      ),
+                      table: ({ node, ...props }) => (
+                        <div className="overflow-x-auto w-full">
+                          <table className="text-[11px] sm:text-sm border-collapse w-full min-w-[400px]" {...props} />
+                        </div>
+                      ),
+                      td: ({ node, ...props }) => (
+                        <td className="border border-pink-200 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+                      ),
+                      th: ({ node, ...props }) => (
+                        <th className="border border-pink-300 bg-pink-50 px-1 py-0.5 sm:px-2 sm:py-1" {...props} />
+                      ),
+                    }}
+                  >
+                    {sections.mainText}
+                  </ReactMarkdown>
+                </div>
 
                 {/* Source sections */}
                 <div className="space-y-2">
                   {sections.companyDocs && (
-                    <MessageSection
-                      title="社内文書情報"
-                      content={sections.companyDocs}
-                      icon={FileText}
-                    />
+                    <div id="社内文書情報">
+                      <MessageSection
+                        title="社内文書情報"
+                        content={sections.companyDocs}
+                        icon={FileText}
+                      />
+                    </div>
                   )}
 
                   {sections.onlineInfo && (
-                    <MessageSection
-                      title="オンラインWeb情報"
-                      content={sections.onlineInfo}
-                      icon={Globe}
-                    />
+                    <div id="オンラインWeb情報">
+                      <MessageSection
+                        title="オンラインWeb情報"
+                        content={sections.onlineInfo}
+                        icon={Globe}
+                      />
+                    </div>
                   )}
                 </div>
               </>
@@ -365,14 +382,14 @@ export default function ChatMessage({
                 remarkPlugins={[remarkGfm]}
                 components={{
                   a: ({ href, children }) => (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#CC3366] hover:text-[#FF98A5] underline"
-                        >
-                        {children}
-                      </a>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#CC3366] hover:text-[#FF98A5] underline"
+                    >
+                      {children}
+                    </a>
                   ),
                   table: ({ node, ...props }) => (
                     <div className="overflow-x-auto w-full">
@@ -392,7 +409,7 @@ export default function ChatMessage({
             )}
           </div>
 
-          <div className="mt-2 flex items-center justify-between">
+          <div id="highlighted-component-1" className="mt-2 flex items-center justify-between">
             <div className="text-[9px] sm:text-[10px] text-gray-400">
               {message.timestamp && new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </div>
@@ -409,7 +426,7 @@ export default function ChatMessage({
                 ) : (
                   <Volume2 className="h-4 w-4 text-pink-500" />
                 )}
-          </Button>
+              </Button>
             ) : null}
           </div>
         </Card>

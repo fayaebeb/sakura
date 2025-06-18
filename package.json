@@ -8,7 +8,8 @@
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "frontend": "vite"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -59,7 +60,9 @@
     "drizzle-orm": "^0.39.1",
     "drizzle-zod": "^0.7.0",
     "elevenlabs": "^1.57.0",
-    "embla-carousel-react": "^8.3.0",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
     "express-brute": "^1.0.1",
     "express-rate-limit": "^7.5.0",
@@ -80,10 +83,12 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.1",
     "react-icons": "^5.4.0",
+    "react-joyride": "^2.9.3",
     "react-markdown": "^10.0.1",
     "react-resizable-panels": "^2.1.4",
     "react-textarea-autosize": "^8.5.9",
     "recharts": "^2.13.0",
+    "recoil": "^0.7.7",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",

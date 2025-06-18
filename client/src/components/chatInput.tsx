@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/select";
 import { createPortal } from "react-dom";
 import DbButton from "@/components/dbbutton";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { chatInputState } from "@/state/chatInputState";
 
 // Debounce function to improve input performance
 function useDebounce(callback: Function, delay: number) {
@@ -57,6 +59,7 @@ function useDebounce(callback: Function, delay: number) {
     [callback, delay],
   );
 }
+
 
 // Optimized version to reduce input lag
 // Message category type
@@ -134,7 +137,7 @@ const ChatInput = memo(function ChatInput({
     };
   }, [isDbDropdownOpen]);
 
-  const [localInput, setLocalInput] = useState(input);
+  const [localInput, setLocalInput] = useRecoilState(chatInputState);
 
   useEffect(() => {
     setLocalInput(input);
@@ -194,151 +197,154 @@ const ChatInput = memo(function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="pt-2 sm:pt-1 pb-2 sm:pb-2 px-2 sm:px-4 border-t flex flex-col gap-1 relative"
+      className=" relative p-2 md:p-4 space-y-2 md:space-y-5 border-t flex flex-col "
     >
       {showOptions && (
-        <div className="overflow-x-auto sm:overflow-visible px-1 relative">
-          <div className="flex items-center gap-2 min-w-max">
-            {/* Category selection toggle group */}
-            <div className="flex">
-              <TooltipProvider>
-                <ToggleGroup
-                  type="single"
-                  value={category}
-                  onValueChange={(value) => {
-                    if (value) setCategory(value as MessageCategory);
-                  }}
-                  className="flex border rounded-md p-0.5 bg-gray-50 shadow-sm"
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <ToggleGroupItem
-                        value="SELF"
-                        aria-label="個人"
-                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
-                          category === "SELF"
-                            ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 shadow-sm"
-                            : "hover:bg-blue-50"
-                        }`}
-                      >
-                        <User
-                          size={12}
-                          className={
-                            category === "SELF"
-                              ? "text-blue-600"
-                              : "text-gray-500"
-                          }
-                        />
-                        <span>自分</span>
-                      </ToggleGroupItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="text-xs">個人としてメッセージを送信</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <ToggleGroupItem
-                        value="PRIVATE"
-                        aria-label="民間"
-                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
-                          category === "PRIVATE"
-                            ? "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 shadow-sm"
-                            : "hover:bg-gray-100"
-                        }`}
-                      >
-                        <Building
-                          size={12}
-                          className={
-                            category === "PRIVATE"
-                              ? "text-gray-600"
-                              : "text-gray-500"
-                          }
-                        />
-                        <span>民間</span>
-                      </ToggleGroupItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="text-xs">民間企業としてメッセージを送信</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <ToggleGroupItem
-                        value="ADMINISTRATIVE"
-                        aria-label="行政"
-                        className={`flex items-center gap-1 px-1 py-0.5 text-xs rounded ${
-                          category === "ADMINISTRATIVE"
-                            ? "bg-gradient-to-r from-red-100 to-red-200 text-red-700 shadow-sm"
-                            : "hover:bg-red-50"
-                        }`}
-                      >
-                        <Landmark
-                          size={12}
-                          className={
-                            category === "ADMINISTRATIVE"
-                              ? "text-red-600"
-                              : "text-gray-500"
-                          }
-                        />
-                        <span>行政</span>
-                      </ToggleGroupItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="text-xs">行政機関としてメッセージを送信</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </ToggleGroup>
-              </TooltipProvider>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setUseWeb(!useWeb);
-                }}
-                className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
-                            ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
-                            ${
-                              useWeb
-                                ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
-                                : "bg-muted text-muted-foreground border border-gray-300"
+        <>
+          <div className={`  ${showOptions ? "pt-2" : ""}`}>
+            <div className="flex flex-row  items-center justify-between">
+              {/* Category selection toggle group */}
+              <div className={`flex  `}>
+                <TooltipProvider>
+                  <ToggleGroup
+                    id="user-type-select"
+                    type="single"
+                    value={category}
+                    onValueChange={(value) => {
+                      if (value) setCategory(value as MessageCategory);
+                    }}
+                    className="flex border rounded-full  bg-gray-50 shadow-md"
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem
+                          value="SELF"
+                          aria-label="個人"
+                          className={`rounded-full border border-transparent  ${category === "SELF"
+                            ? "bg-pink-300 border-pink-500"
+                            : "hover:bg-pink-50 "
+                            }`}
+                        >
+                          <User
+                            size={12}
+                            className={ 
+                              category === "SELF"
+                                ? "text-pink-500"
+                                : "text-gray-600"
                             }
+                          />
+                          <span className="hidden md:block">自分</span>
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs">個人としてメッセージを送信</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem
+                          value="PRIVATE"
+                          aria-label="民間"
+                          className={`border border-transparent rounded-full  ${category === "PRIVATE"
+                            ? "bg-green-300 border-green-500"
+                            : "hover:bg-green-100 "
+                            }`}
+                        >
+                          <Building
+                            size={12}
+                            className={
+                              category === "PRIVATE"
+                                ? "text-green-600"
+                                : "text-gray-500"
+                            }
+                          />
+                          <span className="hidden md:block">民間</span>
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs">民間企業としてメッセージを送信</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem
+                          value="ADMINISTRATIVE"
+                          aria-label="行政"
+                          className={`border border-transparent rounded-full ${category === "ADMINISTRATIVE"
+                            ? "bg-blue-300 border-blue-500"
+                            : "hover:bg-blue-50"
+                            }`}
+                        >
+                          <Landmark
+                            size={12}
+                            className={
+                              category === "ADMINISTRATIVE"
+                                ? "text-red-600"
+                                : "text-gray-500"
+                            }
+                          />
+                          <span className="hidden md:block">行政</span>
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs">行政機関としてメッセージを送信</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </ToggleGroup>
+                </TooltipProvider>
+              </div>
+
+              <div className="flex items-center justify-between space-x-1.5 md:justify-center sm:space-x-2 md:space-x-4">
+                <button
+                  id="search-internet-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setUseWeb(!useWeb);
+                  }}
+                  className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
+                            ${isMobile ? "w-[36px] h-[36px] rounded-full px-2" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
+                            ${useWeb
+                      ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
+                      : "bg-muted text-muted-foreground border border-gray-300"
+                    }
                             hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
                           `}
-              >
-                <Globe className="h-4 w-4" />
-                {!isMobile && useWeb && (
-                  <span className="hidden sm:inline">オンライン情報</span>
-                )}
-              </button>
+                >
+                  <Globe className="h-4 w-4" />
+                  {!isMobile && useWeb && (
+                    <span className="hidden sm:inline">オンライン情報</span>
+                  )}
+                </button>
 
-              <DbButton
-                useDb={useDb}
-                setUseDb={setUseDb}
-                selectedDb={selectedDb}
-                setSelectedDb={setSelectedDb}
-              />
+                <DbButton
+                  useDb={useDb}
+                  setUseDb={setUseDb}
+                  selectedDb={selectedDb}
+                  setSelectedDb={setSelectedDb}
+                />
+
+                <PromptPicker onSelect={handlePromptSelect} />
+              </div>
+              {" "}
             </div>
-            <div className="relative flex-shrink-0 mr-[32px] z-30">
-              <PromptPicker onSelect={handlePromptSelect} />
-            </div>{" "}
           </div>
-        </div>
+        </>
+
       )}
 
-      <div className="flex gap-1.5 sm:gap-2">
-        <div className="flex-shrink-0">
+      <div className={`flex items-center justify-between space-x-2 ${!showOptions ? "pt-2" : ""} `}>
+        <div className="flex-shrink-0 ">
           <VoiceRecorder
             onRecordingComplete={handleVoiceRecording}
             isProcessing={isProcessingVoice}
           />
         </div>
 
-        <div className="relative flex-1 min-w-0">
+        <div className="flex items-center justify-center flex-1">
           <TextareaAutosize
+            id="chat-input"
             ref={textareaRef}
             autoFocus
             value={localInput}
@@ -350,7 +356,7 @@ const ChatInput = memo(function ChatInput({
             placeholder="メッセージを書いてね！"
             className="px-3 py-2 focus:ring-2 focus:ring-pink-100 text-xs sm:text-sm min-h-[40px] max-h-[200px] resize-none w-full border rounded-lg"
             minRows={1}
-            maxRows={6}
+            maxRows={7}
             onKeyDown={handleKeyDown}
             spellCheck={false} // Disable spell checking for better performance
             autoComplete="off" // Disable browser autocomplete
@@ -359,14 +365,14 @@ const ChatInput = memo(function ChatInput({
         </div>
 
         <motion.button
+          id="send-button"
           type="submit"
           disabled={sendDisabled}
-          className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
-            ${isMobile ? "w-[36px] h-[36px] rounded-full p-0" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
-            ${
-              sendDisabled
-                ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-gradient-to-r from-pink-400 to-pink-500 text-white"
+          className={`flex items-center justify-center space-x-1 rounded-full p-3 
+            ${isMobile ? "rounded-full " : "space-x-1 p-2"}
+            ${sendDisabled
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
+              : "bg-gradient-to-r from-pink-400 to-pink-500 text-white"
             }`}
           whileHover={!sendDisabled ? { scale: 1.05 } : {}}
           whileTap={!sendDisabled ? { scale: 0.95 } : {}}
@@ -375,18 +381,19 @@ const ChatInput = memo(function ChatInput({
           {!isMobile && <span className="text-xs hidden sm:inline">送信</span>}
         </motion.button>
       </div>
+
       <button
         type="button"
         onClick={() => setShowOptions((prev) => !prev)}
-        className="absolute right-2 bottom-[60px] z-20 bg-white border border-gray-300 p-1.5 rounded-full shadow-md transition-transform duration-200 hover:bg-gray-100"
+        className="absolute -top-5 md:-top-9 left-0 mx-auto right-0 z-20 w-fit bg-white border border-gray-300 p-1.5 rounded-full shadow-md transition-transform duration-200 hover:bg-gray-100"
         aria-label="Toggle options"
       >
         <ChevronDown
-          className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${
-            showOptions ? "rotate-0" : "rotate-180"
-          }`}
+          className={`h-2 w-2 sm:w-5 sm:h-5 text-gray-600 transition-transform duration-300 ${showOptions ? "rotate-0" : "rotate-180"
+            }`}
         />
       </button>
+      
     </form>
   );
 });

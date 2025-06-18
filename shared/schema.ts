@@ -6,6 +6,10 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  // will start out as NULL until you stamp it on the first login
+  initialLoginAt: timestamp("initial_login_at", { withTimezone: true }),
+  /** marks the wizard as done (optional, but keeps logic simple) */
+  onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
 });
 
 export const sessions = pgTable("sessions", {
