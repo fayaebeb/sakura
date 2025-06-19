@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertMessageSchema, insertFeedbackSchema, chatRequestSchema } from "@shared/schema";
+import { insertMessageSchema, insertFeedbackSchema, chatRequestSchema, faqSnapshots, faqItems } from "@shared/schema";
 import { transcribeAudio } from "./apis/openai";
 import { textToSpeechStream } from "./apis/openaitts";
 import multer from "multer";
@@ -17,6 +17,8 @@ import {
 import rateLimit from 'express-rate-limit';
 import { sendError, getPersistentSessionId } from "./utils/errorResponse";
 import dotenv from "dotenv";
+import { db } from "./db";
+import { desc, eq } from "drizzle-orm";
 dotenv.config();
 
 const createUserAwareRateLimiter = (options: { windowMs: number; max: number; message?: string }) =>
@@ -245,6 +247,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
+
+  // ─── New: “Last Week FAQs” endpoint ────────────────────────────────────────
+  app.get('/api/faq/last-week', async (_req: Request, res: Response) => {
+    // 1. Fetch the most recent snapshot
+    const [latest] = await db
+      .select()
+      .from(faqSnapshots)
+      .orderBy(desc(faqSnapshots.generatedAt)) // use desc() helper instead of string
+      .limit(1);
+
+    if (!latest) {
+      return res.status(404).json({ error: 'No FAQ snapshot found' });
+    }
+
+    // 2. Fetch items for that snapshot, ordered by count desc
+    const items = await db
+      .select({
+        question: faqItems.question,
+        count: faqItems.count,
+      })
+      .from(faqItems)
+      .where(eq(faqItems.snapshotId, latest.id))
+      .orderBy(desc(faqItems.count));          // again use desc()
+
+    // 3. Return combined payload
+    return res.json({
+      generatedAt: latest.generatedAt,
+      totalQuestions: latest.totalQuestions,
+      trendText: latest.trendText,
+      faqs: items,
+    });
+  })
 
 
   app.get("/api/messages/:sessionId",

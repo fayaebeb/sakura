@@ -12,11 +12,13 @@ import { RecoilRoot } from "recoil";
 import Tour from "./components/Tour";
 import Testing from "./pages/testing";
 import { useIsMobile } from "./hooks/use-mobile";
+import InfoPage from "./pages/info-page";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
+      <ProtectedRoute path="/info" component={InfoPage} />
       <ProtectedRoute path="/voice" component={VoiceModePage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/test" component={Testing} />

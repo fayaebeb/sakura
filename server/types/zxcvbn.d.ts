@@ -18,3 +18,5 @@ declare module "zxcvbn" {
 
   export = zxcvbn;
 }
+
+declare module 'density-clustering';

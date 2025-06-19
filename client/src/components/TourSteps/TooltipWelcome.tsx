@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkle } from "lucide-react";
+import { useOnboarding } from "@/hooks/useOnBoarding";
+import { useAuth } from "@/hooks/use-auth";
 
 
 const TooltipWelcome: React.FC<TooltipRenderProps> = ({
@@ -19,6 +21,16 @@ const TooltipWelcome: React.FC<TooltipRenderProps> = ({
     closeProps
 
 }) => {
+    const { user } = useAuth()
+
+    const completeOnboarding = useOnboarding();
+
+    const handleFinish = async () => {
+        if (user?.onboardingCompletedAt === null) {
+            await completeOnboarding.mutateAsync();
+        }
+    };
+
     return (
         <Card className="relative overflow-hidden px-5 pb-2 pt-10 md:px-10 md:pt-10 md:pb-8 w-[350px] flex flex-col md:flex-row md:w-[700px] gap-6 rounded-2xl bg-gradient-to-b from-pink-200 via-pink-100 to-white border-0 border-b-4 border-rose-600 shadow-2xl">
 
@@ -69,7 +81,10 @@ const TooltipWelcome: React.FC<TooltipRenderProps> = ({
                         </p>
                         {/* 🔘 Buttons */}
                         <div className="flex justify-center md:justify-start  gap-3 mt-4">
-                            <Button {...closeProps} className="bg-pink-200 hover:bg-pink-300 text-pink-800 rounded-full px-6">スキップする</Button>
+                            <Button {...closeProps} onClick={async (e) => {
+                                closeProps.onClick?.(e);
+                                await handleFinish();
+                            }} className="bg-pink-200 hover:bg-pink-300 text-pink-800 rounded-full px-6">スキップする</Button>
                             <Button {...primaryProps} className="bg-rose-400 hover:bg-rose-500 text-white rounded-full px-6">はじめる！✨</Button>
                         </div>
                     </div>

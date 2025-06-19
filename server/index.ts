@@ -4,6 +4,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupSecurity, securityLogger, sanitizeInput, sessionSecurity } from "./security";
+import { scheduleLastWeekFaqJob } from "./jobs/lastWeekFAQs";
+import { generateAndSaveFaqSnapshot } from "./services/faqService";
 const app = express();
 
 // Apply security measures first
@@ -58,6 +60,15 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
+
+  scheduleLastWeekFaqJob();
+
+  // Optional: run a manual snapshot on startup in development
+  // if (app.get("env") === "development") {
+  //   generateAndSaveFaqSnapshot().catch((err) =>
+  //     console.error("[Manual FAQ snapshot] Error:", err)
+  //   );
+  // }
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
