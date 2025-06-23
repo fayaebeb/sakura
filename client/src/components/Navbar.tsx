@@ -100,14 +100,14 @@ const Navbar = () => {
 
     return (
         <>
-            <header id="welcome-text" className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20">
+            <header id="welcome-text" className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-30 w-full">
                 <div className="container mx-auto px-4 py-2 flex justify-between items-center">
                     {/* Company Logo */}
                     <motion.div
                         className="flex items-center"
                         whileHover={{ scale: 1.05 }}
                     >
-                        <img src="/images/pclogo.png" alt="Company Logo" className="h-5 sm:h-10" />
+                            <img src="/images/pclogo.png" alt="Company Logo" className="h-5 sm:h-10" />
                     </motion.div>
 
                     {/* AI Brand Logo with animation */}

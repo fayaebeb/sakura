@@ -1,53 +1,16 @@
-// src/components/FaqLastWeekCard.tsx
-import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BadgeInfo, Heart, Loader2, Sparkles } from "lucide-react";
-import { useFaqLastWeek } from "@/hooks/useFAQ";
+import React from 'react'
 import { motion } from "framer-motion";
-import { Header } from "@radix-ui/react-accordion";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Heart, Sparkles } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { MainGrid } from '@/components/InfoPage/MainGrid';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { TableOfContent } from '@/components/InfoPage/TableOfContent';
 
-
-export default function InfoPage() {
-  /**
-   * The hook returns the usual mutation object:
-   *  - mutate        (void → void)  – fire and forget
-   *  - mutateAsync   (void → Promise<Data>)
-   *  - data          (FaqLastWeekResponse | undefined)
-   *  - isLoading, isError, error, etc.
-   */
-  const {
-    mutate: fetchFaqs,
-    data,
-    isPending,
-    isError,
-    error,
-  } = useFaqLastWeek();
-
-  /* --------------------------------------------------------
-   * Pattern 1: auto-fetch once when the component mounts
-   * ------------------------------------------------------ */
-  useEffect(() => {
-    fetchFaqs(); // same as fetchFaqs(undefined)
-  }, [fetchFaqs]);
-
-  /* --------------------------------------------------------
-   * Pattern 2: expose a “Refresh” button to re-fetch on demand
-   * ------------------------------------------------------ */
-  const handleRefresh = () => fetchFaqs();
-
-  /* --------------------------------------------------------
-   * Pattern 3: call mutateAsync if you need the resolved data
-   * ------------------------------------------------------ */
-  // const handleManual = async () => {
-  //   const snapshot = await fetchFaqsAsync();
-  //   console.log(snapshot);
-  // };
-
+const InfoPage = () => {
   return (
-
+    <SidebarProvider>
+      <TableOfContent />
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#ffefd5] to-[#fff0f5] relative">
       {/* Floating decorative elements */}
       <div className="absolute top-20 right-10 opacity-30 hidden md:block">
@@ -80,12 +43,21 @@ export default function InfoPage() {
         </motion.div>
       </div>
 
-      <Navbar />
+      {/* ヘッダーセクション (Header section) */}
+      {/* <Navbar /> */}
+      <div className='w-full flex items-center justify-center'>
+        <div className="max-w-3xl h-[100rem] xl:max-w-2xl rounded-3xl flex items-center justify-center w-full ">
+          <MainGrid />
+        </div>
+      </div>
 
+
+      {/* Footer with subtle branding */}
       <Footer />
 
-
     </div>
-    
-  );
+    </SidebarProvider>
+  )
 }
+
+export default InfoPage

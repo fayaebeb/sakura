@@ -48,6 +48,7 @@
     "@types/cors": "^2.8.18",
     "@types/express-brute": "^1.0.6",
     "@types/multer": "^1.4.12",
+    "@xyflow/react": "^12.7.0",
     "axios": "^1.8.4",
     "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.0",
