@@ -114,7 +114,7 @@ const ImageFlow: React.FC<Props> = ({ activeSlide, onChange, menuRef, userTypeRe
                         </div>
                     </div>
                 </div>
-                <div className="bg-gradient-to-t md:bg-gradient-to-l text-white from-pink-800 to-pink-500 p-4 rounded-b-2xl md:rounded-l-none md:rounded-r-2xl  md:w-1/3  md:space-y-5 flex flex-col justify-between text-center">
+                <div className="bg-gradient-to-t md:bg-gradient-to-tl text-white from-pink-800 to-pink-500 p-4 rounded-b-2xl md:rounded-l-none md:rounded-r-2xl  md:w-1/3  md:space-y-5 flex flex-col justify-between text-center">
                     <Carousel
                         className="h-full"
                         setApi={setApi}
@@ -236,7 +236,6 @@ const ImageFlow: React.FC<Props> = ({ activeSlide, onChange, menuRef, userTypeRe
                             <div className="flex ">
                                 <Dot size={20} /><span>音声モードでは、音声入力の会話形式で応答できます。</span>
                             </div>
-
                             <div className="flex"><Dot size={20} /><span>履歴削除すると今までの履歴が消されます。</span></div>
                             <div className="flex"><Dot size={20} /><span>フィードバックでは、本サイトのレビューを投稿できます。</span></div>
                         </div>
