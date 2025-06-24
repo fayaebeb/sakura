@@ -26,7 +26,7 @@ import {
     AlertDialogCancel,
     AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Star, TheaterIcon } from 'lucide-react';
+import { Gem, Star, TheaterIcon, Zap } from 'lucide-react';
 
 /* -------------- constants you can tweak -------------- */
 const TOTAL = 100;
@@ -363,15 +363,15 @@ const SakurabotDefinition = () => {
                     <div className='grid grid-cols-1 md:grid-cols-3  items-center justify-center gap-5 '>
                         <Card className='p-5 flex flex-col space-y-2 items-center justify-center bg-white backdrop-blur-lg border border-pink-500 rounded-2xl'>
                             <Star fill='#e7008a' stroke='#e7008a' />
-                            <h4 className='text-xl font-semibold text-pink-500'>Heading </h4>
+                            <h4 className='text-xl font-semibold text-pink-500'>安全 </h4>
                         </Card>
                         <Card className='p-5 flex flex-col space-y-2 items-center justify-center bg-white backdrop-blur-lg border border-pink-500 rounded-2xl'>
-                            <Star fill='#e7008a' stroke='#e7008a' />
-                            <h4 className='text-xl font-semibold text-pink-500'>Heading </h4>
+                            <Zap fill='#e7008a' stroke='#e7008a' />
+                            <h4 className='text-xl font-semibold text-pink-500'>速い</h4>
                         </Card>
                         <Card className='p-5 flex flex-col space-y-2 items-center justify-center bg-white backdrop-blur-lg border border-pink-500 rounded-2xl'>
-                            <Star fill='#e7008a' stroke='#e7008a' />
-                            <h4 className='text-xl font-semibold text-pink-500'>Heading </h4>
+                            <Gem fill='#e7008a' stroke='#e7008a' />
+                            <h4 className='text-xl font-semibold text-pink-500'>使いやすい</h4>
                         </Card>
                     </div>
                     <Button onClick={() => setIsOpen(true)} className='rounded-2xl w-full bg-gradient-to-br from-pink-800 to-pink-500'>FlowChart</Button>

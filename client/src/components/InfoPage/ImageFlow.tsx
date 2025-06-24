@@ -114,7 +114,7 @@ const ImageFlow: React.FC<Props> = ({ activeSlide, onChange, menuRef, userTypeRe
                         </div>
                     </div>
                 </div>
-                <div className="bg-gradient-to-t md:bg-gradient-to-l text-white from-pink-800 to-pink-500 p-4 rounded-b-2xl md:rounded-l-none md:rounded-r-2xl  md:w-1/3  md:space-y-5 flex flex-col justify-between text-center">
+                <div className="bg-gradient-to-t md:bg-gradient-to-tl text-white from-pink-800 to-pink-500 p-4 rounded-b-2xl md:rounded-l-none md:rounded-r-2xl  md:w-1/3  md:space-y-5 flex flex-col justify-between text-center">
                     <Carousel
                         className="h-full"
                         setApi={setApi}
