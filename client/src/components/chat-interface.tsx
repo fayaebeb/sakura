@@ -16,9 +16,10 @@ import ChatLoadingIndicator, { SakuraPetalLoading } from "./chat-loading-indicat
 import { motion, AnimatePresence } from "framer-motion";
 import TranscriptionConfirmation from "./transcription-confirmation";
 import SuggestionPanel from "@/components/suggestion-panel";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { tourState } from "@/state/tourState";
 import { sampleMessageData, sampleMessageDataPc } from "@/lib/sampleData";
+import { chatInputState } from "@/state/chatInputState";
 
 
 // Audio player for bot responses
@@ -132,7 +133,7 @@ const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
 const TUTORIAL_SHOWN_KEY_PREFIX = "tutorial_shown_user_";
 
 const ChatInterface = () => {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useRecoilState(chatInputState);
   const { user } = useAuth();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);

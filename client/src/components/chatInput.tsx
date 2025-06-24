@@ -10,7 +10,7 @@ import {
   Check,
 } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import VoiceRecorder from "./voice-recorder";
 import PromptPicker from "./prompt-picker";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -139,9 +139,7 @@ const ChatInput = memo(function ChatInput({
 
   const [localInput, setLocalInput] = useRecoilState(chatInputState);
 
-  useEffect(() => {
-    setLocalInput(input);
-  }, [input]);
+
 
   const debouncedSetInput = useDebounce((value: string) => {
     setInput(value);
@@ -182,157 +180,178 @@ const ChatInput = memo(function ChatInput({
     [isMobile, handleSubmit, sendDisabled, textareaRef],
   );
 
-  // Handle immediate input change for better responsiveness
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newValue = e.target.value;
-      localInputRef.current = newValue; // Update local ref immediately
-      setInput(newValue); // Update parent state in a debounced way
+      const v = e.target.value;
+      localInputRef.current = v;
+      setLocalInput(v);
+      debouncedSetInput(v);
     },
-    [debouncedSetInput],
+    [debouncedSetInput, setLocalInput],
   );
 
+  // Handle immediate input change for better responsiveness
+  // const handleInputChange = useCallback(
+  //   (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  //     const newValue = e.target.value;
+  //     localInputRef.current = newValue; // Update local ref immediately
+  //     setInput(newValue); // Update parent state in a debounced way
+  //   },
+  //   [debouncedSetInput],
+  // );
+
   const [showOptions, setShowOptions] = useState(true);
+
 
   return (
     <form
       onSubmit={handleSubmit}
       className=" relative p-2 md:p-4 space-y-2 md:space-y-5 border-t flex flex-col "
     >
-      {showOptions && (
-        <>
-          <div className={`  ${showOptions ? "pt-2" : ""}`}>
-            <div className="flex flex-row  items-center justify-between">
-              {/* Category selection toggle group */}
-              <div className={`flex  `}>
-                <TooltipProvider>
-                  <ToggleGroup
-                    id="user-type-select"
-                    type="single"
-                    value={category}
-                    onValueChange={(value) => {
-                      if (value) setCategory(value as MessageCategory);
+      <AnimatePresence initial={false}>
+        {showOptions && (
+          <motion.div
+            key="options-toggle"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.125 }}
+            className={`pt-2`}
+          >
+            <div className={`  `}>
+              <div className="flex flex-row  items-center justify-between">
+                {/* Category selection toggle group */}
+                <div className={`flex  `}>
+                  <TooltipProvider>
+                    <ToggleGroup
+                      id="user-type-select"
+                      type="single"
+                      value={category}
+                      onValueChange={(value) => {
+                        if (value) setCategory(value as MessageCategory);
+                      }}
+                      className="flex border rounded-full  bg-gray-50 shadow-md"
+                    >
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <ToggleGroupItem
+                            value="SELF"
+                            aria-label="個人"
+                            className={`rounded-full border border-transparent space-x-1 flex items-center justify-center ${category === "SELF"
+                              ? "bg-pink-300 border-pink-500"
+                              : "hover:bg-pink-50 "
+                              }`}
+                          >
+                            <User
+                              size={12}
+                              className={
+                                category === "SELF"
+                                  ? "text-pink-500"
+                                  : "text-gray-600"
+                              }
+                            />
+                            <span className="hidden md:block">自分</span>
+                          </ToggleGroupItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p className="text-xs">個人としてメッセージを送信</p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <ToggleGroupItem
+                            value="PRIVATE"
+                            aria-label="民間"
+                            className={`border border-transparent rounded-full space-x-1 flex items-center justify-center  ${category === "PRIVATE"
+                              ? "bg-green-300 border-green-500"
+                              : "hover:bg-green-100 "
+                              }`}
+                          >
+                            <Building
+                              size={12}
+                              className={
+                                category === "PRIVATE"
+                                  ? "text-green-600"
+                                  : "text-gray-500"
+                              }
+                            />
+                            <span className="hidden md:block">民間</span>
+                          </ToggleGroupItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p className="text-xs">民間企業としてメッセージを送信</p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <ToggleGroupItem
+                            value="ADMINISTRATIVE"
+                            aria-label="行政"
+                            className={`border border-transparent rounded-full space-x-1 flex items-center justify-center ${category === "ADMINISTRATIVE"
+                              ? "bg-blue-300 border-blue-500"
+                              : "hover:bg-blue-50"
+                              }`}
+                          >
+                            <Landmark
+                              size={12}
+                              className={
+                                category === "ADMINISTRATIVE"
+                                  ? "text-red-600"
+                                  : "text-gray-500"
+                              }
+                            />
+                            <span className="hidden md:block">行政</span>
+                          </ToggleGroupItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p className="text-xs">行政機関としてメッセージを送信</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </ToggleGroup>
+                  </TooltipProvider>
+                </div>
+
+                <div className="flex items-center justify-between space-x-1.5 md:justify-center sm:space-x-2 md:space-x-4">
+                  <button
+                    id="search-internet-button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setUseWeb(!useWeb);
                     }}
-                    className="flex border rounded-full  bg-gray-50 shadow-md"
-                  >
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToggleGroupItem
-                          value="SELF"
-                          aria-label="個人"
-                          className={`rounded-full border border-transparent  ${category === "SELF"
-                            ? "bg-pink-300 border-pink-500"
-                            : "hover:bg-pink-50 "
-                            }`}
-                        >
-                          <User
-                            size={12}
-                            className={ 
-                              category === "SELF"
-                                ? "text-pink-500"
-                                : "text-gray-600"
-                            }
-                          />
-                          <span className="hidden md:block">自分</span>
-                        </ToggleGroupItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p className="text-xs">個人としてメッセージを送信</p>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToggleGroupItem
-                          value="PRIVATE"
-                          aria-label="民間"
-                          className={`border border-transparent rounded-full  ${category === "PRIVATE"
-                            ? "bg-green-300 border-green-500"
-                            : "hover:bg-green-100 "
-                            }`}
-                        >
-                          <Building
-                            size={12}
-                            className={
-                              category === "PRIVATE"
-                                ? "text-green-600"
-                                : "text-gray-500"
-                            }
-                          />
-                          <span className="hidden md:block">民間</span>
-                        </ToggleGroupItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p className="text-xs">民間企業としてメッセージを送信</p>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToggleGroupItem
-                          value="ADMINISTRATIVE"
-                          aria-label="行政"
-                          className={`border border-transparent rounded-full ${category === "ADMINISTRATIVE"
-                            ? "bg-blue-300 border-blue-500"
-                            : "hover:bg-blue-50"
-                            }`}
-                        >
-                          <Landmark
-                            size={12}
-                            className={
-                              category === "ADMINISTRATIVE"
-                                ? "text-red-600"
-                                : "text-gray-500"
-                            }
-                          />
-                          <span className="hidden md:block">行政</span>
-                        </ToggleGroupItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p className="text-xs">行政機関としてメッセージを送信</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </ToggleGroup>
-                </TooltipProvider>
-              </div>
-
-              <div className="flex items-center justify-between space-x-1.5 md:justify-center sm:space-x-2 md:space-x-4">
-                <button
-                  id="search-internet-button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setUseWeb(!useWeb);
-                  }}
-                  className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
+                    className={`h-[40px] flex items-center justify-center flex-shrink-0 shadow-md transition
                             ${isMobile ? "w-[36px] h-[36px] rounded-full px-2" : "px-2 sm:px-3 py-2 rounded-full gap-1"}
                             ${useWeb
-                      ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
-                      : "bg-muted text-muted-foreground border border-gray-300"
-                    }
+                        ? "bg-gradient-to-r from-pink-400 to-pink-500 text-white border border-pink-500"
+                        : "bg-muted text-muted-foreground border border-gray-300"
+                      }
                             hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-300
                           `}
-                >
-                  <Globe className="h-4 w-4" />
-                  {!isMobile && useWeb && (
-                    <span className="hidden sm:inline">オンライン情報</span>
-                  )}
-                </button>
+                  >
+                    <Globe className="h-4 w-4" />
+                    {!isMobile && useWeb && (
+                      <span className="hidden sm:inline">オンライン情報</span>
+                    )}
+                  </button>
 
-                <DbButton
-                  useDb={useDb}
-                  setUseDb={setUseDb}
-                  selectedDb={selectedDb}
-                  setSelectedDb={setSelectedDb}
-                />
+                  <DbButton
+                    useDb={useDb}
+                    setUseDb={setUseDb}
+                    selectedDb={selectedDb}
+                    setSelectedDb={setSelectedDb}
+                  />
 
-                <PromptPicker onSelect={handlePromptSelect} />
+                  <PromptPicker onSelect={handlePromptSelect} />
+                </div>
+                {" "}
               </div>
-              {" "}
             </div>
-          </div>
-        </>
+          </motion.div>
 
-      )}
+        )}
+      </AnimatePresence>
+
 
       <div className={`flex items-center justify-between space-x-2 ${!showOptions ? "pt-2" : ""} `}>
         <div className="flex-shrink-0 ">
@@ -348,11 +367,7 @@ const ChatInput = memo(function ChatInput({
             ref={textareaRef}
             autoFocus
             value={localInput}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              setLocalInput(newValue); // Immediate UI feedback
-              debouncedSetInput(newValue); // Debounced sync to parent
-            }}
+            onChange={handleInputChange}
             placeholder="メッセージを書いてね！"
             className="px-3 py-2 focus:ring-2 focus:ring-pink-100 text-xs sm:text-sm min-h-[40px] max-h-[200px] resize-none w-full border rounded-lg"
             minRows={1}
@@ -393,7 +408,7 @@ const ChatInput = memo(function ChatInput({
             }`}
         />
       </button>
-      
+
     </form>
   );
 });

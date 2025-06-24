@@ -113,6 +113,26 @@ export const loginUserSchema = z.object({
   password: z.string().min(1, "パスワードは必須です"),
 });
 
+
+export const faqSnapshots = pgTable("faq_snapshots", {
+  id: serial("id").primaryKey(),
+  generatedAt: timestamp("generated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  trendText: text("trend_text").notNull(),
+  totalQuestions: integer("total_questions").notNull(),
+});
+
+export const faqItems = pgTable("faq_items", {
+  id: serial("id").primaryKey(),
+  snapshotId: integer("snapshot_id")
+    .notNull()
+    .references(() => faqSnapshots.id),
+  question: text("question").notNull(),
+  count: integer("count").notNull(),
+});
+
+
 export type LoginUser = z.infer<typeof loginUserSchema>;
 
 
