@@ -236,7 +236,6 @@ const ImageFlow: React.FC<Props> = ({ activeSlide, onChange, menuRef, userTypeRe
                             <div className="flex ">
                                 <Dot size={20} /><span>音声モードでは、音声入力の会話形式で応答できます。</span>
                             </div>
-
                             <div className="flex"><Dot size={20} /><span>履歴削除すると今までの履歴が消されます。</span></div>
                             <div className="flex"><Dot size={20} /><span>フィードバックでは、本サイトのレビューを投稿できます。</span></div>
                         </div>
