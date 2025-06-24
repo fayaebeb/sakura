@@ -218,8 +218,8 @@ const InfoPage = () => {
 
                 <Card className="relative p-5 rounded-2xl shadow-lg bg-gradient-to-br from-pink-800 to-pink-500 text-white font-sm text-sm">
                   <span className="bg-pink-300 text-center text-black rounded w-fit">{`今週は${totalQuestions}件の質問にお答えしました。皆さんありがとうございます。`}
-                  </span> 
-                  <br/>
+                  </span>
+                  <br />
                   <span>{trendText}</span>
                   <span className="absolute -right-4 -bottom-2 text-5xl -rotate-45">🌸</span>
                 </Card>
@@ -316,7 +316,7 @@ const InfoPage = () => {
       <AlertDialog open={isRankOpen} onOpenChange={setIsRankOpen}>
         <AlertDialogContent className=" bg-gradient-to-br from-[#ffefd5] to-[#fff0f5] mx-auto max-w-[90%] sm:max-w-md md:max-w-lg lg:max-w-xl rounded-xl p-6">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-pink-600">Ranking</AlertDialogTitle>
+            <AlertDialogTitle className="text-pink-600">質問ランキング</AlertDialogTitle>
             <AlertDialogDescription className="text-black">
 
               <ScrollArea
@@ -350,13 +350,16 @@ const InfoPage = () => {
               </ScrollArea>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="relative">
             <AlertDialogCancel className="bg-pink-500 hover:bg-pink-600 text-white border border-pink-400">
               閉じる
             </AlertDialogCancel>
+            <img className="absolute -left-8 -bottom-10 w-16 h-20  hidden md:block" src="/images/sakura-explain-5.png" />
 
           </AlertDialogFooter>
+
         </AlertDialogContent>
+
       </AlertDialog>
     </SidebarProvider>
 

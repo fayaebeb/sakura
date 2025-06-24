@@ -277,54 +277,53 @@ const Testing = () => {
 
             </div>
             <AlertDialog open={isRankOpen} onOpenChange={setIsRankOpen}>
-                <AlertDialogContent className=" bg-gradient-to-br from-[#ffefd5] to-[#fff0f5] mx-auto max-w-[90%] sm:max-w-md md:max-w-lg lg:max-w-xl rounded-xl p-6">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-pink-600">Ranking</AlertDialogTitle>
+                    <AlertDialogContent className=" bg-gradient-to-br from-[#ffefd5] to-[#fff0f5] mx-auto max-w-[90%] sm:max-w-md md:max-w-lg lg:max-w-xl rounded-xl p-6">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-pink-600">質問ランキング</AlertDialogTitle>
                         <AlertDialogDescription className="text-black">
-
-                            <ScrollArea
-                                /* 4 × 48 px rows  +  56 px header  = 248 px   tweak if your row/header differs */
-                                className="h-[248px] overflow-hidden rounded-2xl px-2"
-                                type="scroll"       /* common vertical scrollbar */
-
-                            >
-                                <Table className="bg-white rounded-2xl">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-12">#</TableHead>
-                                            <TableHead>質問内容</TableHead>
-                                            <TableHead className="w-24 text-right">件数</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {faqs.map((faq, idx) => (
-                                            <TableRow className="cursor-pointer" onClick={() => usePrompt(faq.question)} key={faq.question}>
-                                                <TableCell className="font-medium tabular-nums">
-                                                    {idx + 1}
-                                                </TableCell>
-                                                <TableCell>{faq.question}</TableCell>
-                                                <TableCell className="text-right tabular-nums">
-                                                    {faq.count}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </ScrollArea>
+            
+                          <ScrollArea
+                            /* 4 × 48 px rows  +  56 px header  = 248 px   tweak if your row/header differs */
+                            className="h-[248px] overflow-hidden rounded-2xl px-2"
+                            type="scroll"       /* common vertical scrollbar */
+            
+                          >
+                            <Table className="bg-white rounded-2xl">
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-12">#</TableHead>
+                                  <TableHead>質問内容</TableHead>
+                                  <TableHead className="w-24 text-right">件数</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {faqs.map((faq, idx) => (
+                                  <TableRow className="cursor-pointer" onClick={() => usePrompt(faq.question)} key={faq.question}>
+                                    <TableCell className="font-medium tabular-nums">
+                                      {idx + 1}
+                                    </TableCell>
+                                    <TableCell>{faq.question}</TableCell>
+                                    <TableCell className="text-right tabular-nums">
+                                      {faq.count}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </ScrollArea>
                         </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-white text-pink-500 border-pink-200 hover:bg-pink-50">
-                            もう少し一緒にいる
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="relative">
+                        <AlertDialogCancel className="bg-pink-500 hover:bg-pink-600 text-white border border-pink-400">
+                          閉じる
                         </AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-pink-500 hover:bg-pink-600 text-white border border-pink-400"
-                        >
-                            ログアウト
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                        <img className="absolute -left-10 -bottom-6 w-16 h-20  hidden md:block" src="/images/sakura-explain-5.png" />
+            
+                      </AlertDialogFooter>
+            
+                    </AlertDialogContent>
+            
+                  </AlertDialog>
         </SidebarProvider>
 
     );
