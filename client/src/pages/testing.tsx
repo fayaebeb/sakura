@@ -7,7 +7,6 @@ import Autoplay from "embla-carousel-autoplay"
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { ArrowDown, Book, Crown, FileText, Mic, Sparkle } from "lucide-react";
-import { MainGrid } from "@/components/InfoPage/MainGrid";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TableOfContent } from "@/components/InfoPage/TableOfContent";
 import {
@@ -41,6 +40,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SakurabotDefinition from "@/components/InfoPage/Sakurabot-definition";
 import SakuraFlow from "@/components/InfoPage/SakuraFlow";
+import MainGrid from "@/components/InfoPage/MainGrid";
 interface Slide {
     id: number;
     title: string;
@@ -108,13 +108,15 @@ export type ScrollHandlers = {
     options: () => void;           // 質問オプション
     ask: () => void;               // よい質問の仕方
     terms: () => void;             // 利用上の注意
+    menu: () => void;             // 利用上の注意
+    userType: () => void;             // 利用上の注意
+    database: () => void;             // 利用上の注意
 };
 
 
 
 
 
-const MotionCard = motion(Card);
 const Testing = () => {
     //  const setLocalInput = useSetRecoilState(chatInputState);
     //     const setPromptInChatInput = (prompt: string) => {
@@ -146,6 +148,9 @@ const Testing = () => {
     const optionsRef = useRef<HTMLDivElement>(null);
     const askRef = useRef<HTMLDivElement>(null);
     const termsRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const userTypeRef = useRef<HTMLDivElement>(null);
+    const databaseRef = useRef<HTMLDivElement>(null);
 
     /* build the map of scroll functions */
     const scrollFns: ScrollHandlers = {
@@ -155,22 +160,16 @@ const Testing = () => {
         options: () => optionsRef.current?.scrollIntoView({ behavior: "smooth" }),
         ask: () => askRef.current?.scrollIntoView({ behavior: "smooth" }),
         terms: () => termsRef.current?.scrollIntoView({ behavior: "smooth" }),
+        menu: () => menuRef.current?.scrollIntoView({ behavior: "smooth" }),
+        userType: () => userTypeRef.current?.scrollIntoView({ behavior: "smooth" }),
+        database: () => databaseRef.current?.scrollIntoView({ behavior: "smooth" }),
     };
 
-    const selectMenu = () => {
-        setActive(0)
-    }
-    const selectUserType = () => {
-        setActive(1)
-    }
-    const selectDatabase = () => {
-        setActive(2)
-    }
 
     return (
         <SidebarProvider>
             {/* <TableOfContent /> */}
-            <FloatingSidebar />
+            <FloatingSidebar scrollFns={scrollFns} />
             <div className="bg-gradient-to-br from-[#ffefd5] to-[#fff0f5] relative h-full w-full flex flex-col  items-center justify-center">
                 {/* <Navbar /> */}
                 {/* <SidebarTrigger className="fixed top-1/2 bottom-0 rounded-full bg-pink-200 border-2 border-pink-500 p-5 text-xl left-10 z-20" /> */}
@@ -244,7 +243,7 @@ const Testing = () => {
                     <img className="absolute left-0 top-0 rotate-180" src="/images/wave.svg" />
 
                     <div className="max-w-3xl p-10 h-full md:max-w-4xl  lg:max-w-[55rem]  rounded-3xl flex items-center justify-center w-full ">
-                        <MainGrid />
+                        <MainGrid scrollFns={scrollFns} />
                     </div>
                     {/* <img className="absolute left-0 -bottom-1 " src="/images/wave-2.svg" /> */}
 
@@ -268,7 +267,7 @@ const Testing = () => {
                     {/* <img className="absolute left-0 -top-1 rotate-180" src="/images/wave-2.svg" /> */}
                     <div className="flex flex-col items-center justify-center  xl:max-w-4xl z-20 w-fit ">
                         <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-gradient-to-r w-fit from-pink-800 to-pink-500 bg-clip-text">サイトの使い方</h1>
-                        <ImageHighlightPage activeSlide={active} onChange={setActive} />
+                        <ImageHighlightPage menuRef={menuRef} databaseRef={databaseRef} userTypeRef={userTypeRef} activeSlide={active} onChange={setActive} />
                     </div>
                     <img className="absolute left-0 -bottom-0 " src="/images/wave-2.svg" />
 

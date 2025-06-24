@@ -139,9 +139,7 @@ const ChatInput = memo(function ChatInput({
 
   const [localInput, setLocalInput] = useRecoilState(chatInputState);
 
-  useEffect(() => {
-    setLocalInput(input);
-  }, [input]);
+
 
   const debouncedSetInput = useDebounce((value: string) => {
     setInput(value);
@@ -182,17 +180,28 @@ const ChatInput = memo(function ChatInput({
     [isMobile, handleSubmit, sendDisabled, textareaRef],
   );
 
-  // Handle immediate input change for better responsiveness
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newValue = e.target.value;
-      localInputRef.current = newValue; // Update local ref immediately
-      setInput(newValue); // Update parent state in a debounced way
+      const v = e.target.value;
+      localInputRef.current = v;
+      setLocalInput(v);
+      debouncedSetInput(v);
     },
-    [debouncedSetInput],
+    [debouncedSetInput, setLocalInput],
   );
 
+  // Handle immediate input change for better responsiveness
+  // const handleInputChange = useCallback(
+  //   (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  //     const newValue = e.target.value;
+  //     localInputRef.current = newValue; // Update local ref immediately
+  //     setInput(newValue); // Update parent state in a debounced way
+  //   },
+  //   [debouncedSetInput],
+  // );
+
   const [showOptions, setShowOptions] = useState(true);
+
 
   return (
     <form
@@ -358,11 +367,7 @@ const ChatInput = memo(function ChatInput({
             ref={textareaRef}
             autoFocus
             value={localInput}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              setLocalInput(newValue); // Immediate UI feedback
-              debouncedSetInput(newValue); // Debounced sync to parent
-            }}
+            onChange={handleInputChange}
             placeholder="メッセージを書いてね！"
             className="px-3 py-2 focus:ring-2 focus:ring-pink-100 text-xs sm:text-sm min-h-[40px] max-h-[200px] resize-none w-full border rounded-lg"
             minRows={1}

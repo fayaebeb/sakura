@@ -12,6 +12,7 @@ export const HoverEffect = ({
     card: React.ReactNode
     divClassname?: string
     hoverClassname?: string
+    onClick?: () => void; 
     // title: string;
     // description: string;
     // link: string;
@@ -22,7 +23,7 @@ export const HoverEffect = ({
 
   return (
     <div
-      className={cn(
+      className={cn(  
         "grid grid-cols-1 md:grid-cols-2  lg:grid-cols-6  ",
         className
       )}
@@ -32,6 +33,7 @@ export const HoverEffect = ({
           className={cn("relative group  block p-2 ", item.divClassname)}
           onMouseEnter={() => setHoveredIndex(idx)}
           onMouseLeave={() => setHoveredIndex(null)}
+          onClick={item.onClick} 
         >
           <AnimatePresence>
             {hoveredIndex === idx && (
