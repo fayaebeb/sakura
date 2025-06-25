@@ -43,6 +43,7 @@ import SakuraFlow from "@/components/InfoPage/SakuraFlow";
 import { FaqLastWeekResponse, useFaqLastWeek } from "@/hooks/useFAQ";
 import MainGrid from "@/components/InfoPage/MainGrid";
 import Loading from "@/components/InfoPage/Loading";
+import HowToAskGoodQuestions from "@/components/InfoPage/HowToAskGoodQuestions";
 interface Slide {
   id: number;
   title: string;
@@ -294,9 +295,6 @@ const InfoPage = () => {
             </h1>
             <SakurabotDefinition />
           </div>
-
-
-
         </div>
 
 
@@ -307,7 +305,15 @@ const InfoPage = () => {
             <ImageHighlightPage menuRef={menuRef} databaseRef={databaseRef} userTypeRef={userTypeRef} activeSlide={active} onChange={setActive} />
           </div>
           <img className="absolute left-0 -bottom-0 " src="/images/wave-2.svg" />
+        </div>
 
+        <div ref={askRef} className="relative w-full flex items-center justify-center py-20">
+          {/* <img className="absolute left-0 -top-1 rotate-180" src="/images/wave-2.svg" /> */}
+          <div className="flex flex-col items-center justify-center  xl:max-w-4xl z-20 w-fit ">
+            <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-gradient-to-r w-fit from-pink-800 to-pink-500 bg-clip-text">よい質問の仕方</h1>
+            <HowToAskGoodQuestions  />
+          </div>
+          <img className="absolute left-0 -bottom-0 " src="/images/wave-2.svg" />
         </div>
 
         <Footer />

@@ -1,10 +1,11 @@
-// src/jobs/lastWeekFaq.ts
+// src/jobs/lastWeekFAQs.ts
 
 import cron from 'node-cron';
 import { generateAndSaveFaqSnapshot } from '../services/faqService';
 
 /**
- * Schedules the weekly job at every Monday 00:00 in Asia/Tokyo.
+ * Schedule the weekly FAQ snapshot job:
+ * every Monday at 00:00 (Asia/Tokyo).
  */
 export function scheduleLastWeekFaqJob(): void {
   cron.schedule(
@@ -18,8 +19,6 @@ export function scheduleLastWeekFaqJob(): void {
         console.error('[FAQ Job] Error:', err);
       }
     },
-    {
-      timezone: 'Asia/Tokyo',
-    }
+    { timezone: 'Asia/Tokyo' }
   );
 }
