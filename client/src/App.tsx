@@ -13,6 +13,7 @@ import Tour from "./components/Tour";
 import Testing from "./pages/testing";
 import { useIsMobile } from "./hooks/use-mobile";
 import InfoPage from "./pages/info-page";
+import Settings from "./components/settings";
 
 function Router() {
   return (
@@ -37,6 +38,7 @@ function App() {
           <Tour />
           <Router />
           <Toaster />
+          <Settings/>
         </AuthProvider>
       </RecoilRoot>
     </QueryClientProvider>

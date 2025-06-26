@@ -40,12 +40,15 @@ import {
     MessageSquare,
     Gem,
     MessageCircleQuestion,
+    SettingsIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { ScrollHandlers } from "@/pages/info-page";
 import FeedbackDialog from "../feedback-dialog";
+import { useRecoilState } from "recoil";
+import { settingsStateAtom } from "@/state/settingsState";
 
 /* -------------------------------------------------------------------------- */
 /*                               Nav definition                               */
@@ -69,8 +72,8 @@ const nav: NavItem[] = [
         scrollTo: "usage",
         children: [
             { label: "メニュー", icon: <Dot size={20} />, scrollTo: "menu" },
-            { label: "質問オプション",  icon: <Dot size={20} />, scrollTo: "userType" },
-            { label: "参照先データ",  icon: <Dot size={20} />, scrollTo: "database" },
+            { label: "質問オプション", icon: <Dot size={20} />, scrollTo: "userType" },
+            { label: "参照先データ", icon: <Dot size={20} />, scrollTo: "database" },
         ],
     },
 
@@ -91,6 +94,15 @@ const FloatingSidebar: React.FC<FloatingSidebarProps> = ({ scrollFns }) => {
     const displayName = user?.email?.split("@")[0];
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
 
+    const [_, setIsSettingsOpen] = useRecoilState(settingsStateAtom);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const handleOpenSheet = () => {
+
+        setIsSettingsOpen(true);
+        // setIsSidebarOpen(false)
+    };
+
     return (
         <Sheet>
             {/* ── trigger ── */}
@@ -99,6 +111,7 @@ const FloatingSidebar: React.FC<FloatingSidebarProps> = ({ scrollFns }) => {
                     variant="ghost"
                     size="icon"
                     className="fixed top-4 left-4 z-50 rounded-full bg-pink-200 backdrop-blur-md shadow-lg "
+                // onClick={() => setIsSidebarOpen(true)}
                 >
                     <Menu className="h-5 w-5" />
                     <span className="sr-only">Open sidebar</span>
@@ -240,7 +253,7 @@ const FloatingSidebar: React.FC<FloatingSidebarProps> = ({ scrollFns }) => {
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <motion.span
-                                                    className="text-sm font-medium hidden sm:flex items-center"
+                                                    className="text-sm font-medium flex items-center"
                                                     animate={{ scale: [1, 1.05, 1] }}
                                                     transition={{ duration: 2, repeat: Infinity }}
                                                 >
@@ -269,21 +282,32 @@ const FloatingSidebar: React.FC<FloatingSidebarProps> = ({ scrollFns }) => {
                                                 <MessageSquare className="h-4 w-4 text-pink-500" />
                                                 フィードバック
                                             </DropdownMenuItem>
-                                            <DropdownMenuSeparator className="bg-pink-100/70" />
+                                            <DropdownMenuItem
+                                                onClick={handleOpenSheet}
+                                                className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
+                                            >
+                                                <SettingsIcon className="h-4 w-4 text-pink-500" />
+                                                設定
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </motion.div>
-                                <Button
-                                    onClick={() => logoutMutation.mutate()}
-                                    className="w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500"
-                                >
-                                    ログアウト
-                                </Button>
+                                <Link className="w-full" href="/auth">
+                                    <Button
+                                        onClick={() => logoutMutation.mutate()}
+                                        className="w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500"
+                                    >
+                                        ログアウト
+                                    </Button>
+                                </Link>
+
                             </div>
                         ) : (
-                            <Button className="w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500">
-                                ログイン
-                            </Button>
+                            <Link className="w-full" href="/auth">
+                                <Button className="w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500">
+                                    ログイン
+                                </Button>
+                            </Link>
                         )}
                     </SheetFooter>
                 </SheetContent>

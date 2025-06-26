@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from "framer-motion";
-import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu, MessageSquare, BookOpen, BadgeInfo } from "lucide-react";
+import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu, MessageSquare, BookOpen, BadgeInfo, SettingsIcon } from "lucide-react";
 
 import {
     AlertDialog,
@@ -28,9 +28,10 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { tourState } from '@/state/tourState';
 import FeedbackDialog from './feedback-dialog';
+import { settingsStateAtom } from '@/state/settingsState';
 
 
 
@@ -43,6 +44,8 @@ const Navbar = () => {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+    const [_, setIsSettingsOpen] = useRecoilState(settingsStateAtom);
+
     const setTour = useSetRecoilState(tourState);
 
 
@@ -98,6 +101,12 @@ const Navbar = () => {
         }));
     };
 
+    const handleOpenSheet = () => {
+
+        setIsSettingsOpen(true);
+        // setIsSidebarOpen(false)
+    };
+
     return (
         <>
             <header id="welcome-text" className="border-b border-pink-100 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-30 w-full">
@@ -107,7 +116,7 @@ const Navbar = () => {
                         className="flex items-center"
                         whileHover={{ scale: 1.05 }}
                     >
-                            <img src="/images/pclogo.png" alt="Company Logo" className="h-5 sm:h-10" />
+                        <img src="/images/pclogo.png" alt="Company Logo" className="h-5 sm:h-10" />
                     </motion.div>
 
                     {/* AI Brand Logo with animation */}
@@ -229,6 +238,13 @@ const Navbar = () => {
                                         </DropdownMenuItem>
                                     </Link>
 
+                                    <DropdownMenuItem
+                                        onClick={handleOpenSheet}
+                                        className="cursor-pointer text-pink-700 hover:bg-pink-50 focus:bg-pink-50 focus:text-pink-800"
+                                    >
+                                        <SettingsIcon className="h-4 w-4 text-pink-500" />
+                                        設定
+                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator className="bg-pink-100/70" />
 
                                     {/* Logout Option */}
