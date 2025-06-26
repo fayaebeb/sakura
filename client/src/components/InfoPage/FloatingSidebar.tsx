@@ -292,22 +292,34 @@ const FloatingSidebar: React.FC<FloatingSidebarProps> = ({ scrollFns }) => {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </motion.div>
-                                <Link className="w-full" href="/auth">
-                                    <Button
-                                        onClick={() => logoutMutation.mutate()}
-                                        className="w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500"
-                                    >
-                                        ログアウト
-                                    </Button>
-                                </Link>
+                                <motion.div
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="relative w-full"
+                                >
+                                    <Link className="w-full" href="/auth">
+                                        <div
+                                            onClick={() => logoutMutation.mutate()}
+                                            className="flex items-center justify-center p-1.5 text-sm w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500"
+                                        >
+                                            ログアウト
+                                        </div>
+                                    </Link>
+                                </motion.div>
 
                             </div>
                         ) : (
-                            <Link className="w-full" href="/auth">
-                                <Button className="w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500">
-                                    ログイン
-                                </Button>
-                            </Link>
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="relative w-full"
+                            >
+                                <Link className="w-full" href="/auth">
+                                    <div className="w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500">
+                                        ログイン
+                                    </div>
+                                </Link>
+                            </motion.div>
                         )}
                     </SheetFooter>
                 </SheetContent>
