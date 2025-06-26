@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { comparePasswords, hashPassword, setupAuth } from "./auth";
 import { insertMessageSchema, insertFeedbackSchema, chatRequestSchema, faqSnapshots, faqItems } from "@shared/schema";
 import { transcribeAudio } from "./apis/openai";
 import { textToSpeechStream } from "./apis/openaitts";
@@ -12,7 +12,8 @@ import {
   apiRateLimit,
   validateMessage,
   validateFeedback,
-  handleValidationErrors
+  handleValidationErrors,
+  validatePasswordChange
 } from "./security";
 import rateLimit from 'express-rate-limit';
 import { sendError, getPersistentSessionId } from "./utils/errorResponse";
@@ -377,6 +378,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "Failed to save feedback",
           error instanceof Error ? error.message : "Unknown error"
         );
+      }
+    }
+  );
+
+  app.post("/api/change-password",
+    apiRateLimit,
+    validatePasswordChange, // Use the password validation defined above
+    handleValidationErrors, // Handle validation errors
+    async (req: Request, res: Response) => {
+      if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
+      console.log("🔍 Received change-password request");
+      console.log("🔐 req.user:", req.user); // <== log this
+
+      const { oldPassword, newPassword } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      try {
+        // Fetch user from the database
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        // Compare old password
+        const passwordValid = await comparePasswords(oldPassword, user.password);
+        if (!passwordValid) {
+          return res.status(400).json({ error: "Old password is incorrect" });
+        }
+
+        // Hash the new password and update it in the database
+        const hashedPassword = await hashPassword(newPassword);
+        await storage.updateUserPassword(userId, hashedPassword);
+
+        // Respond with success
+        res.status(200).json({ message: "Password changed successfully" });
+      } catch (error) {
+        console.error("Error changing password:", error);
+        res.status(500).json({ error: "Failed to change password" });
       }
     }
   );

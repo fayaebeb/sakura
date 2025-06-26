@@ -109,6 +109,21 @@ export const validateFeedback = [
     .withMessage("Invalid message ID"),
 ];
 
+export const validatePasswordChange = [
+  body("oldPassword")
+    .notEmpty()
+    .withMessage("Old password is required")
+    .isLength({ max: 128 })
+    .withMessage("Password too long"),
+  body("newPassword")
+    .notEmpty()
+    .withMessage("New password is required")
+    .isLength({ min: 8, max: 128 })
+    .withMessage("Password must be between 8 and 128 characters")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
+    .withMessage("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"),
+];
+
 // Validation error handler
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);

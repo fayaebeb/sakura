@@ -69,7 +69,7 @@ app.use((req, res, next) => {
   //     console.error("[Manual FAQ snapshot] Error:", err)
   //   );
   // }
-
+  
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes

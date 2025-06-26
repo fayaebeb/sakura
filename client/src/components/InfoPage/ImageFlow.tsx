@@ -90,9 +90,10 @@ const ImageFlow: React.FC<Props> = ({ activeSlide, onChange, menuRef, userTypeRe
     ];
 
     return (
-        <div className="flex flex-col space-y-2 py-5 px-5">
+        <div className="flex flex-col space-y-2 py-5 px-5 relative">
+                <div className='hidden md:block absolute top-[52%]  -right-12 h-16 w-16 p-20 -z-10 rounded-full bg-[#e7008a]'/>
             <div className="flex flex-col md:flex-row  rounded-2xl pt-10 ">
-                <div className="bg-white  rounded-t-2xl md:rounded-t-none md:rounded-l-2xl md:w-2/3 ">
+                <div className="bg-white  rounded-t-2xl md:rounded-r-none md:rounded-l-2xl md:w-2/3 border border-pink-500 ">
                     <div className="p-4 w-full max-w-full relative bg-white  py-16 rounded-2xl ">
 
                         <img className="w-full rounded-2xl shadow-2xl shadow-pink-200" src="/images/sakura-home-mb.png" alt="" />
