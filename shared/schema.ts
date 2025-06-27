@@ -100,7 +100,7 @@ export const insertFeedbackSchema = createInsertSchema(feedback).pick({
 export const inviteTokens = pgTable("invite_tokens", {
   id: serial("id").primaryKey(),
   token: text("token").notNull().unique(),
-  createdById: integer("created_by_id").references(() => users.id),
+  createdById: integer("created_by_moderator_id").references(() => users.id),
   usedById: integer("used_by_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   usedAt: timestamp("used_at"),
