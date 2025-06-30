@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import ChatInterface from "@/components/chat-interface";
 import { motion } from "framer-motion";
 import { Heart, Sparkles, AudioLines, Gem, Trash2, LogOut, User, Menu, MessageSquare, BookOpen, BadgeInfo } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,8 @@ import { tourState } from "@/state/tourState";
 import { useSetRecoilState } from "recoil";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FloatingSidebar from "@/components/InfoPage/FloatingSidebar";
+import { ScrollHandlers } from "./info-page";
 
 
 export default function HomePage() {

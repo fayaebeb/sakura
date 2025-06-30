@@ -25,7 +25,7 @@ declare global {
 const SALT_ROUNDS = 12;
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
@@ -45,7 +45,7 @@ async function compareScryptPasswords(supplied: string, stored: string): Promise
 }
 
 // Hybrid password comparison that handles both bcrypt and legacy scrypt
-async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+export async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   // Check if it's a bcrypt hash (starts with $2b$)
   if (stored.startsWith('$2b$')) {
     return await bcrypt.compare(supplied, stored);
@@ -147,23 +147,23 @@ export function setupAuth(app: Express) {
             error: "このユーザー名は既に使用されています。"
           });
         }
-        
+
         const { email, password, inviteToken } = req.body as {
           email: string;
           password: string;
           inviteToken?: string;
         };
-        
+
         if (!inviteToken) {
           return res.status(400).json({ error: "招待トークンが必要です。" });
         }
-        
+
         const tokenRecord = await storage.getInviteToken(inviteToken);
         if (!tokenRecord || !tokenRecord.isValid || tokenRecord.usedById) {
           return res.status(400).json({ error: "無効なまたは使用済みの招待トークンです。" });
         }
-        
-        
+
+
         const user = await storage.createUser({
           email,
           password: await hashPassword(password),
