@@ -39,7 +39,7 @@ const MainMessageDialog: React.FC<TooltipRenderProps> = ({
                 {/* Left: Speech bubble area */}
                 <div className="flex-1 flex flex-col justify-between">
                     <div className="bg-white text-gray-800 text-xs rounded-lg shadow px-3 py-2 border border-pink-300 mt-3 ml-3 mr-2 mb-3 space-y-2">
-                        <h2 className="text-base font-bold text-sakura-600 mb-1">お話したいことを書いてね！ ✨</h2>
+                        <h2 className="text-base font-bold text-sakura-600 mb-1">ここで返信するよ ✨</h2>
                         <p className="leading-snug">
                             ここからあなたの質問・意見に答えますね！
                         </p>
@@ -89,7 +89,7 @@ const MainMessageDialog: React.FC<TooltipRenderProps> = ({
                 {/* Left: Speech bubble area */}
                 <div className="flex-1 flex flex-col justify-between">
                     <div className="bg-white text-gray-800 text-sm rounded-xl shadow px-4 py-3 border border-pink-300 mt-4 ml-4 mr-2 mb-4 ">
-                        <h2 className="text-base font-bold text-sakura-600 mb-1">お話したいことを書いてね！ ✨</h2>
+                        <h2 className="text-base font-bold text-sakura-600 mb-1">ここで返信するよ ✨</h2>
                         <p className="leading-snug">
                             ここからあなたの質問・意見に答えますね！
                         </p>
