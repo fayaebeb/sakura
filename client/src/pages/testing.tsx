@@ -296,6 +296,8 @@ const Testing = () => {
                     </div>
                 </div>
 
+               
+
                 {/* Right: Mascot Image */}
                 <div className="relative w-[200px] flex items-end justify-center overflow-visible -mr-3">
                     <img

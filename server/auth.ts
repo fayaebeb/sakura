@@ -14,6 +14,7 @@ import {
   validateLogin,
   handleValidationErrors
 } from "./security";
+import { verifyTurnstile } from "./utils/verifyTurnstile";
 
 declare global {
   namespace Express {
@@ -134,6 +135,7 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register",
     authRateLimit,
+    verifyTurnstile,
     validateRegistration,
     handleValidationErrors,
     async (req: Request, res: Response, next: NextFunction) => {
@@ -206,6 +208,7 @@ export function setupAuth(app: Express) {
   app.post("/api/login",
     authRateLimit,
     bruteForce.prevent,
+    verifyTurnstile,
     validateLogin,
     handleValidationErrors,
     (req: Request, res: Response, next: NextFunction) => {

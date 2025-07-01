@@ -300,7 +300,7 @@ const FloatingSidebar: React.FC<FloatingSidebarProps> = ({ scrollFns }) => {
                                     {/* <Link className="w-full" href="/auth"> */}
                                         <div
                                             onClick={() => logoutMutation.mutate()}
-                                            className="flex items-center justify-center p-1.5 text-sm w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500"
+                                            className="flex items-center justify-center p-1.5 cursor-pointer text-sm w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500"
                                         >
                                             ログアウト
                                         </div>

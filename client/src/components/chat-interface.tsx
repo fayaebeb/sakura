@@ -48,89 +48,8 @@ const AudioPlayer = ({ audioUrl, isPlaying, onPlayComplete }: { audioUrl: string
 };
 
 
-const Tutorial = ({ onClose }: { onClose: () => void }) => {
-  const [step, setStep] = useState(1);
 
-  const steps = [
-    {
-      title: "ようこそ！",
-      description:
-        "「桜AI」は、PCKKにおいて、情報提供や質問への回答を行うAIです。私の役割は、さまざまなトピックについて正確で分かりやすい情報を提供し、ユーザーのリクエストに的確にお応えすることです。たとえば、データに基づくご質問には、社内資料や外部情報を参照しながら丁寧にお答えします。",
-      icon: <Sparkles className="h-5 w-5 text-pink-400" />,
-    },
-    {
-      title: "楽しくお話ししましょう！",
-      description:
-        "「桜AI」は、社内の全国うごき統計に関する営業資料や、人流に関する社内ミニ講座の内容を基礎データとして取り込み、さらにWikipediaやGoogleのAPIを通じてインターネット上の情報も収集しています。これらの情報をもとに、最適な回答を生成しています。",
-      icon: <Heart className="h-5 w-5 text-red-400" />,
-    },
-  ];
-
-  return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        className="flex items-center justify-center"
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", duration: 0.5 }}
-      >
-        <Card className="w-[80%] max-w-md p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }}
-            >
-              {steps[step - 1].icon}
-            </motion.div>
-            <h3 className="text-lg font-semibold">{steps[step - 1].title}</h3>
-          </div>
-          <p className="text-muted-foreground">{steps[step - 1].description}</p>
-          <div className="flex justify-between items-center pt-4">
-            <div className="flex gap-2">
-              {steps.map((_, idx) => (
-                <motion.div
-                  key={idx}
-                  className={`w-2 h-2 rounded-full ${idx + 1 === step ? "bg-primary" : "bg-muted"
-                    }`}
-                  animate={
-                    idx + 1 === step
-                      ? {
-                        scale: [1, 1.3, 1],
-                      }
-                      : {}
-                  }
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-              ))}
-            </div>
-            <Button
-              onClick={() => {
-                if (step < steps.length) {
-                  setStep(step + 1);
-                } else {
-                  onClose();
-                }
-              }}
-            >
-              {step < steps.length ? "次へ" : "さあ、始めましょう！！"}
-            </Button>
-          </div>
-        </Card>
-      </motion.div>
-    </motion.div>
-  );
-};
 const CHAT_SESSION_KEY_PREFIX = "chat_session_id_user_";
-const TUTORIAL_SHOWN_KEY_PREFIX = "tutorial_shown_user_";
 
 const ChatInterface = () => {
   const [input, setInput] = useRecoilState(chatInputState);
@@ -140,7 +59,6 @@ const ChatInterface = () => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   const messageTopRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [showTutorial, setShowTutorial] = useState(false);
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
@@ -160,29 +78,7 @@ const ChatInterface = () => {
   // Detect mobile devices
   const isMobile = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
 
-  useEffect(() => {
-    if (!showTutorial) {
-      textareaRef.current?.focus();
-    }
-  }, [showTutorial]);
 
-  // Handle tutorial display
-  useEffect(() => {
-    if (!user) return;
-    const tutorialShownKey = `${TUTORIAL_SHOWN_KEY_PREFIX}${user.id}`;
-    const tutorialShown = localStorage.getItem(tutorialShownKey);
-    if (!tutorialShown) {
-      setShowTutorial(true);
-    }
-  }, [user]);
-
-
-  const handleCloseTutorial = () => {
-    if (!user) return;
-    const tutorialShownKey = `${TUTORIAL_SHOWN_KEY_PREFIX}${user.id}`;
-    setShowTutorial(false);
-    localStorage.setItem(tutorialShownKey, "true");
-  };
 
   const [sessionId, setSessionId] = useState<string>("");
 
@@ -703,10 +599,6 @@ const ChatInterface = () => {
 
   return (
     <Card id="chat-interface" className="flex flex-col h-[calc(100vh-12rem)] relative overflow-visible">
-
-      <AnimatePresence>
-        {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
-      </AnimatePresence>
 
 
       {currentAudioUrl && (
