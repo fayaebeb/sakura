@@ -45,7 +45,7 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
       id: 2,
       title: "行政",
       icon: <Landmark className="w-full h-full text-blue-600 bg-blue-200 rounded-xl p-2 shadow-2xl" />,
-      description: "「民間企業からこんな質問があった！」などあればこれを押してね！",
+      description: "「行政からこんな質問があった！」などあればこれを押してね！",
       style: "bg-blue-100 border border-blue-300  text-blue-800"
 
 

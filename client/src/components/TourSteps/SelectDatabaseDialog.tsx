@@ -52,6 +52,10 @@ const SelectDatabaseDialog: React.FC<TooltipRenderProps> = ({ primaryProps,
                 <div className="flex flex-1 flex-col space-y-4">
                     <h2 className="text-base text-center md:text-left font-bold text-rose-600">データベースのご紹介！✨</h2>
 
+                    <p className="leading-snug">
+                        どの人流の資料を参照したいか選べるよ！<br />
+                    </p>
+
                     {/* Database cards in a grid */}
                     <div className="grid grid-cols-1 gap-3">
                         {databases.map(({ Icon, title, description }) => (
