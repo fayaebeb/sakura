@@ -88,7 +88,7 @@ const VoiceModeDialog: React.FC<TooltipRenderProps> = ({
                     <img
                         src="/images/sakura-voice.png"
                         alt="Sakura-chan"
-                        className="absolute bottom-0 pointer-events-none h-[250px] w-[250px] select-none"
+                        className="absolute bottom-0 pointer-events-none h-[300px] w-[250px] select-none"
                         style={{ zIndex: 1 }}
                     />
 
