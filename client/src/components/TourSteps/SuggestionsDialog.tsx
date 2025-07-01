@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "../ui/card";
 import { TooltipRenderProps } from "react-joyride";
 import { Button } from "../ui/button";
@@ -15,6 +15,7 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
 
 
     const isMobile = useRecoilValue(isMobileState);
+    const [loaded, setLoaded] = useState(false);
 
     return (
         <>
@@ -22,12 +23,19 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
 
                 {/* Left: Speech bubble area */}
                 <div className="flex-1 flex flex-col justify-between">
-                    <div className="bg-white text-gray-800 text-xs rounded-lg shadow px-3 py-2 border border-pink-300 mt-3 ml-3 mr-2 mb-3">
-                        <h2 className="text-base font-bold text-sakura-600 mb-1">チャット画面だよ！✨</h2>
+                    <div className="bg-white text-gray-800 text-xs rounded-lg shadow px-3 py-2 border border-pink-300 mt-3 ml-3 mr-2 mb-3 space-y-2">
+                        <h2 className="text-base font-bold text-sakura-600 mb-1">会話のヒント！</h2>
                         <p className="leading-snug">
-                            ここで桜ちゃんと自由におしゃべりできるよ〜💬<br />
-                            以前の会話も一覧で見れるんだ！便利でしょ？
+                            ここで会話形式を選べるよ！​<br />
+                            どんな答え方が良いか教えてね！
                         </p>
+                        <div className={`rounded-2xl w-[250px] ${loaded ? "blur-0 h-fit" : "blur-sm h-[150px]"
+                            }`}>
+                            <img onLoad={() => setLoaded(true)}
+                                className={`transition duration-500 ease-in-out rounded-2xl shadow-md shadow-pink-300 ${loaded ? "blur-0" : "blur-sm"
+                                    }`} src="/images/suggestions_tutorial.png" alt="" />
+                        </div>
+
                     </div>
 
                     {/* Buttons */}
@@ -58,16 +66,22 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
                 </div> */}
             </Card>
 
-            <Card className="hidden relative md:flex w-full max-w-lg overflow-visible bg-white/90 rounded-3xl pl-0 pr-0 pt-0 pb-0 bg-gradient-to-r from-pink-200 via-pink-200 to-white border-0 border-b-4 border-rose-600 shadow-2xl">
+            <Card className="hidden relative md:flex  max-w-lg overflow-visible bg-white/90 rounded-3xl pl-0 pr-0 pt-0 pb-0 bg-gradient-to-r from-pink-200 via-pink-200 to-white border-0 border-b-4 border-rose-600 shadow-2xl">
 
                 {/* Left: Speech bubble area */}
                 <div className="flex-1 flex flex-col justify-between">
-                    <div className="bg-white text-gray-800 text-sm rounded-xl shadow px-4 py-3 border border-pink-300 mt-4 ml-4 mr-2 mb-4">
-                        <h2 className="text-lg font-bold text-sakura-600 mb-1">チャット画面だよ！✨</h2>
+                    <div className="bg-white text-gray-800 text-sm rounded-xl shadow px-4 py-3 border border-pink-300 mt-4 ml-4 mr-2 mb-4 space-y-2">
+                        <h2 className="text-lg font-bold text-sakura-600 mb-1">会話のヒント！</h2>
                         <p className="leading-snug">
-                            ここで桜ちゃんと自由におしゃべりできるよ〜💬<br />
-                            以前の会話も一覧で見れるんだ！便利でしょ？
+                            ここで会話形式を選べるよ！​<br />
+                            どんな答え方が良いか教えてね！
                         </p>
+                        <div className={`rounded-2xl w-[250px] ${loaded ? "blur-0 h-fit" : "blur-sm h-[150px]"
+                            }`}>
+                            <img onLoad={() => setLoaded(true)}
+                                className={`transition duration-500 ease-in-out rounded-2xl shadow-md shadow-pink-300 ${loaded ? "blur-0" : "blur-sm"
+                                    }`} src="/images/suggestions_tutorial.png" alt="" />
+                        </div>
                     </div>
 
                     {/* Buttons */}
@@ -99,7 +113,7 @@ const SuggestionsDialog: React.FC<TooltipRenderProps> = ({
 
 
 
-        
+
     );
 };
 

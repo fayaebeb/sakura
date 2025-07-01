@@ -130,7 +130,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.isAuthenticated()) return sendError(res, 401, "Unauthorized");
 
       const persistentSessionId = getPersistentSessionId(req.user!.email);
-
       const result = chatRequestSchema.safeParse(req.body);
       if (!result.success) {
         console.error("Invalid request body:", result.error);

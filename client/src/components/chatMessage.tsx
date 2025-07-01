@@ -321,8 +321,8 @@ export default function ChatMessage({
 
           <div className="prose prose-xs sm:prose-sm break-words font-medium max-w-none w-full">
             {message.isBot && sections ? (
-              <>
-                <div id="main-message-text">
+              <div id="main-message-text">
+                <div id="">
                   <ReactMarkdown
 
                     remarkPlugins={[remarkGfm]}
@@ -376,7 +376,7 @@ export default function ChatMessage({
                     </div>
                   )}
                 </div>
-              </>
+              </div>
             ) : (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}

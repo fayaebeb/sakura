@@ -16,10 +16,10 @@ const SearchInternetButtonDialog: React.FC<TooltipRenderProps> = ({
                 {/* Left: Speech bubble area */}
                 <div className="flex-1 flex flex-col justify-between">
                     <div className="bg-white text-gray-800 text-xs rounded-lg shadow px-3 py-2 border border-pink-300 mt-3 ml-3 mr-2 mb-3">
-                        <h2 className="text-base font-bold text-sakura-600 mb-1">チャット画面だよ！✨</h2>
+                        <h2 className="text-base font-bold text-sakura-600 mb-1">インターネット検索ボタンだよ！✨</h2>
                         <p className="leading-snug">
-                            ここで桜ちゃんと自由におしゃべりできるよ〜💬<br />
-                            以前の会話も一覧で見れるんだ！便利でしょ？
+                            情報源について、社内ソースだけでなく、<br />
+                            インターネット検索もしてお答えします！
                         </p>
                     </div>
 
@@ -46,10 +46,10 @@ const SearchInternetButtonDialog: React.FC<TooltipRenderProps> = ({
                 {/* Left: Speech bubble area */}
                 <div className="flex-1 flex flex-col justify-between">
                     <div className="bg-white text-gray-800 text-sm rounded-xl shadow px-4 py-3 border border-pink-300 mt-4 ml-4 mr-2 mb-4">
-                        <h2 className="text-lg font-bold text-sakura-600 mb-1">チャット画面だよ！✨</h2>
+                        <h2 className="text-lg font-bold text-sakura-600 mb-1">インターネット検索ボタンだよ！✨</h2>
                         <p className="leading-snug">
-                            ここで桜ちゃんと自由におしゃべりできるよ〜💬<br />
-                            以前の会話も一覧で見れるんだ！便利でしょ？
+                            情報源について、社内ソースだけでなく、<br />
+                            インターネット検索もしてお答えします！
                         </p>
                     </div>
 

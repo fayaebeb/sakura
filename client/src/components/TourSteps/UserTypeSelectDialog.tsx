@@ -26,8 +26,8 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
   const slides: Slide[] = [
     {
       id: 0,
-      title: "チャット画面だよ！✨",
-      description: "ここで桜ちゃんと自由におしゃべりできるよ〜💬以前の会話も一覧で見れるんだ！便利でしょ？",
+      title: "民間",
+      description: "「民間企業からこんな質問があった！」などあればこれを押してね！",
       icon: <User className="w-full h-full text-pink-600 bg-pink-200 rounded-xl p-2 shadow-2xl" />,
 
       style: "bg-pink-100 border border-pink-300 text-pink-800"
@@ -35,17 +35,17 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
     },
     {
       id: 1,
-      title: "履歴をさっと確認👀",
-      description: "過去のメッセージをタイムライン形式で確認！キーワード検索ですぐに探せるよ。",
+      title: "自分",
+      description: "自分が疑問に思ったことや自分が意見したいことであればこれを押してね！",
       style: "bg-green-100 border border-green-300  text-green-800",
       icon: <Building className="w-full h-full text-green-600 bg-green-200 rounded-xl p-2 shadow-2xl " />,
 
     },
     {
       id: 2,
-      title: "設定をカスタマイズ⚙️",
+      title: "行政",
       icon: <Landmark className="w-full h-full text-blue-600 bg-blue-200 rounded-xl p-2 shadow-2xl" />,
-      description: "テーマカラーや通知設定を自由に変更！自分好みの環境に仕上げよう。",
+      description: "「民間企業からこんな質問があった！」などあればこれを押してね！",
       style: "bg-blue-100 border border-blue-300  text-blue-800"
 
 
@@ -82,10 +82,10 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
         <div className="flex-1 flex flex-col justify-between p-4 space-y-4">
           <div className="bg-white text-gray-800 text-sm rounded-xl shadow px-4 py-3 border border-pink-300 space-y-5">
             <div>
-              <h2 className="text-base font-bold text-rose-600 mb-1">チャット画面だよ！✨</h2>
+              <h2 className="text-base font-bold text-rose-600 mb-1">誰からの質問か選んでね！✨</h2>
               <p className="leading-snug">
-                ここで桜ちゃんと自由におしゃべりできるよ〜💬<br />
-                以前の会話も一覧で見れるんだ！便利でしょ？
+                ここでは誰からの質問/意見か選べるよ！​<br />
+                ニーズ調査のためにぜひ協力お願いします！
               </p>
             </div>
 
@@ -94,14 +94,14 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
                 setApi={setApi}
                 opts={{ loop: true }} // Enable infinite looping
                 plugins={[
-                  Autoplay({ delay: 2000, stopOnInteraction: false }), // Autoplay every 2 seconds
+                  Autoplay({ delay: 4000, stopOnInteraction: false }), // Autoplay every 2 seconds
                 ]}
               >
                 <CarouselContent className="px-1 ">
                   {slides.map((slide) => (
                     <CarouselItem key={slide.id} >
-                      <div className={`flex  p-2 rounded-lg shadow-lg items-center h-full ${slide.style} space-x-2 `}>
-                        <div className=" p-2 h-full">
+                      <div className={`flex  p-1 rounded-lg shadow-lg items-center h-full ${slide.style} space-x-1 `}>
+                        <div className=" p-1 h-full">
                           {slide.icon}
                         </div>
                         <div className="w-fit space-y-1">
@@ -148,16 +148,16 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
         {/* Right: Mascot Image */}
 
       </Card>
-       <Card className="hidden relative md:flex w-full max-w-sm overflow-visible bg-white/90 rounded-2xl bg-gradient-to-r from-pink-200 via-pink-200 to-white border-0 border-b-4 border-rose-600 shadow-xl">
+      <Card className="hidden relative md:flex w-full max-w-sm overflow-visible bg-white/90 rounded-2xl bg-gradient-to-r from-pink-200 via-pink-200 to-white border-0 border-b-4 border-rose-600 shadow-xl">
 
         {/* Left: Speech bubble area */}
         <div className="flex-1 flex flex-col justify-between p-4 space-y-4">
           <div className="bg-white text-gray-800 text-sm rounded-xl shadow px-4 py-3 border border-pink-300 space-y-5">
             <div>
-              <h2 className="text-base font-bold text-rose-600 mb-1">チャット画面だよ！✨</h2>
+              <h2 className="text-base font-bold text-rose-600 mb-1">誰からの質問か選んでね！✨</h2>
               <p className="leading-snug">
-                ここで桜ちゃんと自由におしゃべりできるよ〜💬<br />
-                以前の会話も一覧で見れるんだ！便利でしょ？
+                ここでは誰からの質問/意見か選べるよ！​<br />
+                ニーズ調査のためにぜひ協力お願いします！
               </p>
             </div>
 
@@ -166,14 +166,14 @@ const UserTypeSelectDialog: React.FC<TooltipRenderProps> = ({
                 setApi={setApi}
                 opts={{ loop: true }} // Enable infinite looping
                 plugins={[
-                  Autoplay({ delay: 2000, stopOnInteraction: false }), // Autoplay every 2 seconds
+                  Autoplay({ delay: 4000, stopOnInteraction: false }), // Autoplay every 2 seconds
                 ]}
               >
                 <CarouselContent className="px-1 ">
                   {slides.map((slide) => (
                     <CarouselItem key={slide.id} >
-                      <div className={`flex  p-2 rounded-lg shadow-lg items-center h-full ${slide.style} space-x-2 `}>
-                        <div className="w-1/4 p-2 h-full">
+                      <div className={`flex  p-1 rounded-lg shadow-lg items-center h-full ${slide.style} space-x-1 `}>
+                        <div className="w-1/4 p-1 h-full">
                           {slide.icon}
                         </div>
                         <div className="w-fit space-y-1">
