@@ -150,7 +150,7 @@ export function setupSecurity(app: Express) {
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           imgSrc: ["'self'", "data:", "https:"],
-          scriptSrc: ["'self'"],
+          scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
           connectSrc: ["'self'", "wss:", "https://skapi-qkrap.ondigitalocean.app"],
           mediaSrc: ["'self'", "blob:"],
           objectSrc: ["'none'"],
@@ -158,7 +158,8 @@ export function setupSecurity(app: Express) {
             "'self'",
             "https://drive.google.com",
             "https://docs.google.com",
-            "https://drive-thirdparty.googleusercontent.com"
+            "https://drive-thirdparty.googleusercontent.com",
+            "https://challenges.cloudflare.com",
            ],
         },
       },
