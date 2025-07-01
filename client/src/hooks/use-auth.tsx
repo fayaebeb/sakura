@@ -115,17 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       console.log("Auth - Logout successful");
-      // Clear user session data from localStorage
-      if (typeof localStorage !== "undefined") {
-        Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith("chat_session_id_user_") || key.startsWith("tutorial_shown_user_")) {
-            localStorage.removeItem(key);
-          }
-        });
-      }
-      // Invalidate user cache
       queryClient.setQueryData(["/api/user"], null);
-
       toast({
         title: "ログアウト成功",
         description: "またのご利用をお待ちしております。",
