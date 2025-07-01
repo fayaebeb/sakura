@@ -7,6 +7,7 @@ import {
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export type AuthUser = SelectUser & {
   initialLoginAt: string | null;
@@ -42,6 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnMount: true,
     refetchOnReconnect: true,
   });
+
+  const [, setLocation] = useLocation();
 
   // When the component mounts, refetch the user data to validate the session
   useEffect(() => {
@@ -116,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       console.log("Auth - Logout successful");
       queryClient.setQueryData(["/api/user"], null);
+       setLocation("/auth");
       toast({
         title: "ログアウト成功",
         description: "またのご利用をお待ちしております。",

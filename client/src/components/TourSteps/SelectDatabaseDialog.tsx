@@ -7,19 +7,19 @@ import { TooltipRenderProps } from "react-joyride";
 
 const databases = [
     {
-        Icon: Book,
-        title: "うごき統計",
-        description: "Curated articles, FAQs and reference material the AI can cite for factual answers."
+        Icon: "/images/database-1.png",
+        title: "全国うごき統計",
+        description: "ソフトバンク携帯基地局に基づく全国の国内人流データに関する営業資料等を参照します。"
     },
     {
-        Icon: FileText,
-        title: "来た来ぬ",
-        description: "Your project specifications, design docs and reports – kept up to date and fully searchable."
+        Icon: "/images/database-2.png",
+        title: "全国インバウンド統計",
+        description: "Azira社のGPS位置情報に基づく全国の来訪インバウンド人流データに関する営業資料等を参照します。"
     },
     {
-        Icon: Mic,
-        title: "インバウンド",
-        description: "Auto‑generated summaries and full transcripts of past meetings for quick context lookup."
+        Icon: "/images/database-3.png",
+        title: "全国来た来ぬ統計",
+        description: "Lineヤフー社のGPS×検索データに基づく全国来訪・逸失人流データに関する営業資料等を参照します。"
     }
 ];
 const SelectDatabaseDialog: React.FC<TooltipRenderProps> = ({ primaryProps,
@@ -60,7 +60,8 @@ const SelectDatabaseDialog: React.FC<TooltipRenderProps> = ({ primaryProps,
                                 className="group flex items-start gap-3 rounded-lg bg-white/80 p-3 shadow-lg transition hover:bg-pink-100/70"
                             >
                                 <div className="mt-1 shrink-0 rounded-full bg-pink-200/70 p-2 shadow">
-                                    <Icon className="h-5 w-5 text-pink-700" />
+                                    {/* <Icon className="h-5 w-5 text-pink-700" /> */}
+                                    <img className="h-8 w-8" src={Icon} />
                                 </div>
                                 <div className="space-y-0.5">
                                     <p className="text-sm font-semibold text-pink-900">{title}</p>
@@ -82,12 +83,12 @@ const SelectDatabaseDialog: React.FC<TooltipRenderProps> = ({ primaryProps,
                             スキップ
                         </Button>
                         <Button
-                            {...backProps}  
+                            {...backProps}
                             className="rounded-full bg-pink-300 px-4 py-1 text-xs text-pink-800 hover:bg-pink-300"
                         >
                             戻る
                         </Button>
-                        <Button 
+                        <Button
                             {...primaryProps}
                             className="rounded-full bg-pink-500 px-4 py-1 text-xs text-white hover:bg-pink-600"
                         >

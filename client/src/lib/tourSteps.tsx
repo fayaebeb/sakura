@@ -60,13 +60,17 @@ export const tourSteps: CustomJoyrideStep[] = [
     //   customRadius: "9999px"
 
     // },
-    {   
-             id: "suggestions-button",
+    {
+        id: "suggestions-button",
         target: "#suggestions-button",
         content: "Click here to get started!",
-        placement: "bottom",
         spotlightPadding: 0,
-        customRadius: "9999px"
+        customRadius: "9999px",
+        
+        floaterProps: {
+            disableFlip: true,       // <-- only this step won't flip
+        },
+        placement: "top",
     },
     {
         id: "voice-mode-button",
@@ -98,27 +102,25 @@ export const tourSteps: CustomJoyrideStep[] = [
         content: "Click here to get started!",
         placement: "bottom",
         spotlightPadding: 5,
-        floaterProps: {
-            disableFlip: true,       // <-- only this step won't flip  
-        },
+       
         customRadius: "var(--radius)",
     },
-    {
-        id: "社内文書情報",
-        target: "#社内文書情報",
-        content: "Click here to get started!",
-        placement: "top",
-        spotlightPadding: 0,
-        customRadius: "var(--radius)"
-    },
-    {
-        id: "オンラインWeb情報",
-        target: "#オンラインWeb情報",
-        content: "Click here to get started!",
-        placement: "top",
-        spotlightPadding: 0,
-        customRadius: "var(--radius)"
-    },
+    // {
+    //     id: "社内文書情報",
+    //     target: "#社内文書情報",
+    //     content: "Click here to get started!",
+    //     placement: "top",
+    //     spotlightPadding: 0,
+    //     customRadius: "var(--radius)"
+    // },
+    // {
+    //     id: "オンラインWeb情報",
+    //     target: "#オンラインWeb情報",
+    //     content: "Click here to get started!",
+    //     placement: "top",
+    //     spotlightPadding: 0,
+    //     customRadius: "var(--radius)"
+    // },
     {
         id: "settings-dropdown",
         target: "#settings-dropdown",

@@ -63,7 +63,7 @@ interface NavItem {
 }
 
 const nav: NavItem[] = [
-    { label: "さくらボットとは", href: "/", icon: <Home size={18} /> },
+    { label: "ホーム", href: "/", icon: <Home size={18} /> },
     { label: "さくらボットとは", icon: <MessageCircleQuestion size={18} />, scrollTo: "about" },
 
     {
@@ -297,14 +297,14 @@ const FloatingSidebar: React.FC<FloatingSidebarProps> = ({ scrollFns }) => {
                                     whileTap={{ scale: 0.95 }}
                                     className="relative w-full"
                                 >
-                                    <Link className="w-full" href="/auth">
+                                    {/* <Link className="w-full" href="/auth"> */}
                                         <div
                                             onClick={() => logoutMutation.mutate()}
                                             className="flex items-center justify-center p-1.5 text-sm w-full rounded-xl bg-white hover:bg-pink-500 hover:border-white border hover:text-white text-pink-500"
                                         >
                                             ログアウト
                                         </div>
-                                    </Link>
+                                    {/* </Link> */}
                                 </motion.div>
 
                             </div>

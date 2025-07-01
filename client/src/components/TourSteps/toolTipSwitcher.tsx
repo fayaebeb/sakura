@@ -15,6 +15,8 @@ import VoiceModeDialog from "./VoiceModeDialog";
 import ChatInputDialog from "./ChatInputDialog";
 import SendButtonDialog from "./SendButtonDialog";
 import TooltipEnd from "./TooltipEnd";
+import MainMessageDialog from "./MainMessageDialog";
+import SettingsDialog from "./SettingsDialog";
 
 
 const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
@@ -41,13 +43,13 @@ const ToolTipSwitcher: React.FC<TooltipRenderProps> = (props) => {
         case "send-button":
             return <SendButtonDialog {...props} />;
         case "main-message-text":
-            return <ChatInputDialog {...props} />;
-        case "社内文書情報":
-            return <ChatInterfaceDialog {...props} />;
-        case "オンラインWeb情報":
-            return <ChatInterfaceDialog {...props} />;
+            return <MainMessageDialog {...props} />;
+        // case "社内文書情報":
+        //     return <ChatInterfaceDialog {...props} />;
+        // case "オンラインWeb情報":
+        //     return <ChatInterfaceDialog {...props} />;
         case "settings-dropdown":
-            return <ChatInterfaceDialog {...props} />;
+            return <SettingsDialog {...props} />;
         case "end-tour":
             return <TooltipEnd {...props} />;
 
