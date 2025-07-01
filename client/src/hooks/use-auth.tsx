@@ -49,13 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // When the component mounts, refetch the user data to validate the session
   useEffect(() => {
     refetch();
-    
+
     // Setup periodic session check every 5 minutes
     const interval = setInterval(() => {
       console.log("Auth - Periodic session refresh");
       refetch();
     }, 5 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, [refetch]);
 
@@ -118,6 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       console.log("Auth - Logout successful");
+      // Clear user session data from localStorage
+      if (typeof localStorage !== "undefined") {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith("chat_session_id_user_") || key.startsWith("tutorial_shown_user_")) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+      // Invalidate user cache
       queryClient.setQueryData(["/api/user"], null);
        setLocation("/auth");
       toast({
