@@ -18,7 +18,7 @@ import { useLocation } from "wouter";
 import { Loader2, Heart, Star, Ticket, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import zxcvbn from "zxcvbn";
-import TurnstileWidget from "@/components/TurnstileWidget";
+import TurnstileWidget, { TurnstileWidgetHandle } from "@/components/TurnstileWidget";
 import { useToast } from "@/hooks/use-toast";
 
 const loginCharacters = [
