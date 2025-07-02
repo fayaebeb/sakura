@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { insertUserSchema, loginUserSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Loader2, Heart, Star, Ticket, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,6 +36,7 @@ export default function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [captcha, setCaptcha] = useState<string | null>(null);
   const { toast } = useToast();
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
 
   useEffect(() => {
@@ -83,8 +84,7 @@ export default function AuthPage() {
   };
 
   if (!user) {
-    const onSubmit = form.handleSubmit((data) => {
-
+    const onSubmit = form.handleSubmit(async (data) => {
       if (!captcha) {
         toast({
           title: "ログイン成功",
@@ -93,12 +93,44 @@ export default function AuthPage() {
         return;
       }
 
-      if (isLogin) {
-        const { email, password } = data;
-        loginMutation.mutate({ email, password, turnstileToken: captcha });
-      } else {
-        registerMutation.mutate({ ...data, turnstileToken: captcha });
+      console.log("Before mutation - captcha:", captcha);
+      console.log("Turnstile ref:", turnstileRef.current);
+
+      try {
+        if (isLogin) {
+          const { email, password } = data;
+          await loginMutation.mutateAsync({ email, password, turnstileToken: captcha });
+        } else {
+          await registerMutation.mutateAsync({ ...data, turnstileToken: captcha });
+        }
+
+        console.log("Success - about to reset captcha");
+
+        // Try multiple reset approaches
+        if (turnstileRef.current) {
+          console.log("Calling reset...");
+          turnstileRef.current.reset();
+          setCaptcha(null);
+          console.log("Reset called, captcha cleared");
+        } else {
+          console.error("Turnstile ref is null!");
+        }
+
+      } catch (error) {
+        console.log("Error - about to reset captcha");
+
+        if (turnstileRef.current) {
+          console.log("Calling reset on error...");
+          turnstileRef.current.reset();
+          setCaptcha(null);
+          console.log("Reset called on error, captcha cleared");
+        } else {
+          console.error("Turnstile ref is null on error!");
+        }
+
+        console.error('Authentication failed:', error);
       }
+
     });
 
     return (
@@ -319,7 +351,7 @@ export default function AuthPage() {
                     </>
                   )}
 
-                  <TurnstileWidget onToken={setCaptcha} />
+                  <TurnstileWidget ref={turnstileRef} onToken={setCaptcha} />
 
 
                   <motion.div
