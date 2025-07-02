@@ -74,6 +74,37 @@ const upload = multer({
   }
 });
 
+
+
+const processedPastMessages = async (userid: number) => {
+  const messages = await storage.getPastMessagesByUser(userid, 5);
+  messages.reverse();
+
+  messages.pop();
+
+  // Format the conversation history string
+  let pastMessages: { role: string, content: string }[] = [];
+  for (const message of messages) {
+    if (message.isBot) {
+      pastMessages.push({ role: "AI", content: message.content });
+    } else {
+      pastMessages.push({ role: "user", content: message.content });
+    }
+  }
+
+  const history = pastMessages.map((message) => {
+    if (message.role === "AI") {
+      const contentSplit = message.content.split('###');
+      message.content = contentSplit[0]; // Keep content before ###
+
+      message.content = message.content.trim().replace(/\s+/g, ' ');
+    }
+    return message;
+  });
+
+  return history
+}
+
 const SKAPI = process.env.SKAPI!;
 
 // send message to SKAPI
@@ -81,7 +112,8 @@ async function sendMessageToLangchain(
   message: string,
   useWeb: boolean,
   useDb: boolean,
-  selectedDb: string
+  selectedDb: string,
+  history: { role: string, content: string }[]
 ): Promise<string> {
   // console.log(`Sending request to LangChain FastAPI: ${message}`);
 
@@ -95,6 +127,7 @@ async function sendMessageToLangchain(
       useweb: useWeb,
       usedb: useDb,
       db: selectedDb,
+      history: history
     }),
   });
 
@@ -152,12 +185,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessionId: persistentSessionId,
         });
 
+        const history = await processedPastMessages(req.user!.id)
+
         // Get response from langchain
         const formattedResponse = await sendMessageToLangchain(
           body.content,
           body.useWeb ?? false,
           body.useDb ?? false,
-          body.db ?? "files"
+          body.db ?? "files",
+          history
         );
 
         // Bot message should inherit the same category as the user message
@@ -555,12 +591,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               category: "SELF",
             });
 
+            const history = await processedPastMessages(client.userId)
+            
             console.log("Processing voice mode message with AI...");
             const formattedResponse = await sendMessageToLangchain(
               transcribedText,
               data.useweb ?? false,
               data.usedb ?? false,
-              data.db ?? "files"
+              data.db ?? "files",
+              history
             );
 
             const botMessage = await storage.createMessage(client.userId, {

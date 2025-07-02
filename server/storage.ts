@@ -35,7 +35,7 @@ export interface IStorage {
   sessionStore: session.Store;
   stampInitialLogin(id: number): Promise<void>;
   completeOnboarding(id: number): Promise<void>;
-
+  getPastMessagesByUser(userId: number, limitCount: number) : Promise<Message[]> 
 }
 
 export class DatabaseStorage implements IStorage {
@@ -156,6 +156,16 @@ export class DatabaseStorage implements IStorage {
       .set({ password: newPassword })
       .where(eq(users.id, userId));
   }
+
+  async getPastMessagesByUser(userId: number, limitCount: number): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.userId, userId))
+      .orderBy(desc(messages.timestamp))
+      .limit(limitCount);
+  }
+
 
 }
 
